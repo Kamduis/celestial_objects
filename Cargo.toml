@@ -1,0 +1,6 @@
+[package]
+name = "celestial_objects"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
