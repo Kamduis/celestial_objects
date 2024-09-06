@@ -12,7 +12,6 @@ use std::path::PathBuf;
 use std::sync::{OnceLock, Mutex};
 
 mod types;
-// mod calc;
 mod serde_helpers;
 
 use crate::types::CelestialSystem;
@@ -81,6 +80,23 @@ pub(crate) mod tests {
 	use serial_test::serial;
 	// use tempfile::tempdir;
 
+	use crate::types::{CelestialBody, EquatorialCoordinates, Star};
+
+	fn systems_example() -> Vec<CelestialSystem> {
+		vec![
+			CelestialSystem::new(
+				"Sol",
+				&EquatorialCoordinates::new( "0h 0m 0s", "0° 0m 0s", 0.0 ),
+				CelestialBody::Star( Star {} )
+			),
+			CelestialSystem::new(
+				"Alpha Centauri",
+				&EquatorialCoordinates::new( "14h 39m 36.49400s", "-60° 50m 2.3737s", 4.344 ),
+				CelestialBody::Star( Star {} )
+			),
+		]
+	}
+
 	#[test]
 	#[serial]
 	fn import_worlds() {
@@ -89,5 +105,11 @@ pub(crate) mod tests {
 		let path = PathBuf::from( "./tests/systems-example.ron" );
 
 		import( &path ).unwrap();
+
+		let expected = systems_example();
+		let received = db_worlds().lock().unwrap();
+		for ( recei, expect ) in received.iter().zip( expected ) {
+			assert_eq!( recei.identifier(), expect.identifier() );
+		}
 	}
 }
