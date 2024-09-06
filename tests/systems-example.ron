@@ -5,7 +5,6 @@
 		affiliation: Union,
 		description: "Home system of humans and human developed AIs.",
 		body: Star((
-			name: "Sol",
 			mass: 1.0,
 			radius: 1.0,
 			luminosity: 1.0,
@@ -67,8 +66,8 @@
 									temperature: (-160.0, 130.0),
 									techlevel: 11,
 									gates: 1,
+									satellites: [],
 								)),
-								satellites: [],
 							),
 							(
 								axis_semi_major: 497.7e6,
@@ -90,8 +89,8 @@
 									),
 									techlevel: 11,
 									gates: 0,
+									satellites: [],
 								)),
-								satellites: [],
 							),
 						],
 					)),

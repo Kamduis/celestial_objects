@@ -13,6 +13,21 @@ use serde::Deserialize;
 
 
 //=============================================================================
+// Traits
+
+
+pub trait AstronomicalObject {
+	/// Return a new object from `self` with `name`.
+	fn with_name( self, name: &str ) -> Self;
+
+	/// Return a new object from `self` with `satellites` orbiting it.
+	fn with_satellites( self, satellites: Vec<Orbit> ) -> Self;
+}
+
+
+
+
+//=============================================================================
 // Enums
 
 
@@ -27,6 +42,28 @@ pub enum CelestialBody {
 	Trabant( Trabant ),
 
 	Station( Station ),
+}
+
+impl AstronomicalObject for CelestialBody {
+	/// Return a new `CelestialBody` from `self` with `name`.
+	fn with_name( self, name: &str ) -> Self {
+		match self {
+			Self::GravitationalCenter( x ) => Self::GravitationalCenter( x.with_name( name ) ),
+			Self::Star( x ) => Self::Star( x.with_name( name ) ),
+			Self::Trabant( x ) => Self::Trabant( x.with_name( name ) ),
+			Self::Station( x ) => Self::Station( x.with_name( name ) ),
+		}
+	}
+
+	/// Return a new `CelestialBody` from `self` with `satellites`.
+	fn with_satellites( self, satellites: Vec<Orbit> ) -> Self {
+		match self {
+			Self::GravitationalCenter( x ) => Self::GravitationalCenter( x.with_satellites( satellites ) ),
+			Self::Star( x ) => Self::Star( x.with_satellites( satellites ) ),
+			Self::Trabant( x ) => Self::Trabant( x.with_satellites( satellites ) ),
+			Self::Station( x ) => Self::Station( x.with_satellites( satellites ) ),
+		}
+	}
 }
 
 
@@ -64,6 +101,13 @@ impl CelestialSystem {
 			body,
 		}
 	}
+
+	/// Return a new object from `self` with `name`.
+	pub fn with_name( mut self, name: &str ) -> Self {
+		self.name = Some( name.to_string() );
+		self
+	}
+
 
 	/// Returns the identifier of the `CelestialSystem`.
 	pub fn identifier( &self ) -> &str {
@@ -112,6 +156,19 @@ pub struct GravitationalCenter {
 	pub(super) satellites: Vec<Orbit>,
 }
 
+impl AstronomicalObject for GravitationalCenter {
+	/// Returns `self` unmodified, since gravitational centers a theoretical objects that never have names.
+	fn with_name( self, _name: &str ) -> Self {
+		self
+	}
+
+	/// Return a new object from `self` with `satellites` orbiting it.
+	fn with_satellites( mut self, satellites: Vec<Orbit> ) -> Self {
+		self.satellites = satellites;
+		self
+	}
+}
+
 
 /// Representing a star of a planetary system.
 #[derive( Deserialize, Clone, PartialEq, Debug )]
@@ -152,12 +209,87 @@ impl Star {
 	}
 }
 
+impl AstronomicalObject for Star {
+	/// Return a new object from `self` with `name`.
+	fn with_name( mut self, name: &str ) -> Self {
+		self.name = Some( name.to_string() );
+		self
+	}
+
+	/// Return a new object from `self` with `satellites` orbiting it.
+	fn with_satellites( mut self, satellites: Vec<Orbit> ) -> Self {
+		self.satellites = satellites;
+		self
+	}
+}
+
 
 /// Representing a trabant. This could be a planet in the orbit of a star of a moon in the orbit of a planet.
 #[derive( Deserialize, Clone, PartialEq, Default, Debug )]
-pub struct Trabant {}
+pub struct Trabant {
+	/// The name of this trabant. If this is `None`, the trabant will be named by its hierarchy within the `CelestialSystem`.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(super) name: Option<String>,
+
+	/// The radius in relation to the radius of Terra.
+	pub(super) radius: f32,
+
+	/// The surface gravity of this trabant in relation to the surface gravity of Terra.
+	pub(super) gravity: f32,
+
+	/// The objects oribitng this trabant.
+	pub(super) satellites: Vec<Orbit>,
+}
+
+impl AstronomicalObject for Trabant {
+	/// Return a new object from `self` with `name`.
+	fn with_name( mut self, name: &str ) -> Self {
+		self.name = Some( name.to_string() );
+		self
+	}
+
+	/// Return a new object from `self` with `satellites` orbiting it.
+	fn with_satellites( mut self, satellites: Vec<Orbit> ) -> Self {
+		self.satellites = satellites;
+		self
+	}
+}
 
 
 /// Representing a space station.
 #[derive( Deserialize, Clone, PartialEq, Debug )]
-pub struct Station {}
+pub struct Station {
+	/// The name of this station.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(super) name: Option<String>,
+
+	// /// The mass in kg.
+	// pub(super) mass: f64,
+
+	/// The radius in meter.
+	pub(super) radius: f32,
+
+	/// The gravity within the station in relation to the surface gravity of Terra.
+	pub(super) gravity: f32,
+
+	/// The objects oribitng this station.
+	pub(super) satellites: Vec<Orbit>,
+}
+
+impl AstronomicalObject for Station {
+	/// Return a new object from `self` with `name`.
+	fn with_name( mut self, name: &str ) -> Self {
+		self.name = Some( name.to_string() );
+		self
+	}
+
+	/// Return a new object from `self` with `satellites` orbiting it.
+	fn with_satellites( mut self, satellites: Vec<Orbit> ) -> Self {
+		self.satellites = satellites;
+		self
+	}
+}
