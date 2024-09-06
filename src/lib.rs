@@ -80,19 +80,32 @@ pub(crate) mod tests {
 	use serial_test::serial;
 	// use tempfile::tempdir;
 
-	use crate::types::{CelestialBody, EquatorialCoordinates, Star};
+	use crate::types::{CelestialBody, EquatorialCoordinates, Orbit, GravitationalCenter, Star};
 
 	fn systems_example() -> Vec<CelestialSystem> {
 		vec![
 			CelestialSystem::new(
 				"Sol",
 				&EquatorialCoordinates::new( "0h 0m 0s", "0° 0m 0s", 0.0 ),
-				CelestialBody::Star( Star {} )
+				CelestialBody::Star( Star::new( 1.0, 1.0, 1.0, "G2", ) )
 			),
 			CelestialSystem::new(
 				"Alpha Centauri",
 				&EquatorialCoordinates::new( "14h 39m 36.49400s", "-60° 50m 2.3737s", 4.344 ),
-				CelestialBody::Star( Star {} )
+				CelestialBody::GravitationalCenter( GravitationalCenter {
+					satellites: vec![
+						Orbit {
+							axis_semi_major: 17.493,
+							eccentricity: 0.51947,
+							body: CelestialBody::Star( Star::new( 1.0788, 1.2175, 1.5059, "G2", ) ),
+						},
+						Orbit {
+							axis_semi_major: 17.493,
+							eccentricity: 0.51947,
+							body: CelestialBody::Star( Star::new( 0.9092, 0.8591, 0.4981, "K4", ) ),
+						},
+					],
+				} )
 			),
 		]
 	}

@@ -91,24 +91,73 @@ impl EquatorialCoordinates {
 }
 
 
+/// Representing the orbit of a `CelestialBody` around another `CelestialBody`.
+#[derive( Deserialize, Clone, PartialEq, Debug )]
+pub struct Orbit {
+	/// The semi major axis of the `object`'s orbit in AU.
+	pub axis_semi_major: f32,
+
+	/// The eccentricity of the `object`'s orbit.
+	pub eccentricity: f32,
+
+	/// The objects orbiting.
+	pub body: CelestialBody,
+}
+
+
 /// Representing the theoretical gravitational center of two heavy masses orbiting each other.
 #[derive( Deserialize, Clone, PartialEq, Debug )]
 pub struct GravitationalCenter {
-	/// The objects oribitng this gravitational center..
-	pub(super) satellites: Vec<CelestialBody>
+	/// The objects oribitng this gravitational center.
+	pub(super) satellites: Vec<Orbit>,
 }
 
 
 /// Representing a star of a planetary system.
 #[derive( Deserialize, Clone, PartialEq, Debug )]
-pub struct Star {}
+pub struct Star {
+	/// The name of this star. If this is `None`, the star will be named by its hierarchy within the `CelestialSystem`.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(super) name: Option<String>,
+
+	/// The mass in relation to the mass of Sol.
+	pub(super) mass: f32,
+
+	/// The radius in relation to the radius of Sol.
+	pub(super) radius: f32,
+
+	/// The luminosity in relation to the luminosity of Sol.
+	pub(super) luminosity: f32,
+
+	/// The spectral class.
+	pub(super) spectral_class: String,
+
+	/// The objects oribitng this star.
+	pub(super) satellites: Vec<Orbit>,
+}
+
+impl Star {
+	/// Create a new `Star`.
+	pub fn new( mass: f32, radius: f32, luminosity: f32, spectral_class: &str ) -> Self {
+		Self {
+			name: None,
+			mass,
+			radius,
+			luminosity,
+			spectral_class: spectral_class.to_string(),
+			satellites: Vec::new(),
+		}
+	}
+}
 
 
 /// Representing a trabant. This could be a planet in the orbit of a star of a moon in the orbit of a planet.
 #[derive( Deserialize, Clone, PartialEq, Default, Debug )]
-pub struct Trabant;
+pub struct Trabant {}
 
 
 /// Representing a space station.
 #[derive( Deserialize, Clone, PartialEq, Debug )]
-pub struct Station;
+pub struct Station {}
