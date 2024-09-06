@@ -7,7 +7,7 @@
 // Crates
 
 
-use serde::Deserialize;
+use serde::{Serialize, Deserialize};
 
 
 
@@ -32,7 +32,7 @@ pub trait AstronomicalObject {
 
 
 /// Classification of celestial bodies.
-#[derive( Deserialize, Clone, PartialEq, Debug )]
+#[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub enum CelestialBody {
 	/// A point in space that is the gravitational center of two masses orbiting each other.
 	GravitationalCenter( GravitationalCenter ),
@@ -74,13 +74,14 @@ impl AstronomicalObject for CelestialBody {
 
 
 /// A `CelestialSystem` is the framework around a hierarchy of nested `CelestialBody`s.
-#[derive( Deserialize, Clone, PartialEq, Debug )]
+#[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct CelestialSystem {
 	/// The identifier of the celestial system. Old catalog names, mostly of the main star within this system, if it is a system with multiple stars.
 	identifier: String,
 
 	/// The name as the system, as it is known to the people.
 	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
 	name: Option<String>,
 
@@ -117,7 +118,7 @@ impl CelestialSystem {
 
 
 /// Equatorial coordinates (assuming Epoch J2000.0) representing a star's position ([Galactic coordinate system](https://en.wikipedia.org/wiki/Equatorial_coordinate_system)).
-#[derive( Deserialize, Clone, PartialEq, Debug )]
+#[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct EquatorialCoordinates {
 	pub ra: String,
 	pub dec: String,
@@ -136,7 +137,7 @@ impl EquatorialCoordinates {
 
 
 /// Representing the orbit of a `CelestialBody` around another `CelestialBody`.
-#[derive( Deserialize, Clone, PartialEq, Debug )]
+#[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct Orbit {
 	/// The semi major axis of the `object`'s orbit in AU.
 	pub axis_semi_major: f32,
@@ -150,7 +151,7 @@ pub struct Orbit {
 
 
 /// Representing the theoretical gravitational center of two heavy masses orbiting each other.
-#[derive( Deserialize, Clone, PartialEq, Debug )]
+#[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct GravitationalCenter {
 	/// The objects oribitng this gravitational center.
 	pub(super) satellites: Vec<Orbit>,
@@ -171,7 +172,7 @@ impl AstronomicalObject for GravitationalCenter {
 
 
 /// Representing a star of a planetary system.
-#[derive( Deserialize, Clone, PartialEq, Debug )]
+#[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct Star {
 	/// The name of this star. If this is `None`, the star will be named by its hierarchy within the `CelestialSystem`.
 	#[serde( default )]
@@ -225,7 +226,7 @@ impl AstronomicalObject for Star {
 
 
 /// Representing a trabant. This could be a planet in the orbit of a star of a moon in the orbit of a planet.
-#[derive( Deserialize, Clone, PartialEq, Default, Debug )]
+#[derive( Serialize, Deserialize, Clone, PartialEq, Default, Debug )]
 pub struct Trabant {
 	/// The name of this trabant. If this is `None`, the trabant will be named by its hierarchy within the `CelestialSystem`.
 	#[serde( default )]
@@ -259,7 +260,7 @@ impl AstronomicalObject for Trabant {
 
 
 /// Representing a space station.
-#[derive( Deserialize, Clone, PartialEq, Debug )]
+#[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct Station {
 	/// The name of this station.
 	#[serde( default )]
