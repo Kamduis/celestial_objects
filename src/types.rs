@@ -109,10 +109,23 @@ impl CelestialSystem {
 		self
 	}
 
-
 	/// Returns the identifier of the `CelestialSystem`.
 	pub fn identifier( &self ) -> &str {
 		&self.identifier
+	}
+
+	/// Returns the name of the `CelestialSystem`. If this system has been given a popular name, this will be returned. If not, this returnes the same as `identifier()`.
+	pub fn name( &self ) -> &str {
+		if let Some( x ) = &self.name {
+			return x;
+		}
+
+		self.identifier()
+	}
+
+	/// Returns the equatorial coordinates of this `CelestialSystem`.
+	pub fn coordinates( &self ) -> &EquatorialCoordinates {
+		&self.coordinates
 	}
 }
 
@@ -292,5 +305,36 @@ impl AstronomicalObject for Station {
 	fn with_satellites( mut self, satellites: Vec<Orbit> ) -> Self {
 		self.satellites = satellites;
 		self
+	}
+}
+
+
+
+
+//=============================================================================
+// Testing
+
+
+#[cfg( test )]
+mod tests {
+	use super::*;
+
+	use crate::tests::systems_examples;
+
+	#[test]
+	fn data_of_nested_worlds() {
+		let systems = systems_examples::systems_example();
+
+		let sol = systems[0].clone();
+
+		assert_eq!( sol.identifier(), "Sol" );
+		assert_eq!( sol.name(), "Sol" );
+		// assert_eq!( sol.coordinates(), EquatorialCoordinates::new( "0h 0m 0s", "0° 0m 0s", 0.0 ) );
+
+		let centauri = systems[1].clone();
+
+		assert_eq!( centauri.identifier(), "Alpha Centauri" );
+		assert_eq!( centauri.name(), "Centauri" );
+		// assert_eq!( centauri.coordinates(), EquatorialCoordinates::new( "14h 39m 36.49400s", "-60° 50m 2.3737s", 4.344 ) );
 	}
 }

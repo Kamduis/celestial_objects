@@ -18,7 +18,7 @@ use crate::types::{CelestialBody, EquatorialCoordinates, Orbit, GravitationalCen
 // Example systems
 
 
-pub(super) fn systems_example() -> Vec<CelestialSystem> {
+pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 	vec![
 		CelestialSystem::new(
 			"Sol",

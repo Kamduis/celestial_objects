@@ -15,6 +15,7 @@ use std::sync::{OnceLock, Mutex};
 use ron::ser::PrettyConfig;
 
 mod types;
+mod coords;
 mod serde_helpers;
 
 use crate::types::CelestialSystem;
@@ -33,6 +34,25 @@ fn db_worlds() -> &'static Mutex<Vec<CelestialSystem>> {
 	DB_WORLDS.get_or_init( || {
 		Mutex::new( Vec::new() )
 	} )
+}
+
+
+
+
+
+//=============================================================================
+// Access worlds
+
+
+/// Returns a celestial system. The system is the root of the nested world data. If no system with `identifier` is found, this function returns `None`.
+///
+/// # Arguments
+/// * `identifier` The unique identifier of the celestial system.
+pub fn system( identifier: &str ) -> Option<CelestialSystem> {
+	let db = db_worlds().lock().unwrap();
+
+	db.iter()
+		.find( |x| x.identifier() == identifier ).cloned()
 }
 
 
@@ -108,7 +128,7 @@ pub(crate) mod tests {
 	use serial_test::serial;
 	use tempfile::tempdir;
 
-	mod systems_examples;
+	pub(crate) mod systems_examples;
 
 	#[test]
 	#[serial]
@@ -164,5 +184,20 @@ pub(crate) mod tests {
 		for ( i, expected ) in db_expected.iter().enumerate() {
 			assert_eq!( &db[i], expected );
 		}
+	}
+
+	#[test]
+	#[serial]
+	fn test_access_system() {
+		clear_worlds();
+
+		let path = PathBuf::from( "./tests/systems-example.ron" );
+
+		import( &path ).unwrap();
+
+		let sys_sol = system( "Sol" );
+
+		assert!( sys_sol.is_some() );
+		assert_eq!( sys_sol.unwrap().identifier(), "Sol" );
 	}
 }
