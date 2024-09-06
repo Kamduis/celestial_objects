@@ -1,0 +1,224 @@
+[
+	(
+		identifier: "Sol",
+		position: ( ra: "0h 0m 0s", dec: "0° 0m 0s", dist: 0.0 ),
+		affiliation: Union,
+		description: "Home system of humans and human developed AIs.",
+		bodies: [
+			(
+				body: Star((
+					name: "Sol",
+					mass: 1.0,
+					radius: 1.0,
+					luminosity: 1.0,
+					spectral_class: "G2",
+				)),
+				satellites: [
+					(
+						body: Trabant((
+							name: "Venus",
+							radius: 0.9499,
+							gravity: 0.904,
+							rotation_period: -20996820.0,
+							axis_semi_major: 0.723332,
+							eccentricity: 0.006772,
+							temperature: (437.0, 497.0),
+							atmosphere: (
+								pressure: 92.0,
+								quality: Toxic,
+								composition: GasComposition({
+									CarbonDioxide: 0.912,
+									Nitrogen: 0.035,
+									Oxygen: 0.051,
+									SulfurDioxide: 0.001,
+								}),
+							),
+							techlevel: 10,
+							gates: 14,
+						)),
+						satellites: [],
+					),
+					(
+						body: Trabant((
+							name: "Terra",
+							radius: 1.0,
+							gravity: 1.0,
+							rotation_period: 86164.10035,
+							axis_semi_major: 149.598261e9,
+							eccentricity: 0.01671123,
+							temperature: (-89.0, 58.0),
+							atmosphere: (
+								pressure: 1.01,
+								quality: Toxic,
+								composition: GasComposition({
+									Argon: 0.0093,
+									CarbonDioxide: 0.17038,
+									Nitrogen: 0.7808,
+									Oxygen: 0.00095,
+									SulfurDioxide: 0.0301,
+								}),
+							),
+							gates: 0,
+						)),
+						satellites: [
+							(
+								body: Trabant((
+									name: "Luna",
+									radius: 0.2731,
+									gravity: 0.1654,
+									axis_semi_major: 1.0000010180626,
+									eccentricity: 0.0549,
+									temperature: (-160.0, 130.0),
+									techlevel: 11,
+									gates: 1,
+								)),
+								satellites: [],
+							),
+							(
+								body: Station((
+									name: "Argus",
+									mass: 4180e3,
+									radius: 6e3,
+									gravity: 1.0,
+									axis_semi_major: 497.7e6,
+									eccentricity: 0.001,
+									temperature: (18.0, 26.0),
+									atmosphere: (
+										pressure: 1.0,
+										quality: Breathable,
+										composition: GasComposition({
+											CarbonDioxide: 0.004,
+											Nitrogen: 0.787,
+											Oxygen: 0.207,
+										}),
+									),
+									techlevel: 11,
+									gates: 0,
+								)),
+								satellites: [],
+							),
+						],
+					),
+					(
+						name: "Neptun",
+						body: Trabant((
+							radius: 3.829,
+							gravity: 1.137,
+							rotation_period: 57479.0,
+							axis_semi_major: 30.07,
+							eccentricity: 0.0113,
+							temperature: (-201.0, -201.0),
+							atmosphere: (
+								pressure: 1.0,
+								quality: Toxic,
+								composition: GasComposition({
+									Hydrogen: 0.79,
+									Helium: 0.19,
+									Methane: 0.015,
+								}),
+							),
+							gates: 0,
+						)),
+						satellites: [
+							(
+								body: Trabant((
+									name: "Triton",
+									radius: 0.2122,
+									gravity: 0.0794,
+									axis_semi_major: 0.00237,
+									eccentricity: 0.000016,
+									temperature: (-237.5, -237.5),
+									techlevel: 12,
+									gates: 0,
+								)),
+								satellites: [],
+							),
+						],
+					),
+				],
+			),
+		],
+	),
+	(
+		identifier: "Alpha Centauri",
+		name: "Centauri",
+		position: ( ra: "14h 39m 36.49400s", dec: "-60° 50m 2.3737s", dist: 4.344 ),
+		affiliation: Union,
+		description: "Capital of the Union.",
+		bodies: [
+			(
+				body: GravitationalCenter,
+				satellites: [
+					(
+						body: Star((
+							mass: 1.0788,
+							radius: 1.2175,
+							luminosity: 1.5059,
+							spectral_class: "G2",
+						)),
+						satellites: [
+							(
+								body: Trabant((
+									name: "Minos",
+									radius: 1.1,
+									gravity: 1.05,
+									rotation_period: 65220.0,
+									axis_semi_major: 1.1,
+									eccentricity: 0.019345,
+									temperature: (-7.0, 89.0),
+									atmosphere: (
+										pressure: 1.2,
+										quality: Breathable,
+										composition: GasComposition({
+											CarbonDioxide: 0.00054,
+											Nitrogen: 0.77,
+											Oxygen: 0.214,
+											Argon: 0.002,
+										}),
+									),
+									techlevel: 11,
+									gates: 122,
+								)),
+								satellites: [],
+							),
+						],
+					),
+					(
+						body: Star((
+							mass: 0.9092,
+							radius: 0.8591,
+							luminosity: 0.4981,
+							spectral_class: "K4",
+						)),
+						satellites: [
+							(
+								body: Trabant((
+									name: "Taurus",
+									radius: 0.9,
+									gravity: 1.1,
+									rotation_period: 110520.0,
+									axis_semi_major: 0.8,
+									eccentricity: 0.00824,
+									temperature: (-120.0, 127.0),
+									atmosphere: (
+										pressure: 0.36,
+										quality: Breathable,
+										composition: GasComposition({
+											CarbonDioxide: 0.00092,
+											Nitrogen: 0.792,
+											Oxygen: 0.179,
+											Argon: 0.015,
+										}),
+									),
+									techlevel: 11,
+									gates: 58,
+								)),
+								satellites: [],
+							),
+						],
+					),
+				],
+			),
+		],
+	),
+]
