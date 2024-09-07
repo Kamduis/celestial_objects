@@ -8,6 +8,7 @@
 
 
 use serde::{Serialize, Deserialize};
+use thiserror::Error;
 
 use crate::coords::EquatorialCoords;
 
@@ -24,6 +25,27 @@ const LETTERS: [&str; 26] = [
 	"k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
 	"u", "v", "w", "x", "y", "z",
 ];
+
+
+/// Greek letters
+const LETTERS_GREEK: [&str; 28] = [
+	"α", "β", "γ", "δ", "ε", "ζ", "η", "κ", "μ", "ρ",
+	"σ", "θ", "ι", "κ", "λ", "μ", "ν", "ξ", "ο", "π",
+	"ρ", "σ", "τ", "υ", "φ", "χ", "ψ", "ω",
+];
+
+
+
+
+//=============================================================================
+// Errors
+
+
+#[derive( Error, Debug )]
+pub enum CelestialSystemError {
+	#[error( "No celestial body at index: `{0}`" )]
+	IllegalIndex( String ),
+}
 
 
 
@@ -47,6 +69,49 @@ pub trait AstronomicalObject {
 
 	/// Returns the radius of the astronomical object in meter.
 	fn radius( &self ) -> f32;
+}
+
+
+
+
+//=============================================================================
+// Helper functions
+
+
+/// Get the `index`th object orbiting `center`.
+///
+/// **Note:** `index` is *not* 0-based but 1-based. `index = 1` provides the first body orbiting `center`. `index = 0` provides `center`.
+///
+/// # Returns
+/// * First item of tuple: The `CelestialBody` at `index`.
+/// * Second item of tuple: The letter hierarchy to be used as name, if no dedicated name exists.
+fn satellite_getter<'a>( center: &'a CelestialBody, index: &'a [usize], hierarchy: &str ) -> Result<( &'a CelestialBody, String ), CelestialSystemError> {
+	if index.is_empty() {
+		return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+	}
+
+	if index[0] == 0 {
+		return Ok( ( center, hierarchy.to_string() ) );
+	}
+
+	let orbit = &center.satellites().get( index[0] - 1 )
+		.ok_or( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) )?;
+
+	let hierarchy_letter = match ( center, &orbit.body ) {
+		( _, CelestialBody::GravitationalCenter( _ ) ) => unimplemented!( "Gravitational center not expected!" ),
+		( _, CelestialBody::Star( _ ) ) => LETTERS[index[0] - 1].to_uppercase(),
+		( CelestialBody::Trabant( _ ), CelestialBody::Trabant( _ ) ) => LETTERS_GREEK[index[0] - 1].to_string(),
+		( _, CelestialBody::Trabant( _ ) ) => LETTERS[index[0] - 1].to_string(),
+		( _, CelestialBody::Station( _ ) ) => index[0].to_string(),
+	};
+
+	let hierarchy_new = format!( "{}{}", hierarchy, hierarchy_letter );
+
+	if index.len() == 1 {
+		return Ok( ( &orbit.body, hierarchy_new ) );
+	}
+
+	satellite_getter( &orbit.body, &index[1..], &hierarchy_new )
 }
 
 
@@ -197,47 +262,37 @@ impl CelestialSystem {
 	/// `&[2]` represents the second object orbiting `&[0]`.
 	/// `&[1,0]` represents the first object orbiting `&[0]` (identical to `&[1]`).
 	/// `&[1,1]` represents the first object orbiting `&[1]` (the first object orbiting `&[0]`)
-	pub fn name( &self, index: &[usize] ) -> String {
+	pub fn name( &self, index: &[usize] ) -> Result<String, CelestialSystemError> {
 		if index.is_empty() {
-			return self.name.as_ref().cloned().unwrap_or( self.identifier.to_string() );
+			return Ok( self.name.as_ref().cloned().unwrap_or( self.identifier.to_string() ) );
 		}
 
 		if index[0] == 0 {
 			match &self.body {
-				CelestialBody::GravitationalCenter( x ) => {
-					return format!( "{} AB", self.name( &[] ) );
+				CelestialBody::GravitationalCenter( _ ) => {
+					return Ok( format!( "{} AB", self.name( &[] )? ) );
 				},
 				CelestialBody::Star( x ) => {
 					// If no name is given, is the name of the central star equal to the name of the system.
-					return x.name.as_ref().cloned().unwrap_or( self.name( &[] ) );
+					return Ok( x.name.as_ref().cloned().unwrap_or( self.name( &[] )? ) );
 				},
 				_ => unimplemented!( "Center bodies should never by planets, moons or stations." ),
 			}
 		} else {
-			let orbit = &self.body.satellites()[index[0] - 1];
-			match &orbit.body {
-				CelestialBody::Star( x ) => {
-					return x.name.as_ref()
-						.cloned()
-						.unwrap_or(
-							format!( "{} {}",
-								self.name( &[0] ),
-								LETTERS[index[0] - 1].to_uppercase()
-							)
-						);
-				},
-				CelestialBody::Trabant( x ) => {
-					return x.name.as_ref()
-						.cloned()
-						.unwrap_or(
-							format!( "{} {}",
-								self.name( &[0] ),
-								LETTERS[index[0] - 1]
-							)
-						);
-				},
-				_ => unimplemented!( "Center bodies should never by planets, moons or stations." ),
-			}
+			let ( body_got, hierarchy ) = &satellite_getter( &self.body, &index, "" )?;
+
+			let name = match &body_got {
+				CelestialBody::GravitationalCenter( _ ) => unreachable!( "No gravitational center expected." ),
+				CelestialBody::Star( x ) => x.name.as_ref(),
+				CelestialBody::Trabant( x ) => x.name.as_ref(),
+				CelestialBody::Station( x ) => x.name.as_ref(),
+			};
+
+			let res = name
+				.cloned()
+				.unwrap_or( format!( "{} {}", self.name( &[0] )?, hierarchy ) );
+
+			return Ok( res )
 		}
 	}
 
@@ -641,23 +696,23 @@ mod tests {
 
 		let sol = &systems[0];
 
-		assert_eq!( sol.name( &[] ), "Sol" );  // <- The system itself
-		assert_eq!( sol.name( &[0] ), "Sol" );  // <- The singular star
-		assert_eq!( sol.name( &[1] ), "Mercury" );  // <- The first planet
-		assert_eq!( sol.name( &[2] ), "Venus" );  // <- The second planet
-		assert_eq!( sol.name( &[3] ), "Terra" );  // <- The third planet
-		assert_eq!( sol.name( &[3,0] ), "Terra" );  // <- The third planet
-		assert_eq!( sol.name( &[3,1] ), "Luna" );  // <- The first moon of the third planet
+		assert_eq!( sol.name( &[] ).unwrap(), "Sol" );  // <- The system itself
+		assert_eq!( sol.name( &[0] ).unwrap(), "Sol" );  // <- The singular star
+		assert_eq!( sol.name( &[1] ).unwrap(), "Mercury" );  // <- The first planet
+		assert_eq!( sol.name( &[2] ).unwrap(), "Venus" );  // <- The second planet
+		assert_eq!( sol.name( &[3] ).unwrap(), "Terra" );  // <- The third planet
+		assert_eq!( sol.name( &[3,0] ).unwrap(), "Terra" );  // <- The third planet
+		assert_eq!( sol.name( &[3,1] ).unwrap(), "Luna" );  // <- The first moon of the third planet
 
 		let centauri = &systems[1];
 
-		assert_eq!( centauri.name( &[] ), "Centauri AB" );  // <- The system itself
-		assert_eq!( centauri.name( &[0] ), "Centauri AB" );  // <- Gravitational center of the trinary star system.
-		assert_eq!( centauri.name( &[1] ), "Centauri A" );  // The first star
-		assert_eq!( centauri.name( &[2] ), "Centauri B" );  // The second star
-		assert_eq!( centauri.name( &[3] ), "Proxima" );  // The third star
-		assert_eq!( centauri.name( &[1,0] ), "Minos" );  // The first star
-		assert_eq!( centauri.name( &[1,1] ), "Minos" );  // The first planet of the first star
-		assert_eq!( centauri.name( &[2,1] ), "Taurus" );  // The first planet of the second star
+		assert_eq!( centauri.name( &[] ).unwrap(), "Centauri" );  // <- The system itself
+		assert_eq!( centauri.name( &[0] ).unwrap(), "Centauri AB" );  // <- Gravitational center of the trinary star system.
+		assert_eq!( centauri.name( &[1] ).unwrap(), "Centauri AB A" );  // The first star
+		assert_eq!( centauri.name( &[2] ).unwrap(), "Centauri AB B" );  // The second star
+		assert_eq!( centauri.name( &[3] ).unwrap(), "Proxima" );  // The third star
+		assert_eq!( centauri.name( &[1,0] ).unwrap(), "Centauri AB A" );  // The first star
+		assert_eq!( centauri.name( &[1,1] ).unwrap(), "Minos" );  // The first planet of the first star
+		assert_eq!( centauri.name( &[2,1] ).unwrap(), "Taurus" );  // The first planet of the second star
 	}
 }
