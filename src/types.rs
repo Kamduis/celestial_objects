@@ -157,6 +157,92 @@ impl CelestialSystem {
 	pub fn affiliation( &self ) -> &Affiliation {
 		&self.affiliation
 	}
+
+	/// Returns the description of the system.
+	pub fn description( &self ) -> Option<&str> {
+		self.description.as_ref().map( |x| x.as_str() )
+	}
+
+	/// Returns the spectral class of this system's main star.
+	pub fn spectral_class_main( &self ) -> &str {
+		let star_main = self.stars().nth( 0 )
+			.expect( "Each system should have at least one star." );
+		star_main.spectral_class()
+	}
+
+	/// Returns the spectral class of this system's main star.
+	pub fn stars( &self ) -> CelestialSystemStarsIterator {
+		println!( "ITER" );
+		let mut iter_obj = CelestialSystemStarsIterator {
+			body: &self.body,
+			stars: Vec::new(),
+			index: 0,
+		};
+
+		iter_obj.walker( &self.body );
+
+		println!( "{:?}", iter_obj.stars );
+
+		iter_obj
+	}
+}
+
+
+/// Iterator for stars within a `CelestialSystem`.
+///
+/// TODO: The implementation is very inefficient, creating a `Vec` each time the iterator is newly created.
+struct CelestialSystemStarsIterator<'a> {
+	/// The central body of the system.
+	body: &'a CelestialBody,
+
+	stars: Vec<&'a Star>,
+
+	index: usize,
+}
+
+impl<'a> CelestialSystemStarsIterator<'a> {
+	/// Walking all objects within this system and collecting stars.
+	fn walker( &mut self, body: &'a CelestialBody ) {
+		match body {
+			// A star may orbit a gravitational center.
+			CelestialBody::GravitationalCenter( x ) => {
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+
+				return;
+			},
+
+			// A star may orbit another star.
+			CelestialBody::Star( x ) => {
+				self.stars.push( x );
+
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+
+				return;
+			},
+
+			// No star will be orbiting a trabant or station.
+			_ => return,
+		}
+	}
+}
+
+impl<'a> Iterator for CelestialSystemStarsIterator<'a> {
+	type Item = &'a Star;
+
+	fn next( &mut self ) -> Option<Self::Item> {
+		if self.index >= self.stars.len() {
+			return None;
+		}
+
+		let result = Some( self.stars[ self.index ] ) ;
+		self.index += 1;
+
+		result
+	}
 }
 
 
@@ -268,6 +354,11 @@ impl Star {
 			properties: Vec::new(),
 			satellites: Vec::new(),
 		}
+	}
+
+	/// Returns the spectral class of the star.
+	pub fn spectral_class( &self ) -> &str {
+		&self.spectral_class
 	}
 }
 
@@ -384,5 +475,18 @@ mod tests {
 		assert_eq!( centauri.identifier(), "Alpha Centauri" );
 		assert_eq!( centauri.name(), "Centauri" );
 		// assert_eq!( centauri.coordinates(), EquatorialCoordinates::new( "14h 39m 36.49400s", "-60° 50m 2.3737s", 4.344 ) );
+	}
+
+	#[test]
+	fn iterator_of_stars() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert_eq!( sol.stars().count(), 1 );
+
+		let centauri = &systems[1];
+
+		assert_eq!( centauri.stars().count(), 3 );
 	}
 }

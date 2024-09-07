@@ -214,6 +214,18 @@
 						],
 					)),
 				),
+				(
+					axis_semi_major: 8700.0,
+					eccentricity: 0.50,
+					body: Star((
+						name: "Proxima",
+						mass: 1.221,
+						radius: 0.1542,
+						luminosity: 0.001567,
+						spectral_class: "M5.5",
+						satellites: [],
+					)),
+				),
 			],
 		)),
 	),
