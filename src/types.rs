@@ -89,13 +89,37 @@ pub trait AstronomicalObject {
 // Helper functions
 
 
+/// Get the `index`th orbit around `center`.
+///
+/// **Note:** `index` is *not* 0-based but 1-based. `index = 1` provides the first body orbiting `center`. `index = 0` provides `center`.
+///
+/// # Returns
+/// * The `CelestialBody` at `index`.
+fn orbit_getter<'a>(
+	center: &'a CelestialBody,
+	index: &'a [usize]
+) -> Result<&'a Orbit, CelestialSystemError> {
+	if index.is_empty() || index[0] == 0 {
+		return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+	}
+
+	let orbit = &center.satellites().get( index[0] - 1 )
+		.ok_or( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) )?;
+
+	if index.len() == 1 {
+		return Ok( &orbit );
+	}
+
+	orbit_getter( &orbit.body, &index[1..] )
+}
+
+
 /// Get the `index`th object orbiting `center`.
 ///
 /// **Note:** `index` is *not* 0-based but 1-based. `index = 1` provides the first body orbiting `center`. `index = 0` provides `center`.
 ///
 /// # Returns
-/// * First item of tuple: The `CelestialBody` at `index`.
-/// * Second item of tuple: The letter hierarchy to be used as name, if no dedicated name exists.
+/// The `CelestialBody` at `index`.
 fn satellite_getter<'a>(
 	center: &'a CelestialBody,
 	index: &'a [usize]
@@ -545,6 +569,21 @@ impl CelestialSystem {
 			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
 		};
 		return Ok( &star.spectral_class );
+	}
+
+	/// Returns the semi major axis (in AU) of the indexed object to the center it orbits.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// Since the system itself and the center object of the system are not orbiting anything, the indices `&[]` and `&[0]` are illegal and cause an error to be returned.
+	pub fn axis_semi_major( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
+		if index.is_empty() || index[0] == 0 {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		let orbit_got = &orbit_getter( &self.body, &index )?;
+		Ok( orbit_got.axis_semi_major )
 	}
 
 	/// Returns the mass of this system's main star in relation to Sol.
