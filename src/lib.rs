@@ -13,12 +13,14 @@ use std::path::PathBuf;
 use std::sync::{OnceLock, Mutex};
 
 use ron::ser::PrettyConfig;
+// use thiserror::Error;
 
-mod types;
 mod coords;
+mod types;
 mod serde_helpers;
 
-use crate::types::CelestialSystem;
+pub use crate::coords::{EquatorialCoords, GalacticCoords};
+pub use crate::types::{CelestialSystem, Affiliation, StarProperty};
 
 
 
