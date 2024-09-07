@@ -15,6 +15,20 @@ use crate::coords::EquatorialCoords;
 
 
 //=============================================================================
+// Constants
+
+
+/// Letters
+const LETTERS: [&str; 26] = [
+	"a", "b", "c", "d", "e", "f", "g", "h", "i", "j",
+	"k", "l", "m", "n", "o", "p", "q", "r", "s", "t",
+	"u", "v", "w", "x", "y", "z",
+];
+
+
+
+
+//=============================================================================
 // Traits
 
 
@@ -24,6 +38,15 @@ pub trait AstronomicalObject {
 
 	/// Return a new object from `self` with `satellites` orbiting it.
 	fn with_satellites( self, satellites: Vec<Orbit> ) -> Self;
+
+	/// Returns the satellites of this object.
+	fn satellites( &self ) -> &Vec<Orbit>;
+
+	/// Returns the mass of the astronomical object.
+	fn mass( &self ) -> f32;
+
+	/// Returns the radius of the astronomical object in meter.
+	fn radius( &self ) -> f32;
 }
 
 
@@ -64,6 +87,33 @@ impl AstronomicalObject for CelestialBody {
 			Self::Star( x ) => Self::Star( x.with_satellites( satellites ) ),
 			Self::Trabant( x ) => Self::Trabant( x.with_satellites( satellites ) ),
 			Self::Station( x ) => Self::Station( x.with_satellites( satellites ) ),
+		}
+	}
+
+	fn satellites( &self ) -> &Vec<Orbit> {
+		match self {
+			Self::GravitationalCenter( x ) => x.satellites(),
+			Self::Star( x ) => x.satellites(),
+			Self::Trabant( x ) => x.satellites(),
+			Self::Station( x ) => x.satellites(),
+		}
+	}
+
+	fn mass( &self ) -> f32 {
+		match self {
+			Self::GravitationalCenter( x ) => x.mass(),
+			Self::Star( x ) => x.mass(),
+			Self::Trabant( x ) => x.mass(),
+			Self::Station( x ) => x.mass(),
+		}
+	}
+
+	fn radius( &self ) -> f32 {
+		match self {
+			Self::GravitationalCenter( x ) => x.radius(),
+			Self::Star( x ) => x.radius(),
+			Self::Trabant( x ) => x.radius(),
+			Self::Station( x ) => x.radius(),
 		}
 	}
 }
@@ -139,13 +189,56 @@ impl CelestialSystem {
 		&self.identifier
 	}
 
-	/// Returns the name of the `CelestialSystem`. If this system has been given a popular name, this will be returned. If not, this returnes the same as `identifier()`.
-	pub fn name( &self ) -> &str {
-		if let Some( x ) = &self.name {
-			return x;
+	/// Returns the name of the objects within this celestial system. Indexing is done by array slice.
+	///
+	/// `&[]` represents the system itself.
+	/// `&[0]` represents the root object of the system. For a singular star system, this is the star. Forr a binary star system, this is the gravitational center of the two stars.
+	/// `&[1]` represents the first object orbiting `&[0]`.
+	/// `&[2]` represents the second object orbiting `&[0]`.
+	/// `&[1,0]` represents the first object orbiting `&[0]` (identical to `&[1]`).
+	/// `&[1,1]` represents the first object orbiting `&[1]` (the first object orbiting `&[0]`)
+	pub fn name( &self, index: &[usize] ) -> String {
+		if index.is_empty() {
+			return self.name.as_ref().cloned().unwrap_or( self.identifier.to_string() );
 		}
 
-		self.identifier()
+		if index[0] == 0 {
+			match &self.body {
+				CelestialBody::GravitationalCenter( x ) => {
+					return format!( "{} AB", self.name( &[] ) );
+				},
+				CelestialBody::Star( x ) => {
+					// If no name is given, is the name of the central star equal to the name of the system.
+					return x.name.as_ref().cloned().unwrap_or( self.name( &[] ) );
+				},
+				_ => unimplemented!( "Center bodies should never by planets, moons or stations." ),
+			}
+		} else {
+			let orbit = &self.body.satellites()[index[0] - 1];
+			match &orbit.body {
+				CelestialBody::Star( x ) => {
+					return x.name.as_ref()
+						.cloned()
+						.unwrap_or(
+							format!( "{} {}",
+								self.name( &[0] ),
+								LETTERS[index[0] - 1].to_uppercase()
+							)
+						);
+				},
+				CelestialBody::Trabant( x ) => {
+					return x.name.as_ref()
+						.cloned()
+						.unwrap_or(
+							format!( "{} {}",
+								self.name( &[0] ),
+								LETTERS[index[0] - 1]
+							)
+						);
+				},
+				_ => unimplemented!( "Center bodies should never by planets, moons or stations." ),
+			}
+		}
 	}
 
 	/// Returns the equatorial coordinates of this `CelestialSystem`.
@@ -195,7 +288,7 @@ impl CelestialSystem {
 /// Iterator for stars within a `CelestialSystem`.
 ///
 /// TODO: The implementation is very inefficient, creating a `Vec` each time the iterator is newly created.
-struct CelestialSystemStarsIterator<'a> {
+pub struct CelestialSystemStarsIterator<'a> {
 	/// The central body of the system.
 	body: &'a CelestialBody,
 
@@ -314,6 +407,19 @@ impl AstronomicalObject for GravitationalCenter {
 		self.satellites = satellites;
 		self
 	}
+
+	fn satellites( &self ) -> &Vec<Orbit> {
+		&self.satellites
+	}
+
+	fn mass( &self ) -> f32 {
+		0.0
+	}
+
+	/// Returns the star's radius with respect to the radius of Sol.
+	fn radius( &self ) -> f32 {
+		0.0
+	}
 }
 
 
@@ -360,11 +466,6 @@ impl Star {
 		}
 	}
 
-	/// Returns the star's radius with respect to the radius of Sol.
-	fn radius( &self ) -> f32 {
-		self.radius
-	}
-
 	/// Returns the spectral class of the star.
 	pub fn spectral_class( &self ) -> &str {
 		&self.spectral_class
@@ -382,6 +483,19 @@ impl AstronomicalObject for Star {
 	fn with_satellites( mut self, satellites: Vec<Orbit> ) -> Self {
 		self.satellites = satellites;
 		self
+	}
+
+	fn satellites( &self ) -> &Vec<Orbit> {
+		&self.satellites
+	}
+
+	fn mass( &self ) -> f32 {
+		self.mass
+	}
+
+	/// Returns the star's radius with respect to the radius of Sol.
+	fn radius( &self ) -> f32 {
+		self.radius
 	}
 }
 
@@ -417,6 +531,19 @@ impl AstronomicalObject for Trabant {
 		self.satellites = satellites;
 		self
 	}
+
+	fn satellites( &self ) -> &Vec<Orbit> {
+		&self.satellites
+	}
+
+	fn mass( &self ) -> f32 {
+		self.gravity * self.radius.powi( 2 )
+	}
+
+	/// Returns the star's radius with respect to the radius of Sol.
+	fn radius( &self ) -> f32 {
+		self.radius
+	}
 }
 
 
@@ -429,8 +556,8 @@ pub struct Station {
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
 	pub(super) name: Option<String>,
 
-	// /// The mass in kg.
-	// pub(super) mass: f64,
+	/// The mass in kg.
+	pub(super) mass: f32,
 
 	/// The radius in meter.
 	pub(super) radius: f32,
@@ -454,6 +581,19 @@ impl AstronomicalObject for Station {
 		self.satellites = satellites;
 		self
 	}
+
+	fn satellites( &self ) -> &Vec<Orbit> {
+		&self.satellites
+	}
+
+	fn mass( &self ) -> f32 {
+		self.mass
+	}
+
+	/// Returns the star's radius with respect to the radius of Sol.
+	fn radius( &self ) -> f32 {
+		self.radius
+	}
 }
 
 
@@ -465,26 +605,9 @@ impl AstronomicalObject for Station {
 
 #[cfg( test )]
 mod tests {
-	use super::*;
+	// use super::*;
 
 	use crate::tests::systems_examples;
-
-	#[test]
-	fn data_of_nested_worlds() {
-		let systems = systems_examples::systems_example();
-
-		let sol = systems[0].clone();
-
-		assert_eq!( sol.identifier(), "Sol" );
-		assert_eq!( sol.name(), "Sol" );
-		// assert_eq!( sol.coordinates(), EquatorialCoordinates::new( "0h 0m 0s", "0° 0m 0s", 0.0 ) );
-
-		let centauri = systems[1].clone();
-
-		assert_eq!( centauri.identifier(), "Alpha Centauri" );
-		assert_eq!( centauri.name(), "Centauri" );
-		// assert_eq!( centauri.coordinates(), EquatorialCoordinates::new( "14h 39m 36.49400s", "-60° 50m 2.3737s", 4.344 ) );
-	}
 
 	#[test]
 	fn iterator_of_stars() {
@@ -497,5 +620,44 @@ mod tests {
 		let centauri = &systems[1];
 
 		assert_eq!( centauri.stars().count(), 3 );
+	}
+
+	#[test]
+	fn test_identifier() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert_eq!( sol.identifier(), "Sol" );
+
+		let centauri = &systems[1];
+
+		assert_eq!( centauri.identifier(), "Alpha Centauri" );
+	}
+
+	#[test]
+	fn test_names() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert_eq!( sol.name( &[] ), "Sol" );  // <- The system itself
+		assert_eq!( sol.name( &[0] ), "Sol" );  // <- The singular star
+		assert_eq!( sol.name( &[1] ), "Mercury" );  // <- The first planet
+		assert_eq!( sol.name( &[2] ), "Venus" );  // <- The second planet
+		assert_eq!( sol.name( &[3] ), "Terra" );  // <- The third planet
+		assert_eq!( sol.name( &[3,0] ), "Terra" );  // <- The third planet
+		assert_eq!( sol.name( &[3,1] ), "Luna" );  // <- The first moon of the third planet
+
+		let centauri = &systems[1];
+
+		assert_eq!( centauri.name( &[] ), "Centauri AB" );  // <- The system itself
+		assert_eq!( centauri.name( &[0] ), "Centauri AB" );  // <- Gravitational center of the trinary star system.
+		assert_eq!( centauri.name( &[1] ), "Centauri A" );  // The first star
+		assert_eq!( centauri.name( &[2] ), "Centauri B" );  // The second star
+		assert_eq!( centauri.name( &[3] ), "Proxima" );  // The third star
+		assert_eq!( centauri.name( &[1,0] ), "Minos" );  // The first star
+		assert_eq!( centauri.name( &[1,1] ), "Minos" );  // The first planet of the first star
+		assert_eq!( centauri.name( &[2,1] ), "Taurus" );  // The first planet of the second star
 	}
 }

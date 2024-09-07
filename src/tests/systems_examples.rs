@@ -27,6 +27,16 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 			CelestialBody::Star( Star::new( 1.0, 1.0, 1.0, "G2", ) )
 				.with_satellites( vec![
 					Orbit {
+						axis_semi_major: 0.387098,
+						eccentricity: 0.205630,
+						body: CelestialBody::Trabant( Trabant {
+							name: Some( "Mercury".to_string() ),
+							radius: 0.3829,
+							gravity: 0.38,
+							satellites: Vec::new(),
+						} ),
+					},
+					Orbit {
 						axis_semi_major: 0.723332,
 						eccentricity: 0.006772,
 						body: CelestialBody::Trabant( Trabant {
@@ -59,6 +69,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 									eccentricity: 0.001,
 									body: CelestialBody::Station( Station {
 										name: Some( "Argus".to_string() ),
+										mass: 4180e3,
 										radius: 6e3,
 										gravity: 1.0,
 										satellites: Vec::new(),

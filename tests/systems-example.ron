@@ -11,6 +11,18 @@
 			spectral_class: "G2",
 			satellites: [
 				(
+					axis_semi_major: 0.387098,
+					eccentricity: 0.205630,
+					body: Trabant((
+						name: "Mercury",
+						radius: 0.3829,
+						gravity: 0.38,
+						rotation_period: 5067360.0,
+						temperature: (-173.0, 427.0),
+						satellites: [],
+					)),
+				),
+				(
 					axis_semi_major: 0.723332,
 					eccentricity: 0.006772,
 					body: Trabant((
