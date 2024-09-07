@@ -160,25 +160,6 @@ impl CelestialSystem {
 }
 
 
-/// Equatorial coordinates (assuming Epoch J2000.0) representing a star's position ([Galactic coordinate system](https://en.wikipedia.org/wiki/Equatorial_coordinate_system)).
-#[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
-pub struct EquatorialCoordinates {
-	pub ra: String,
-	pub dec: String,
-	pub dist: f32,
-}
-
-impl EquatorialCoordinates {
-	pub fn new( ra: &str, dec: &str, dist: f32 ) -> Self {
-		Self {
-			ra: ra.to_string(),
-			dec: dec.to_string(),
-			dist,
-		}
-	}
-}
-
-
 /// Representing a political affiliation.
 #[derive( Serialize, Deserialize, PartialEq, Hash, Clone, Default, Debug )]
 pub enum Affiliation {
@@ -228,7 +209,7 @@ pub enum StarProperty {
 /// Representing the theoretical gravitational center of two heavy masses orbiting each other.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct GravitationalCenter {
-	/// The objects oribitng this gravitational center.
+	/// The objects orbiting this gravitational center.
 	pub(super) satellites: Vec<Orbit>,
 }
 

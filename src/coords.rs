@@ -471,7 +471,7 @@ impl<'de> Deserialize<'de> for EquatorialCoords {
 
 
 /// This struct represents the galactic coordinate system.
-#[derive( Debug )]
+#[derive( Clone, Debug )]
 pub struct GalacticCoords {
 	/// Longitude (symbol `l`) is the angular distance of an object eastward along the galactic equator from the Galactic Center. Galactic longitude is usually measured in degrees (°), but this attribute stores the longitude in radians.
 	l: f32,
