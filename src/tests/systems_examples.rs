@@ -8,8 +8,9 @@
 
 
 use crate::CelestialSystem;
+use crate::coords::EquatorialCoords;
 use crate::types::AstronomicalObject;
-use crate::types::{CelestialBody, EquatorialCoordinates, Orbit, GravitationalCenter, Star, Trabant, Station};
+use crate::types::{CelestialBody, Orbit, GravitationalCenter, Star, Trabant, Station};
 
 
 
@@ -22,7 +23,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 	vec![
 		CelestialSystem::new(
 			"Sol",
-			&EquatorialCoordinates::new( "0h 0m 0s", "0° 0m 0s", 0.0 ),
+			&EquatorialCoords::try_from_hms_dms_ly( "0h 0m 0s", "0° 0m 0s", 0.0 ).unwrap(),
 			CelestialBody::Star( Star::new( 1.0, 1.0, 1.0, "G2", ) )
 				.with_satellites( vec![
 					Orbit {
@@ -91,7 +92,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 		),
 		CelestialSystem::new(
 			"Alpha Centauri",
-			&EquatorialCoordinates::new( "14h 39m 36.49400s", "-60° 50m 2.3737s", 4.344 ),
+			&EquatorialCoords::try_from_hms_dms_ly( "14h 39m 36.49400s", "-60° 50m 2.3737s", 4.344 ).unwrap(),
 			CelestialBody::GravitationalCenter( GravitationalCenter {
 				satellites: vec![
 					Orbit {
