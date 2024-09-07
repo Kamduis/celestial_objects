@@ -163,8 +163,15 @@ impl CelestialSystem {
 		self.description.as_ref().map( |x| x.as_str() )
 	}
 
+	/// Returns the radius of this system's main star in relation to Sol.
+	pub fn radius_main_star( &self ) -> f32 {
+		let star_main = self.stars().nth( 0 )
+			.expect( "Each system should have at least one star." );
+		star_main.radius()
+	}
+
 	/// Returns the spectral class of this system's main star.
-	pub fn spectral_class_main( &self ) -> &str {
+	pub fn spectral_class_main_star( &self ) -> &str {
 		let star_main = self.stars().nth( 0 )
 			.expect( "Each system should have at least one star." );
 		star_main.spectral_class()
@@ -172,7 +179,6 @@ impl CelestialSystem {
 
 	/// Returns the spectral class of this system's main star.
 	pub fn stars( &self ) -> CelestialSystemStarsIterator {
-		println!( "ITER" );
 		let mut iter_obj = CelestialSystemStarsIterator {
 			body: &self.body,
 			stars: Vec::new(),
@@ -180,8 +186,6 @@ impl CelestialSystem {
 		};
 
 		iter_obj.walker( &self.body );
-
-		println!( "{:?}", iter_obj.stars );
 
 		iter_obj
 	}
@@ -354,6 +358,11 @@ impl Star {
 			properties: Vec::new(),
 			satellites: Vec::new(),
 		}
+	}
+
+	/// Returns the star's radius with respect to the radius of Sol.
+	fn radius( &self ) -> f32 {
+		self.radius
 	}
 
 	/// Returns the spectral class of the star.
