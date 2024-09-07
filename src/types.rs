@@ -211,6 +211,20 @@ pub struct Orbit {
 }
 
 
+/// Some stars have special properties.
+#[derive( Serialize, Deserialize, Clone, PartialEq, Eq, Debug )]
+pub enum StarProperty {
+	/// A star with this property exhibit unusually violent flare activity. Flares occur sporadically, with successive flares spaced anywhere from an hour to a few days apart. Flares may emit up to 10'000 times the amount of radioactive radiation as a comparably sized flare on Sol. This would be lethal to any life forms on planets near the flare star.
+	FlareStar,
+
+	/// A white dwarf star.
+	WhiteDwarf,
+
+	/// A red giant is a luminous giant star of low mass (between 0.25 to 8 M☉).
+	RedGiant,
+}
+
+
 /// Representing the theoretical gravitational center of two heavy masses orbiting each other.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct GravitationalCenter {
@@ -253,6 +267,10 @@ pub struct Star {
 	/// The spectral class.
 	pub(super) spectral_class: String,
 
+	/// Special properties of the star.
+	#[serde( default )]
+	properties: Vec<StarProperty>,
+
 	/// The objects oribitng this star.
 	pub(super) satellites: Vec<Orbit>,
 }
@@ -266,6 +284,7 @@ impl Star {
 			radius,
 			luminosity,
 			spectral_class: spectral_class.to_string(),
+			properties: Vec::new(),
 			satellites: Vec::new(),
 		}
 	}
