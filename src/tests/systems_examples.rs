@@ -10,7 +10,7 @@
 use crate::CelestialSystem;
 use crate::coords::EquatorialCoords;
 use crate::types::AstronomicalObject;
-use crate::types::{CelestialBody, Orbit, GravitationalCenter, Star, Trabant, Station};
+use crate::types::{CelestialBody, Affiliation, Orbit, GravitationalCenter, Star, Trabant, Station};
 
 
 
@@ -89,7 +89,9 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 						} ),
 					},
 				] ),
-		),
+		)
+			.with_affiliation( Affiliation::Union )
+			.with_description( "Original home system of humans and AIs." ),
 		CelestialSystem::new(
 			"Alpha Centauri",
 			&EquatorialCoords::try_from_hms_dms_ly( "14h 39m 36.49400s", "-60° 50m 2.3737s", 4.344 ).unwrap(),
@@ -132,6 +134,8 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 				],
 			} )
 		)
-			.with_name( "Centauri" ),
+			.with_name( "Centauri" )
+			.with_affiliation( Affiliation::Union )
+			.with_description( "Capital of the Union." ),
 	]
 }

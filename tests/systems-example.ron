@@ -3,7 +3,7 @@
 		identifier: "Sol",
 		coordinates: ( ra: "0h 0m 0s", dec: "0° 0m 0s", dist: 0.0 ),
 		affiliation: Union,
-		description: "Home system of humans and human developed AIs.",
+		description: "Original home system of humans and AIs.",
 		body: Star((
 			mass: 1.0,
 			radius: 1.0,

@@ -9,6 +9,8 @@
 
 use serde::{Serialize, Deserialize};
 
+use crate::coords::EquatorialCoords;
+
 
 
 
@@ -86,19 +88,30 @@ pub struct CelestialSystem {
 	name: Option<String>,
 
 	/// The coordinates of the `CelestialSystem` in equatorial coordinates. These coordinates assume Epoch J2000.0 and  represent the systems position ([equatorial coordinate system](https://en.wikipedia.org/wiki/Equatorial_coordinate_system)).
-	coordinates: EquatorialCoordinates,
+	coordinates: EquatorialCoords,
 
-	/// The main body of this system. This `CelestialBody` may have one or more bodies orbiting it. Systems with a single sun as it's center have a `CelestialBody> representing this sun as `body`. Multi-star-systems will have either the main star as `body` (if it is much more massive than the other stars or a `GravitationalCenter` as the theoretical body, that is then orbited by multiple stars.
+	/// The political affiliation of the system.
+	affiliation: Affiliation,
+
+	/// An optional description of this system.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	description: Option<String>,
+
+	/// The main body of this system. This `CelestialBody` may have one or more bodies orbiting it. Systems with a single sun as it's center have a `CelestialBody` representing this sun as `body`. Multi-star-systems will have either the main star as `body` (if it is much more massive than the other stars or a `GravitationalCenter` as the theoretical body, that is then orbited by multiple stars.
 	body: CelestialBody,
 }
 
 impl CelestialSystem {
 	/// Create a new `CelestialSystem`.
-	pub fn new( identifier: &str, coordinates: &EquatorialCoordinates, body: CelestialBody ) -> Self {
+	pub fn new( identifier: &str, coordinates: &EquatorialCoords, body: CelestialBody ) -> Self {
 		Self {
 			identifier: identifier.to_string(),
 			name: None,
 			coordinates: coordinates.clone(),
+			affiliation: Default::default(),
+			description: None,
 			body,
 		}
 	}
@@ -106,6 +119,18 @@ impl CelestialSystem {
 	/// Return a new object from `self` with `name`.
 	pub fn with_name( mut self, name: &str ) -> Self {
 		self.name = Some( name.to_string() );
+		self
+	}
+
+	/// Return a new object from `self` with `affiliation`.
+	pub fn with_affiliation( mut self, affiliation: Affiliation ) -> Self {
+		self.affiliation = affiliation;
+		self
+	}
+
+	/// Return a new object from `self` with `affiliation`.
+	pub fn with_description( mut self, desc: &str ) -> Self {
+		self.description = Some( desc.to_string() );
 		self
 	}
 
@@ -124,8 +149,13 @@ impl CelestialSystem {
 	}
 
 	/// Returns the equatorial coordinates of this `CelestialSystem`.
-	pub fn coordinates( &self ) -> &EquatorialCoordinates {
+	pub fn coordinates( &self ) -> &EquatorialCoords {
 		&self.coordinates
+	}
+
+	/// Returns the political affiliation of the system.
+	pub fn affiliation( &self ) -> &Affiliation {
+		&self.affiliation
 	}
 }
 
@@ -146,6 +176,24 @@ impl EquatorialCoordinates {
 			dist,
 		}
 	}
+}
+
+
+/// Representing a political affiliation.
+#[derive( Serialize, Deserialize, PartialEq, Hash, Clone, Default, Debug )]
+pub enum Affiliation {
+	/// Part of the Union.
+	Union,
+
+	/// Is considered a border world.
+	BorderWorld,
+
+	/// Part of the free territories.
+	Free,
+
+	/// Is uninhabited.
+	#[ default ]
+	Uninhabited,
 }
 
 
