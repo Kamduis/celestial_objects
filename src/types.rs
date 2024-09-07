@@ -85,7 +85,37 @@ pub trait AstronomicalObject {
 /// # Returns
 /// * First item of tuple: The `CelestialBody` at `index`.
 /// * Second item of tuple: The letter hierarchy to be used as name, if no dedicated name exists.
-fn satellite_getter<'a>( center: &'a CelestialBody, index: &'a [usize], hierarchy: &str ) -> Result<( &'a CelestialBody, String ), CelestialSystemError> {
+fn satellite_getter<'a>(
+	center: &'a CelestialBody,
+	index: &'a [usize]
+) -> Result<&'a CelestialBody, CelestialSystemError> {
+	if index.is_empty() {
+		return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+	}
+
+	if index[0] == 0 {
+		return Ok( center );
+	}
+
+	let orbit = &center.satellites().get( index[0] - 1 )
+		.ok_or( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) )?;
+
+	if index.len() == 1 {
+		return Ok( &orbit.body );
+	}
+
+	satellite_getter( &orbit.body, &index[1..] )
+}
+
+
+/// Get the `index`th object orbiting `center`.
+///
+/// **Note:** `index` is *not* 0-based but 1-based. `index = 1` provides the first body orbiting `center`. `index = 0` provides `center`.
+///
+/// # Returns
+/// * First item of tuple: The `CelestialBody` at `index`.
+/// * Second item of tuple: The letter hierarchy to be used as name, if no dedicated name exists.
+fn satellite_getter_hierarchical<'a>( center: &'a CelestialBody, index: &'a [usize], hierarchy: &str ) -> Result<( &'a CelestialBody, String ), CelestialSystemError> {
 	if index.is_empty() {
 		return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 	}
@@ -111,7 +141,7 @@ fn satellite_getter<'a>( center: &'a CelestialBody, index: &'a [usize], hierarch
 		return Ok( ( &orbit.body, hierarchy_new ) );
 	}
 
-	satellite_getter( &orbit.body, &index[1..], &hierarchy_new )
+	satellite_getter_hierarchical( &orbit.body, &index[1..], &hierarchy_new )
 }
 
 
@@ -119,6 +149,28 @@ fn satellite_getter<'a>( center: &'a CelestialBody, index: &'a [usize], hierarch
 
 //=============================================================================
 // Enums
+
+
+/// Classification of celestial bodies without further information.
+#[derive( Clone, Copy, PartialEq, Debug )]
+pub enum BodyType {
+	/// A point in space that is the gravitational center of two masses orbiting each other.
+	GravitationalCenter,
+	Star,
+	Trabant,
+	Station,
+}
+
+impl From<&CelestialBody> for BodyType {
+	fn from( item: &CelestialBody ) -> Self {
+		match item {
+			CelestialBody::GravitationalCenter( _ ) => Self::GravitationalCenter,
+			CelestialBody::Star( _ ) => Self::Star,
+			CelestialBody::Trabant( _ ) => Self::Trabant,
+			CelestialBody::Station( _ ) => Self::Station,
+		}
+	}
+}
 
 
 /// Classification of celestial bodies.
@@ -279,7 +331,7 @@ impl CelestialSystem {
 				_ => unimplemented!( "Center bodies should never by planets, moons or stations." ),
 			}
 		} else {
-			let ( body_got, hierarchy ) = &satellite_getter( &self.body, &index, "" )?;
+			let ( body_got, hierarchy ) = &satellite_getter_hierarchical( &self.body, &index, "" )?;
 
 			let name = match &body_got {
 				CelestialBody::GravitationalCenter( _ ) => unreachable!( "No gravitational center expected." ),
@@ -309,6 +361,30 @@ impl CelestialSystem {
 	/// Returns the description of the system.
 	pub fn description( &self ) -> Option<&str> {
 		self.description.as_ref().map( |x| x.as_str() )
+	}
+
+	/// Returns the body type of the indexed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn body_type( &self, index: &[usize] ) -> Result<BodyType, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		if index[0] == 0 {
+			return Ok( BodyType::from( &self.body ) );
+		}
+
+		let body_got = &satellite_getter( &self.body, &index )?;
+		Ok( BodyType::from( *body_got ) )
+	}
+
+	/// Returns the mass of this system's main star in relation to Sol.
+	pub fn mass_main_star( &self ) -> f32 {
+		let star_main = self.stars().nth( 0 )
+			.expect( "Each system should have at least one star." );
+		star_main.mass()
 	}
 
 	/// Returns the radius of this system's main star in relation to Sol.

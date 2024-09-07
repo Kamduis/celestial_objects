@@ -20,7 +20,7 @@ mod types;
 mod serde_helpers;
 
 pub use crate::coords::{EquatorialCoords, GalacticCoords};
-pub use crate::types::{CelestialSystem, Affiliation, StarProperty};
+pub use crate::types::{CelestialSystem, BodyType, Affiliation, StarProperty};
 
 
 
