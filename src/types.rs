@@ -330,6 +330,38 @@ impl CelestialSystem {
 		self
 	}
 
+	/// Returns all possible indices of objects in this celestial system.
+	///
+	/// Always returns at least `vec![vec![]]` (representing the system itself.
+	///
+	/// `vec![]` represents the system itself.
+	/// `vec![0]` represents the root object of the system. For a singular star system, this is the star. For a binary star system, this is the gravitational center of the two stars.
+	/// `vec![1]` represents the first object orbiting `vec![0]`.
+	/// `vec![2]` represents the second object orbiting `vec![0]`.
+	/// `vec![1,0]` represents the first object orbiting `vec![0]` (identical to `vec![1]`). <- Will not be part of the returned `Vec`, otherwise the object behind `vec![1]` would be counted twice.
+	/// `vec![1,1]` represents the first object orbiting `vec![1]` (the first object orbiting `vec![0]`)
+	pub fn indices( &self ) -> Vec<Vec<usize>> {
+		let mut res = vec![ Vec::new() ];
+		fn walker( center: &CelestialBody, indcs: &mut Vec<Vec<usize>> ) {
+			let idx_new_level = indcs.last().unwrap().clone();
+			for ( i, orb ) in center.satellites().iter().enumerate() {
+				let mut idx_new = idx_new_level.clone();
+				idx_new.push( i + 1 );
+				indcs.push( idx_new );
+
+				// Walk through this objects orbits.
+				walker( &orb.body, indcs );
+			}
+		}
+
+		walker( &self.body, &mut res );
+
+		// Add the index for the center object.
+		res.insert( 1, vec![ 0 ] );
+
+		res
+	}
+
 	/// Returns the identifier of the `CelestialSystem`.
 	pub fn identifier( &self ) -> &str {
 		&self.identifier
@@ -338,7 +370,7 @@ impl CelestialSystem {
 	/// Returns the name of the objects within this celestial system. Indexing is done by array slice.
 	///
 	/// `&[]` represents the system itself.
-	/// `&[0]` represents the root object of the system. For a singular star system, this is the star. Forr a binary star system, this is the gravitational center of the two stars.
+	/// `&[0]` represents the root object of the system. For a singular star system, this is the star. For a binary star system, this is the gravitational center of the two stars.
 	/// `&[1]` represents the first object orbiting `&[0]`.
 	/// `&[2]` represents the second object orbiting `&[0]`.
 	/// `&[1,0]` represents the first object orbiting `&[0]` (identical to `&[1]`).
@@ -843,6 +875,30 @@ mod tests {
 		let centauri = &systems[1];
 
 		assert_eq!( centauri.identifier(), "Alpha Centauri" );
+	}
+
+	#[test]
+	fn test_indices() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+		assert_eq!( sol.indices(), vec![
+			vec![],
+			vec![0],
+			vec![1],
+			vec![2],
+			vec![3], vec![3,1], vec![3,2],
+			vec![4], vec![4,1],
+		] );
+
+		let centauri = &systems[1];
+		assert_eq!( centauri.indices(), vec![
+			vec![],
+			vec![0],
+			vec![1], vec![1,1],
+			vec![2], vec![2,1],
+			vec![3],
+		] );
 	}
 
 	#[test]
