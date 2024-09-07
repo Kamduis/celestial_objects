@@ -87,7 +87,7 @@
 								body: Station((
 									name: "Argus",
 									mass: 4180e3,
-									radius: 6e3,
+									size: ( 200.0, 200.0, 6e3 ),
 									gravity: 1.0,
 									temperature: (18.0, 26.0),
 									atmosphere: (

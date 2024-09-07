@@ -7,6 +7,7 @@
 // Crates
 
 
+use glam::Vec3;
 use serde::{Serialize, Deserialize};
 use thiserror::Error;
 
@@ -17,6 +18,10 @@ use crate::coords::EquatorialCoords;
 
 //=============================================================================
 // Constants
+
+
+/// The radius of Terra in meter.
+const RADIUS_TERRA: f32 = 6.371e6;
 
 
 /// Letters
@@ -360,6 +365,43 @@ impl CelestialSystem {
 		res.insert( 1, vec![ 0 ] );
 
 		res
+	}
+
+	/// Returns all possible indices of satellites of an index in this celestial system.
+	///
+	/// If you need to know the indices of the moons and stations orbiting Terra, you would call:
+	/// ```ignore
+	/// assert_eq!( system.indices_satellites( &[3] ), vec![vec![3,1], vec![3,2]] );
+	/// ```
+	///
+	/// If you need to know the indices of the planets orbiting Sol, you would call:
+	/// ```ignore
+	/// assert_eq!(
+	///     system.indices_satellites( &[0] ),
+	///     vec![vec![1], vec![2], vec![3], vec![4], vec![5], vec![6], vec![7], vec![8]]
+	/// );
+	/// ```
+	///
+	/// Trying to return the satellite indices of Mercury, not having any moons, would return an empty vector.
+	/// ```ignore
+	/// assert_eq!( system.indices_satellites( &[1] ), vec![] );
+	/// ```
+	pub fn indices_satellites( &self, index: &[usize] ) -> Result<Vec<Vec<usize>>, CelestialSystemError> {
+		let body = satellite_getter( &self.body, index )?;
+
+		let mut res = Vec::new();
+
+		for ( i, _ ) in body.satellites().iter().enumerate() {
+			let mut idx_new = if index == &[0] {
+				Vec::new()
+			} else {
+				index.to_vec()
+			};
+			idx_new.push( i + 1 );
+			res.push( idx_new );
+		}
+
+		Ok( res )
 	}
 
 	/// Returns the identifier of the `CelestialSystem`.
@@ -801,13 +843,13 @@ pub struct Station {
 	/// The mass in kg.
 	pub(super) mass: f32,
 
-	/// The radius in meter.
-	pub(super) radius: f32,
+	/// The outline box of the station in meter. This is the box where the station is just fitting inside.
+	pub(super) size: Vec3,
 
 	/// The gravity within the station in relation to the surface gravity of Terra.
 	pub(super) gravity: f32,
 
-	/// The objects oribitng this station.
+	/// The objects orbiting this station.
 	pub(super) satellites: Vec<Orbit>,
 }
 
@@ -832,9 +874,9 @@ impl AstronomicalObject for Station {
 		self.mass
 	}
 
-	/// Returns the star's radius with respect to the radius of Sol.
+	/// Returns the station's radius with respect to the radius of Sol. This is typically a very small number and mostly useless, since stations rarely are spherical.
 	fn radius( &self ) -> f32 {
-		self.radius
+		self.size.max_element() / RADIUS_TERRA
 	}
 }
 
@@ -899,6 +941,24 @@ mod tests {
 			vec![2], vec![2,1],
 			vec![3],
 		] );
+	}
+
+	#[test]
+	fn test_indices_satellites() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert_eq!( sol.indices_satellites( &[0] ).unwrap(), vec![
+			vec![1],
+			vec![2],
+			vec![3],
+			vec![4],
+		] );
+
+		assert_eq!( sol.indices_satellites( &[1] ).unwrap(), Vec::<Vec<usize>>::new() );
+
+		assert_eq!( sol.indices_satellites( &[3] ).unwrap(), vec![ vec![3,1], vec![3,2], ] );
 	}
 
 	#[test]

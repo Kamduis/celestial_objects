@@ -7,6 +7,8 @@
 // Crates
 
 
+use glam::Vec3;
+
 use crate::CelestialSystem;
 use crate::coords::EquatorialCoords;
 use crate::types::AstronomicalObject;
@@ -70,7 +72,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 									body: CelestialBody::Station( Station {
 										name: Some( "Argus".to_string() ),
 										mass: 4180e3,
-										radius: 6e3,
+										size: Vec3::new( 200.0, 200.0, 6e3 ),
 										gravity: 1.0,
 										satellites: Vec::new(),
 									} )
