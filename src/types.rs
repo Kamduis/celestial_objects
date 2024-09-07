@@ -45,6 +45,12 @@ const LETTERS_GREEK: [&str; 28] = [
 pub enum CelestialSystemError {
 	#[error( "No celestial body at index: `{0}`" )]
 	IllegalIndex( String ),
+
+	#[error( "The body at index `{0}` is not a star." )]
+	NotAStar( String ),
+
+	#[error( "There is no star present in the system." )]
+	NoStarPresent,
 }
 
 
@@ -142,6 +148,29 @@ fn satellite_getter_hierarchical<'a>( center: &'a CelestialBody, index: &'a [usi
 	}
 
 	satellite_getter_hierarchical( &orbit.body, &index[1..], &hierarchy_new )
+}
+
+
+/// Get the main star `center`. This is a recursive function walking through the hierarchy until a star is encountered which is then returned. Must be called with `do_stop` being `false`.
+///
+/// # Arguments
+/// * `center` the center object to look for stars orbiting it.
+/// * `do_stop` If a star has been encountered, stop walking through the hierarchy and return the star.
+///
+/// # Returns
+/// The first `CelestialBody` encountered. If no star has been encountered, this returns `None`.
+fn get_main_star<'a>( center: &'a CelestialBody ) -> Option<&'a CelestialBody> {
+	if let CelestialBody::Star( _ ) = center {
+		return Some( center );
+	}
+
+	for sat in center.satellites() {
+		if let Some( x ) = get_main_star( &sat.body ) {
+			return Some( x );
+		}
+	}
+
+	None
 }
 
 
@@ -380,25 +409,75 @@ impl CelestialSystem {
 		Ok( BodyType::from( *body_got ) )
 	}
 
+	/// Returns the radius (in relation to Sol) of the indexed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// If the system index is used (`&[]`), this method returns the radius of the main star.
+	pub fn radius( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
+		if index.is_empty() {
+			match &self.body {
+				CelestialBody::GravitationalCenter( _ ) => {
+					let Some( body ) = get_main_star( &self.body ) else {
+						return Err( CelestialSystemError::NoStarPresent );
+					};
+					return Ok( body.radius() );
+				},
+				_ => return Ok( self.body.radius() ),
+			}
+		}
+
+		if index[0] == 0 {
+			return Ok( self.body.radius() );
+		}
+
+		let body_got = &satellite_getter( &self.body, &index )?;
+		Ok( body_got.radius() )
+	}
+
+	/// Returns the spectral class of the indexed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// If the system index is used (`&[]`), this method returns the spectral class of the main star.
+	pub fn spectral_class<'a>( &'a self, index: &'a [usize] ) -> Result<&'a str, CelestialSystemError> {
+		if index.is_empty() {
+			match &self.body {
+				CelestialBody::GravitationalCenter( _ ) => {
+					let Some( body ) = get_main_star( &self.body ) else {
+						return Err( CelestialSystemError::NoStarPresent );
+					};
+					let CelestialBody::Star( ref star ) = body else {
+						unreachable!( "`get_main_star()` should only ever return stars." );
+					};
+					return Ok( star.spectral_class.as_str() );
+				},
+				CelestialBody::Star( x ) => return Ok( &x.spectral_class ),
+				_ => unreachable!( "Only gravitational centers or stars should be the center object of a planetary system." ),
+			}
+		}
+
+		if index[0] == 0 {
+			let CelestialBody::Star( ref star ) = self.body else {
+				return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
+			};
+			return Ok( &star.spectral_class );
+		}
+
+		let body_got = &satellite_getter( &self.body, &index )?;
+		let CelestialBody::Star( star ) = body_got else {
+			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
+		};
+		return Ok( &star.spectral_class );
+	}
+
 	/// Returns the mass of this system's main star in relation to Sol.
 	pub fn mass_main_star( &self ) -> f32 {
 		let star_main = self.stars().nth( 0 )
 			.expect( "Each system should have at least one star." );
 		star_main.mass()
-	}
-
-	/// Returns the radius of this system's main star in relation to Sol.
-	pub fn radius_main_star( &self ) -> f32 {
-		let star_main = self.stars().nth( 0 )
-			.expect( "Each system should have at least one star." );
-		star_main.radius()
-	}
-
-	/// Returns the spectral class of this system's main star.
-	pub fn spectral_class_main_star( &self ) -> &str {
-		let star_main = self.stars().nth( 0 )
-			.expect( "Each system should have at least one star." );
-		star_main.spectral_class()
 	}
 
 	/// Returns the spectral class of this system's main star.
