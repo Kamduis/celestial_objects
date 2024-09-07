@@ -315,6 +315,16 @@ impl EquatorialCoords {
 		Ok( res )
 	}
 
+	/// Returns the right ascension of this coordinate in radians.
+	pub fn ra( &self ) -> f32 {
+		self.ra
+	}
+
+	/// Returns the declination of this coordinate in radians.
+	pub fn dec( &self ) -> f32 {
+		self.dec
+	}
+
 	/// Returns the distance of this coordinate to the zero point.
 	pub fn dist( &self ) -> f32 {
 		self.dist
