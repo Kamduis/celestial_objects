@@ -534,6 +534,33 @@ impl CelestialSystem {
 		Ok( body_got.radius() )
 	}
 
+	/// Returns the mass (in relation to Sol for stars or in relation to Terra for trabants (planets, moons, station etc.) of the indexed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// If the system index is used (`&[]`), this method returns the radius of the main star.
+	pub fn mass( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
+		if index.is_empty() {
+			match &self.body {
+				CelestialBody::GravitationalCenter( _ ) => {
+					let Some( body ) = get_main_star( &self.body ) else {
+						return Err( CelestialSystemError::NoStarPresent );
+					};
+					return Ok( body.mass() );
+				},
+				_ => return Ok( self.body.mass() ),
+			}
+		}
+
+		if index[0] == 0 {
+			return Ok( self.body.mass() );
+		}
+
+		let body_got = &satellite_getter( &self.body, &index )?;
+		Ok( body_got.mass() )
+	}
+
 	/// Returns the spectral class of the indexed object.
 	///
 	/// # Arguments
@@ -584,84 +611,6 @@ impl CelestialSystem {
 
 		let orbit_got = &orbit_getter( &self.body, &index )?;
 		Ok( orbit_got.axis_semi_major )
-	}
-
-	/// Returns the mass of this system's main star in relation to Sol.
-	pub fn mass_main_star( &self ) -> f32 {
-		let star_main = self.stars().nth( 0 )
-			.expect( "Each system should have at least one star." );
-		star_main.mass()
-	}
-
-	/// Returns the spectral class of this system's main star.
-	pub fn stars( &self ) -> CelestialSystemStarsIterator {
-		let mut iter_obj = CelestialSystemStarsIterator {
-			body: &self.body,
-			stars: Vec::new(),
-			index: 0,
-		};
-
-		iter_obj.walker( &self.body );
-
-		iter_obj
-	}
-}
-
-
-/// Iterator for stars within a `CelestialSystem`.
-///
-/// TODO: The implementation is very inefficient, creating a `Vec` each time the iterator is newly created.
-pub struct CelestialSystemStarsIterator<'a> {
-	/// The central body of the system.
-	body: &'a CelestialBody,
-
-	stars: Vec<&'a Star>,
-
-	index: usize,
-}
-
-impl<'a> CelestialSystemStarsIterator<'a> {
-	/// Walking all objects within this system and collecting stars.
-	fn walker( &mut self, body: &'a CelestialBody ) {
-		match body {
-			// A star may orbit a gravitational center.
-			CelestialBody::GravitationalCenter( x ) => {
-				for sat in &x.satellites {
-					self.walker( &sat.body );
-				}
-
-				return;
-			},
-
-			// A star may orbit another star.
-			CelestialBody::Star( x ) => {
-				self.stars.push( x );
-
-				for sat in &x.satellites {
-					self.walker( &sat.body );
-				}
-
-				return;
-			},
-
-			// No star will be orbiting a trabant or station.
-			_ => return,
-		}
-	}
-}
-
-impl<'a> Iterator for CelestialSystemStarsIterator<'a> {
-	type Item = &'a Star;
-
-	fn next( &mut self ) -> Option<Self::Item> {
-		if self.index >= self.stars.len() {
-			return None;
-		}
-
-		let result = Some( self.stars[ self.index ] ) ;
-		self.index += 1;
-
-		result
 	}
 }
 
@@ -931,19 +880,6 @@ mod tests {
 	// use super::*;
 
 	use crate::tests::systems_examples;
-
-	#[test]
-	fn iterator_of_stars() {
-		let systems = systems_examples::systems_example();
-
-		let sol = &systems[0];
-
-		assert_eq!( sol.stars().count(), 1 );
-
-		let centauri = &systems[1];
-
-		assert_eq!( centauri.stars().count(), 3 );
-	}
 
 	#[test]
 	fn test_identifier() {
