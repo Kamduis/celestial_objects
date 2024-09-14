@@ -1,4 +1,13 @@
-//! Provides data for celestial objects (stars, planets, moons etc.) orbiting each other.
+// Replace crate links with internal links when creating documentation with `cargo`.
+//! [`serde`]: serde
+// File links are not supported by rustdoc.
+//! [LICENSE-APACHE]: https://github.com/Kamduis/normtime/blob/master/LICENSE-APACHE
+//! [LICENSE-MIT]: https://github.com/Kamduis/normtime/blob/master/LICENSE-MIT
+//!
+//! <style>
+//! .rustdoc-hidden { display: none; }
+//! </style>
+#![doc = include_str!( "../README.md" )]
 
 
 
