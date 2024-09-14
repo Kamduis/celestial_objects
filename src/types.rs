@@ -534,6 +534,33 @@ impl CelestialSystem {
 		Ok( body_got.radius() )
 	}
 
+	/// Returns the mass (in relation to Sol for stars or in relation to Terra for trabants (planets, moons, station etc.) of the indexed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// If the system index is used (`&[]`), this method returns the radius of the main star.
+	pub fn mass( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
+		if index.is_empty() {
+			match &self.body {
+				CelestialBody::GravitationalCenter( _ ) => {
+					let Some( body ) = get_main_star( &self.body ) else {
+						return Err( CelestialSystemError::NoStarPresent );
+					};
+					return Ok( body.mass() );
+				},
+				_ => return Ok( self.body.mass() ),
+			}
+		}
+
+		if index[0] == 0 {
+			return Ok( self.body.mass() );
+		}
+
+		let body_got = &satellite_getter( &self.body, &index )?;
+		Ok( body_got.mass() )
+	}
+
 	/// Returns the spectral class of the indexed object.
 	///
 	/// # Arguments
