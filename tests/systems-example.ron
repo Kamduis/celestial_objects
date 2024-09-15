@@ -47,7 +47,7 @@
 					)),
 				),
 				(
-					axis_semi_major: 149.598261e9,
+					axis_semi_major: 1.0,
 					eccentricity: 0.01671123,
 					body: Trabant((
 						name: "Terra",
@@ -69,7 +69,7 @@
 						gates: 0,
 						satellites: [
 							(
-								axis_semi_major: 1.0000010180626,
+								axis_semi_major: 0.00257,
 								eccentricity: 0.0549,
 								body: Trabant((
 									name: "Luna",
@@ -82,7 +82,7 @@
 								)),
 							),
 							(
-								axis_semi_major: 497.7e6,
+								axis_semi_major: 0.0001,
 								eccentricity: 0.001,
 								body: Station((
 									name: "Argus",
@@ -102,6 +102,36 @@
 									techlevel: 11,
 									gates: 0,
 									satellites: [],
+								)),
+							),
+						],
+					)),
+				),
+				(
+					axis_semi_major: 9.5826,
+					eccentricity: 0.0565,
+					body: Trabant((
+						name: "Saturn",
+						radius: 9.449,
+						gravity: 1.065,
+						rotation_period: 38018,
+						temperature: (-185.0, -120.0),
+						atmosphere: (
+							pressure: 1.4,
+							quality: Toxic,
+							composition: GasComposition({
+								Ammonia: 0.125e-3,
+								Helium: 0.0325,
+								Hydrogen: 0.963,
+								Methane: 4.5e-3,
+							}),
+						),
+						satellites: [
+							(
+								axis_semi_major: 425.574205e-6,
+								eccentricity: 0.0,
+								body: Ring((
+									width: 762.51079e-6,
 								)),
 							),
 						],

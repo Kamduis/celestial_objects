@@ -12,7 +12,7 @@ use glam::Vec3;
 use crate::CelestialSystem;
 use crate::coords::EquatorialCoords;
 use crate::types::AstronomicalObject;
-use crate::types::{CelestialBody, Affiliation, Orbit, GravitationalCenter, Star, Trabant, Station};
+use crate::types::{CelestialBody, Affiliation, Orbit, GravitationalCenter, Star, Trabant, Ring, Station};
 
 
 
@@ -49,7 +49,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 						} ),
 					},
 					Orbit {
-						axis_semi_major: 149.598261e9,
+						axis_semi_major: 1.0,
 						eccentricity: 0.01671123,
 						body: CelestialBody::Trabant( Trabant {
 							name: Some( "Terra".to_string() ),
@@ -57,7 +57,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							gravity: 1.0,
 							satellites: vec![
 								Orbit {
-									axis_semi_major: 1.0000010180626,
+									axis_semi_major: 0.00257,
 									eccentricity: 0.0549,
 									body: CelestialBody::Trabant( Trabant {
 										name: Some( "Luna".to_string() ),
@@ -67,7 +67,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 									} ),
 								},
 								Orbit {
-									axis_semi_major: 497.7e6,
+									axis_semi_major: 0.0001,
 									eccentricity: 0.001,
 									body: CelestialBody::Station( Station {
 										name: Some( "Argus".to_string() ),
@@ -76,6 +76,24 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										gravity: 1.0,
 										satellites: Vec::new(),
 									} )
+								},
+							],
+						} ),
+					},
+					Orbit {
+						axis_semi_major: 9.5826,
+						eccentricity: 0.0565,
+						body: CelestialBody::Trabant( Trabant {
+							name: Some( "Saturn".to_string() ),
+							radius: 9.449,
+							gravity: 1.065,
+							satellites: vec![
+								Orbit {
+									axis_semi_major: 425.574205e-6,
+									eccentricity: 0.0,
+									body: CelestialBody::Ring( Ring {
+										width: 762.51079e-6,
+									} ),
 								},
 							],
 						} ),

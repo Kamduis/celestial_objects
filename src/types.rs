@@ -40,6 +40,14 @@ const LETTERS_GREEK: [&str; 28] = [
 ];
 
 
+/// Ringed numbers.
+const NUMBERS_RINGED: [&str; 21] = [
+	"⓪", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨",
+	"⑩", "⑪", "⑫", "⑬", "⑭", "⑮", "⑯", "⑰", "⑱", "⑲",
+	"⑳",
+];
+
+
 
 
 //=============================================================================
@@ -73,7 +81,7 @@ pub trait AstronomicalObject {
 	fn with_satellites( self, satellites: Vec<Orbit> ) -> Self;
 
 	/// Returns the satellites of this object.
-	fn satellites( &self ) -> &Vec<Orbit>;
+	fn satellites( &self ) -> &[Orbit];
 
 	/// Returns the mass of the astronomical object.
 	fn mass( &self ) -> f32;
@@ -167,6 +175,7 @@ fn satellite_getter_hierarchical<'a>( center: &'a CelestialBody, index: &'a [usi
 		( _, CelestialBody::Star( _ ) ) => LETTERS[index[0] - 1].to_uppercase(),
 		( CelestialBody::Trabant( _ ), CelestialBody::Trabant( _ ) ) => LETTERS_GREEK[index[0] - 1].to_string(),
 		( _, CelestialBody::Trabant( _ ) ) => LETTERS[index[0] - 1].to_string(),
+		( _, CelestialBody::Ring( _ ) ) => NUMBERS_RINGED[index[0]].to_string(),
 		( _, CelestialBody::Station( _ ) ) => index[0].to_string(),
 	};
 
@@ -216,6 +225,7 @@ pub enum BodyType {
 	GravitationalCenter,
 	Star,
 	Trabant,
+	Ring,
 	Station,
 }
 
@@ -225,6 +235,7 @@ impl From<&CelestialBody> for BodyType {
 			CelestialBody::GravitationalCenter( _ ) => Self::GravitationalCenter,
 			CelestialBody::Star( _ ) => Self::Star,
 			CelestialBody::Trabant( _ ) => Self::Trabant,
+			CelestialBody::Ring( _ ) => Self::Ring,
 			CelestialBody::Station( _ ) => Self::Station,
 		}
 	}
@@ -241,6 +252,8 @@ pub enum CelestialBody {
 
 	Trabant( Trabant ),
 
+	Ring( Ring ),
+
 	Station( Station ),
 }
 
@@ -251,6 +264,7 @@ impl AstronomicalObject for CelestialBody {
 			Self::GravitationalCenter( x ) => Self::GravitationalCenter( x.with_name( name ) ),
 			Self::Star( x ) => Self::Star( x.with_name( name ) ),
 			Self::Trabant( x ) => Self::Trabant( x.with_name( name ) ),
+			Self::Ring( _ ) => unimplemented!( "Rings don't support names currently." ),
 			Self::Station( x ) => Self::Station( x.with_name( name ) ),
 		}
 	}
@@ -261,15 +275,17 @@ impl AstronomicalObject for CelestialBody {
 			Self::GravitationalCenter( x ) => Self::GravitationalCenter( x.with_satellites( satellites ) ),
 			Self::Star( x ) => Self::Star( x.with_satellites( satellites ) ),
 			Self::Trabant( x ) => Self::Trabant( x.with_satellites( satellites ) ),
+			Self::Ring( _ ) => unimplemented!( "Rings don't support satellites." ),
 			Self::Station( x ) => Self::Station( x.with_satellites( satellites ) ),
 		}
 	}
 
-	fn satellites( &self ) -> &Vec<Orbit> {
+	fn satellites( &self ) -> &[Orbit] {
 		match self {
 			Self::GravitationalCenter( x ) => x.satellites(),
 			Self::Star( x ) => x.satellites(),
 			Self::Trabant( x ) => x.satellites(),
+			Self::Ring( _ ) => &[], // Rings don't support satellites.
 			Self::Station( x ) => x.satellites(),
 		}
 	}
@@ -279,6 +295,7 @@ impl AstronomicalObject for CelestialBody {
 			Self::GravitationalCenter( x ) => x.mass(),
 			Self::Star( x ) => x.mass(),
 			Self::Trabant( x ) => x.mass(),
+			Self::Ring( _ ) => unimplemented!( "Rings don't support having a mass." ),
 			Self::Station( x ) => x.mass(),
 		}
 	}
@@ -288,6 +305,7 @@ impl AstronomicalObject for CelestialBody {
 			Self::GravitationalCenter( x ) => x.radius(),
 			Self::Star( x ) => x.radius(),
 			Self::Trabant( x ) => x.radius(),
+			Self::Ring( x ) => x.width() / 2.0,
 			Self::Station( x ) => x.radius(),
 		}
 	}
@@ -464,6 +482,7 @@ impl CelestialSystem {
 				CelestialBody::GravitationalCenter( _ ) => unreachable!( "No gravitational center expected." ),
 				CelestialBody::Star( x ) => x.name.as_ref(),
 				CelestialBody::Trabant( x ) => x.name.as_ref(),
+				CelestialBody::Ring( _ ) => unimplemented!( "Rings don't support names currently." ),
 				CelestialBody::Station( x ) => x.name.as_ref(),
 			};
 
@@ -612,6 +631,84 @@ impl CelestialSystem {
 		let orbit_got = &orbit_getter( &self.body, &index )?;
 		Ok( orbit_got.axis_semi_major )
 	}
+
+	/// Returns the mass of this system's main star in relation to Sol.
+	pub fn mass_main_star( &self ) -> f32 {
+		let star_main = self.stars().nth( 0 )
+			.expect( "Each system should have at least one star." );
+		star_main.mass()
+	}
+
+	/// Returns the spectral class of this system's main star.
+	pub fn stars( &self ) -> CelestialSystemStarsIterator {
+		let mut iter_obj = CelestialSystemStarsIterator {
+			body: &self.body,
+			stars: Vec::new(),
+			index: 0,
+		};
+
+		iter_obj.walker( &self.body );
+
+		iter_obj
+	}
+}
+
+
+/// Iterator for stars within a `CelestialSystem`.
+///
+/// TODO: The implementation is very inefficient, creating a `Vec` each time the iterator is newly created.
+pub struct CelestialSystemStarsIterator<'a> {
+	/// The central body of the system.
+	body: &'a CelestialBody,
+
+	stars: Vec<&'a Star>,
+
+	index: usize,
+}
+
+impl<'a> CelestialSystemStarsIterator<'a> {
+	/// Walking all objects within this system and collecting stars.
+	fn walker( &mut self, body: &'a CelestialBody ) {
+		match body {
+			// A star may orbit a gravitational center.
+			CelestialBody::GravitationalCenter( x ) => {
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+
+				return;
+			},
+
+			// A star may orbit another star.
+			CelestialBody::Star( x ) => {
+				self.stars.push( x );
+
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+
+				return;
+			},
+
+			// No star will be orbiting a trabant or station.
+			_ => return,
+		}
+	}
+}
+
+impl<'a> Iterator for CelestialSystemStarsIterator<'a> {
+	type Item = &'a Star;
+
+	fn next( &mut self ) -> Option<Self::Item> {
+		if self.index >= self.stars.len() {
+			return None;
+		}
+
+		let result = Some( self.stars[ self.index ] ) ;
+		self.index += 1;
+
+		result
+	}
 }
 
 
@@ -680,7 +777,7 @@ impl AstronomicalObject for GravitationalCenter {
 		self
 	}
 
-	fn satellites( &self ) -> &Vec<Orbit> {
+	fn satellites( &self ) -> &[Orbit] {
 		&self.satellites
 	}
 
@@ -757,7 +854,7 @@ impl AstronomicalObject for Star {
 		self
 	}
 
-	fn satellites( &self ) -> &Vec<Orbit> {
+	fn satellites( &self ) -> &[Orbit] {
 		&self.satellites
 	}
 
@@ -804,7 +901,7 @@ impl AstronomicalObject for Trabant {
 		self
 	}
 
-	fn satellites( &self ) -> &Vec<Orbit> {
+	fn satellites( &self ) -> &[Orbit] {
 		&self.satellites
 	}
 
@@ -815,6 +912,21 @@ impl AstronomicalObject for Trabant {
 	/// Returns the star's radius with respect to the radius of Sol.
 	fn radius( &self ) -> f32 {
 		self.radius
+	}
+}
+
+
+/// Representing a ring around an object.
+#[derive( Serialize, Deserialize, Clone, PartialEq, Default, Debug )]
+pub struct Ring {
+	/// The width of the ring in AU.
+	pub(super) width: f32,
+}
+
+impl Ring {
+	/// The width of the ring in AU.
+	pub fn width( &self ) -> f32 {
+		self.width
 	}
 }
 
@@ -854,7 +966,7 @@ impl AstronomicalObject for Station {
 		self
 	}
 
-	fn satellites( &self ) -> &Vec<Orbit> {
+	fn satellites( &self ) -> &[Orbit] {
 		&self.satellites
 	}
 
@@ -882,6 +994,19 @@ mod tests {
 	use crate::tests::systems_examples;
 
 	#[test]
+	fn iterator_of_stars() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert_eq!( sol.stars().count(), 1 );
+
+		let centauri = &systems[1];
+
+		assert_eq!( centauri.stars().count(), 3 );
+	}
+
+	#[test]
 	fn test_identifier() {
 		let systems = systems_examples::systems_example();
 
@@ -906,6 +1031,7 @@ mod tests {
 			vec![2],
 			vec![3], vec![3,1], vec![3,2],
 			vec![4], vec![4,1],
+			vec![5], vec![5,1],
 		] );
 
 		let centauri = &systems[1];
@@ -929,6 +1055,7 @@ mod tests {
 			vec![2],
 			vec![3],
 			vec![4],
+			vec![5],
 		] );
 
 		assert_eq!( sol.indices_satellites( &[1] ).unwrap(), Vec::<Vec<usize>>::new() );
