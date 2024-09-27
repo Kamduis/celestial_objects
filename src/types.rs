@@ -481,15 +481,17 @@ impl CelestialSystem {
 
 			let name = match &body_got {
 				CelestialBody::GravitationalCenter( _ ) => unreachable!( "No gravitational center expected." ),
-				CelestialBody::Star( x ) => x.name.as_ref(),
-				CelestialBody::Trabant( x ) => x.name.as_ref(),
-				CelestialBody::Ring( _ ) => unimplemented!( "Rings don't support names currently." ),
-				CelestialBody::Station( x ) => x.name.as_ref(),
+				CelestialBody::Star( x ) => x.name.as_ref().map( |y| y.as_str() ),
+				CelestialBody::Trabant( x ) => x.name.as_ref().map( |y| y.as_str() ),
+				CelestialBody::Ring( _ ) => None,
+				CelestialBody::Station( x ) => x.name.as_ref().map( |y| y.as_str() ),
 			};
 
-			let res = name
-				.cloned()
-				.unwrap_or( format!( "{} {}", self.name( &[0] )?, hierarchy ) );
+			let res = match name {
+				Some( x ) => x.to_string(),
+				None => format!( "{} {}", self.name( &[0] )?, hierarchy ),
+
+			};
 
 			return Ok( res )
 		}
@@ -633,6 +635,20 @@ impl CelestialSystem {
 		Ok( orbit_got.axis_semi_major )
 	}
 
+	/// Returns the orbit of the indexed object to the center it orbits.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// Since the system itself and the center object of the system are not orbiting anything, the indices `&[]` and `&[0]` are illegal and cause an error to be returned.
+	pub fn orbit<'a>( &'a self, index: &'a [usize] ) -> Result<&'a Orbit, CelestialSystemError> {
+		if index.is_empty() || index[0] == 0 {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		orbit_getter( &self.body, &index )
+	}
+
 	/// Returns the mass of this system's main star in relation to Sol.
 	pub fn mass_main_star( &self ) -> f32 {
 		let star_main = self.stars().nth( 0 )
@@ -735,13 +751,47 @@ pub enum Affiliation {
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct Orbit {
 	/// The semi major axis of the `object`'s orbit in AU.
-	pub axis_semi_major: f32,
+	axis_semi_major: f32,
 
 	/// The eccentricity of the `object`'s orbit.
-	pub eccentricity: f32,
+	eccentricity: f32,
 
 	/// The objects orbiting.
-	pub body: CelestialBody,
+	body: CelestialBody,
+}
+
+impl Orbit {
+	/// Returns the semi major axis of this orbit.
+	pub fn axis_semi_major( &self ) -> f32 {
+		self.axis_semi_major
+	}
+
+	/// Returns the semi minor axis of this orbit.
+	pub fn axis_semi_minor( &self ) -> f32 {
+		( self.axis_semi_major.powi( 2 ) - ( self.eccentricity * self.axis_semi_major ).powi( 2 ) ).sqrt()
+	}
+
+	/// Returns the eccentricity of this orbit.
+	pub fn eccentricity( &self ) -> f32 {
+		self.eccentricity
+	}
+
+	/// Calculates the periapsis of the orbit.
+	pub fn periapsis( &self ) -> f32 {
+		self.axis_semi_major * ( 1.0 - self.eccentricity )
+	}
+
+	/// Calculates the apoapsis of the orbit.
+	pub fn apoapsis( &self ) -> f32 {
+		self.axis_semi_major * ( 1.0 + self.eccentricity )
+	}
+
+	/// Radius of the border to the focal point 1 at `angle`. This is the distance of the ellipsis to focal point at `angle`. `angle` is in radians.
+	pub fn radius_from_focal( &self, angle: f32 ) -> f32 {
+		let p = self.axis_semi_minor().powi( 2 ) / self.axis_semi_major();
+
+		p / ( 1.0 + self.eccentricity() * angle.cos() )
+	}
 }
 
 
