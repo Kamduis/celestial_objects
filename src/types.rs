@@ -334,6 +334,7 @@ pub struct CelestialSystem {
 	coordinates: EquatorialCoords,
 
 	/// The political affiliation of the system.
+	#[serde( default )]
 	affiliation: Affiliation,
 
 	/// An optional description of this system.
