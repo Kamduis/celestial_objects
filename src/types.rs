@@ -447,6 +447,18 @@ impl CelestialSystem {
 		Ok( res )
 	}
 
+	/// Returns the index of an object within this system with `name`.
+	///
+	/// # Returns
+	/// If `name` cannot be found in the system, this method returns `None`.
+	pub fn index_of( &self, name: &str ) -> Option<Vec<usize>> {
+		self.indices().iter()
+			.map( |x| ( x, self.name( x ).expect( "Index should have been existed!" ) ) )
+			.find( |( _, y )| y == name )
+			.map( |( x, _ )| x )
+			.cloned()
+	}
+
 	/// Returns the identifier of the `CelestialSystem`.
 	pub fn identifier( &self ) -> &str {
 		&self.identifier
@@ -1115,6 +1127,17 @@ mod tests {
 		assert_eq!( sol.indices_satellites( &[1] ).unwrap(), Vec::<Vec<usize>>::new() );
 
 		assert_eq!( sol.indices_satellites( &[3] ).unwrap(), vec![ vec![3,1], vec![3,2], ] );
+	}
+
+	#[test]
+	fn test_object_by_name() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert_eq!( sol.index_of( "Sol" ).unwrap(), vec![ 0 ] );
+		assert_eq!( sol.index_of( "Mercury" ).unwrap(), vec![ 1 ] );
+		assert_eq!( sol.index_of( "Luna" ).unwrap(), vec![ 3, 1 ] );
 	}
 
 	#[test]
