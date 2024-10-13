@@ -59,6 +59,9 @@ pub enum CelestialSystemError {
 	#[error( "No celestial body at index: `{0}`" )]
 	IllegalIndex( String ),
 
+	#[error( "The object at index `{0}` is a gravitational center, not a real object." )]
+	NotARealObject( String ),
+
 	#[error( "The body at index `{0}` is not a star." )]
 	NotAStar( String ),
 
