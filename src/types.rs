@@ -763,13 +763,13 @@ pub enum Affiliation {
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct Orbit {
 	/// The semi major axis of the `object`'s orbit in AU.
-	axis_semi_major: f32,
+	pub axis_semi_major: f32,
 
 	/// The eccentricity of the `object`'s orbit.
-	eccentricity: f32,
+	pub eccentricity: f32,
 
-	/// The objects orbiting.
-	body: CelestialBody,
+	/// The object orbiting.
+	pub body: CelestialBody,
 }
 
 impl Orbit {
