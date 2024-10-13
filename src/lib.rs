@@ -18,6 +18,7 @@
 
 mod coords;
 mod types;
+mod calc;
 mod serde_helpers;
 
 pub use crate::coords::{EquatorialCoords, GalacticCoords};
