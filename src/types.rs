@@ -54,7 +54,7 @@ const NUMBERS_RINGED: [&str; 21] = [
 // Errors
 
 
-#[derive( Error, Debug )]
+#[derive( Error, PartialEq, Debug )]
 pub enum CelestialSystemError {
 	#[error( "No celestial body at index: `{0}`" )]
 	IllegalIndex( String ),
@@ -242,6 +242,14 @@ impl From<&CelestialBody> for BodyType {
 			CelestialBody::Station( _ ) => Self::Station,
 		}
 	}
+}
+
+
+/// Classification of trabants.
+#[derive( Clone, Copy, PartialEq, Eq, Debug )]
+pub enum TrabantType {
+	Planet,
+	Moon,
 }
 
 
@@ -532,6 +540,9 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
+	///
+	/// # Returns
+	/// This method returns an error if `index` is `&[]`, since the system itself is not a body.
 	pub fn body_type( &self, index: &[usize] ) -> Result<BodyType, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
@@ -543,6 +554,41 @@ impl CelestialSystem {
 
 		let body_got = &satellite_getter( &self.body, &index )?;
 		Ok( BodyType::from( *body_got ) )
+	}
+
+	/// Returns the orbit level of the indexed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// # Returns
+	/// The level represents the number of center objects + 1.
+	/// The main star of a single-star-system has level 0.
+	/// Planets in a single-star-system have level 1.
+	/// Moons in a single-star-system have level 2.
+	pub fn level( &self, index: &[usize] ) -> usize {
+		index.len() + 1
+	}
+
+	/// Returns the type of trabant of the indexed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// # Returns
+	/// If the indexed object is not a `Trabant`, this method returns `Ok( None )`
+	pub fn trabant_type( &self, index: &[usize] ) -> Result<Option<TrabantType>, CelestialSystemError> {
+		let BodyType::Trabant = self.body_type( index )? else {
+			return Ok( None );
+		};
+
+		let res = match self.body_type( &self.index_of_center_of( index )? )? {
+			BodyType::Star => TrabantType::Planet,
+			BodyType::Trabant => TrabantType::Moon,
+			_ => unreachable!( "Trabants should only ever orbit stars or planets. This one does not!" ),
+		};
+
+		Ok( Some( res ) )
 	}
 
 	/// Returns the radius (in relation to Sol) of the indexed object.
@@ -663,6 +709,27 @@ impl CelestialSystem {
 		}
 
 		orbit_getter( &self.body, &index )
+	}
+
+	/// Returns the index of the center object of the orbit of the object of `index`.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// Since the system itself and the center object of the system are not orbiting anything, the indices `&[]` and `&[0]` are illegal and cause an error to be returned.
+	pub fn index_of_center_of( &self, index: &[usize] ) -> Result<Vec<usize>, CelestialSystemError> {
+		if index.is_empty() || index[0] == 0 {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		let mut idx = index.to_vec();
+		if index[index.len()-1] == 0 {
+			let _ = std::mem::replace( &mut idx[index.len()-2], 0 );
+		} else {
+			let _ = std::mem::replace( &mut idx[index.len()-1], 0 );
+		}
+
+		Ok( idx )
 	}
 
 	/// Returns the mass of this system's main star in relation to Sol.
@@ -1059,7 +1126,7 @@ impl AstronomicalObject for Station {
 
 #[cfg( test )]
 mod tests {
-	// use super::*;
+	use super::*;
 
 	use crate::tests::systems_examples;
 
@@ -1175,6 +1242,58 @@ mod tests {
 		assert_eq!( centauri.name( &[1,0] ).unwrap(), "Centauri AB A" );  // The first star
 		assert_eq!( centauri.name( &[1,1] ).unwrap(), "Minos" );  // The first planet of the first star
 		assert_eq!( centauri.name( &[2,1] ).unwrap(), "Taurus" );  // The first planet of the second star
+	}
+
+	#[test]
+	fn test_body_type() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert!( sol.body_type( &[] ).is_err() );  // <- The system itself
+		assert_eq!( sol.body_type( &[0] ).unwrap(), BodyType::Star );  // <- The singular star
+		assert_eq!( sol.body_type( &[1] ).unwrap(), BodyType::Trabant );  // <- The first planet
+		assert_eq!( sol.body_type( &[2] ).unwrap(), BodyType::Trabant );  // <- The second planet
+		assert_eq!( sol.body_type( &[3] ).unwrap(), BodyType::Trabant );  // <- The third planet
+		assert_eq!( sol.body_type( &[3,0] ).unwrap(), BodyType::Trabant );  // <- The third planet
+		assert_eq!( sol.body_type( &[3,1] ).unwrap(), BodyType::Trabant );  // <- The first moon of the third planet
+
+		let centauri = &systems[1];
+
+		assert!( centauri.body_type( &[] ).is_err() );  // <- The system itself
+		assert_eq!( centauri.body_type( &[0] ).unwrap(), BodyType::GravitationalCenter );  // <- Gravitational center of the trinary star system.
+		assert_eq!( centauri.body_type( &[1] ).unwrap(), BodyType::Star );  // The first star
+		assert_eq!( centauri.body_type( &[2] ).unwrap(), BodyType::Star );  // The second star
+		assert_eq!( centauri.body_type( &[3] ).unwrap(), BodyType::Star );  // The third star
+		assert_eq!( centauri.body_type( &[1,0] ).unwrap(), BodyType::Star );  // The first star
+		assert_eq!( centauri.body_type( &[1,1] ).unwrap(), BodyType::Trabant );  // The first planet of the first star
+		assert_eq!( centauri.body_type( &[2,1] ).unwrap(), BodyType::Trabant );  // The first planet of the second star
+	}
+
+	#[test]
+	fn test_trabant_type() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert!( sol.trabant_type( &[] ).is_err() );  // <- The system itself
+		assert_eq!( sol.trabant_type( &[0] ).unwrap(), None );  // <- The singular star
+		assert_eq!( sol.trabant_type( &[1] ).unwrap().unwrap(), TrabantType::Planet );  // <- The first planet
+		assert_eq!( sol.trabant_type( &[2] ).unwrap().unwrap(), TrabantType::Planet );  // <- The second planet
+		assert_eq!( sol.trabant_type( &[3] ).unwrap().unwrap(), TrabantType::Planet );  // <- The third planet
+		assert_eq!( sol.trabant_type( &[3,0] ).unwrap().unwrap(), TrabantType::Planet );  // <- The third planet
+		assert_eq!( sol.trabant_type( &[3,1] ).unwrap().unwrap(), TrabantType::Moon );  // <- The first moon of the third planet
+
+		let centauri = &systems[1];
+
+		assert!( centauri.trabant_type( &[] ).is_err() );  // <- The system itself
+		assert_eq!( centauri.trabant_type( &[0] ).unwrap(), None );  // <- Gravitational center of the trinary star system.
+		assert_eq!( centauri.trabant_type( &[1] ).unwrap(), None );  // The first star
+		assert_eq!( centauri.trabant_type( &[2] ).unwrap(), None );  // The second star
+		assert_eq!( centauri.trabant_type( &[3] ).unwrap(), None );  // The third star
+		assert_eq!( centauri.trabant_type( &[1,0] ).unwrap(), None );  // The first star
+		assert_eq!( centauri.trabant_type( &[1,1] ).unwrap().unwrap(), TrabantType::Planet );  // The first planet of the first star
+		assert_eq!( centauri.trabant_type( &[2,1] ).unwrap().unwrap(), TrabantType::Planet );  // The first planet of the second star
 	}
 
 	#[test]
