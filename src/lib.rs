@@ -16,6 +16,7 @@
 // Crates
 
 
+mod units;
 mod coords;
 mod types;
 mod calc;
@@ -23,6 +24,8 @@ mod serde_helpers;
 
 pub use crate::coords::{EquatorialCoords, GalacticCoords};
 pub use crate::types::{CelestialSystem, BodyType, Affiliation, StarProperty};
+pub use crate::types::CelestialSystemError;
+pub use crate::units::{Length, Mass};
 
 
 

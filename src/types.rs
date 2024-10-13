@@ -7,22 +7,21 @@
 // Crates
 
 
+use std::fmt;
+
 use glam::Vec3;
 use serde::{Serialize, Deserialize};
 use thiserror::Error;
 
 use crate::coords::EquatorialCoords;
 use crate::calc;
+use crate::units::{Mass, Length};
 
 
 
 
 //=============================================================================
 // Constants
-
-
-/// The radius of Terra in meter.
-const RADIUS_TERRA: f32 = 6.371e6;
 
 
 /// Letters
@@ -87,31 +86,11 @@ pub trait AstronomicalObject {
 	/// Returns the satellites of this object.
 	fn satellites( &self ) -> &[Orbit];
 
-	/// Returns the mass of the astronomical object in kg.
-	fn mass( &self ) -> f32;
-
-	/// Returns the mass of the astronomical object in relation to sol.
-	fn mass_sol( &self ) -> f32 {
-		self.mass() / calc::MASS_SOL
-	}
-
-	/// Returns the mass of the astronomical object in relation to terra.
-	fn mass_terra( &self ) -> f32 {
-		self.mass() / calc::MASS_TERRA
-	}
+	/// Returns the mass of the astronomical object.
+	fn mass( &self ) -> Mass;
 
 	/// Returns the radius of the astronomical object in meter.
-	fn radius( &self ) -> f32;
-
-	/// Returns the radius of the astronomical object in relation to sol.
-	fn radius_sol( &self ) -> f32 {
-		self.radius() / calc::RADIUS_SOL
-	}
-
-	/// Returns the radius of the astronomical object in relation to terra.
-	fn radius_terra( &self ) -> f32 {
-		self.radius() / calc::RADIUS_TERRA
-	}
+	fn radius( &self ) -> Length;
 }
 
 
@@ -273,6 +252,15 @@ pub enum TrabantType {
 	Moon,
 }
 
+impl fmt::Display for TrabantType {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		match self {
+			Self::Planet => write!( f, "Planet" ),
+			Self::Moon => write!( f, "Moon" ),
+		}
+	}
+}
+
 
 /// Classification of celestial bodies.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
@@ -322,7 +310,7 @@ impl AstronomicalObject for CelestialBody {
 		}
 	}
 
-	fn mass( &self ) -> f32 {
+	fn mass( &self ) -> Mass {
 		match self {
 			Self::GravitationalCenter( x ) => x.mass(),
 			Self::Star( x ) => x.mass(),
@@ -332,53 +320,13 @@ impl AstronomicalObject for CelestialBody {
 		}
 	}
 
-	fn mass_sol( &self ) -> f32 {
-		match self {
-			Self::GravitationalCenter( x ) => x.mass_sol(),
-			Self::Star( x ) => x.mass_sol(),
-			Self::Trabant( x ) => x.mass_sol(),
-			Self::Ring( _ ) => unimplemented!( "Rings don't support having a mass." ),
-			Self::Station( x ) => x.mass_sol(),
-		}
-	}
-
-	fn mass_terra( &self ) -> f32 {
-		match self {
-			Self::GravitationalCenter( x ) => x.mass_terra(),
-			Self::Star( x ) => x.mass_terra(),
-			Self::Trabant( x ) => x.mass_terra(),
-			Self::Ring( _ ) => unimplemented!( "Rings don't support having a mass." ),
-			Self::Station( x ) => x.mass_terra(),
-		}
-	}
-
-	fn radius( &self ) -> f32 {
+	fn radius( &self ) -> Length {
 		match self {
 			Self::GravitationalCenter( x ) => x.radius(),
 			Self::Star( x ) => x.radius(),
 			Self::Trabant( x ) => x.radius(),
 			Self::Ring( x ) => x.width() / 2.0,
 			Self::Station( x ) => x.radius(),
-		}
-	}
-
-	fn radius_sol( &self ) -> f32 {
-		match self {
-			Self::GravitationalCenter( x ) => x.radius_sol(),
-			Self::Star( x ) => x.radius_sol(),
-			Self::Trabant( x ) => x.radius_sol(),
-			Self::Ring( x ) => ( x.width() / 2.0 ) / calc::RADIUS_SOL,
-			Self::Station( x ) => x.radius_sol(),
-		}
-	}
-
-	fn radius_terra( &self ) -> f32 {
-		match self {
-			Self::GravitationalCenter( x ) => x.radius_terra(),
-			Self::Star( x ) => x.radius_terra(),
-			Self::Trabant( x ) => x.radius_terra(),
-			Self::Ring( x ) => ( x.width() / 2.0 ) / calc::RADIUS_TERRA,
-			Self::Station( x ) => x.radius_terra(),
 		}
 	}
 }
@@ -652,13 +600,13 @@ impl CelestialSystem {
 		Ok( Some( res ) )
 	}
 
-	/// Returns the radius in kg of the indexed object.
+	/// Returns the radius of the indexed object.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
 	///
 	/// If the system index is used (`&[]`), this method returns the radius of the main star.
-	pub fn radius( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
+	pub fn radius( &self, index: &[usize] ) -> Result<Length, CelestialSystemError> {
 		if index.is_empty() {
 			match &self.body {
 				CelestialBody::GravitationalCenter( _ ) => {
@@ -679,33 +627,13 @@ impl CelestialSystem {
 		Ok( body_got.radius() )
 	}
 
-	/// Returns the radius in kg of the indexed object.
+	/// Returns the mass of the indexed object.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
 	///
 	/// If the system index is used (`&[]`), this method returns the radius of the main star.
-	pub fn radius_sol( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
-		self.radius( index ).map( |x| x / calc::RADIUS_SOL )
-	}
-
-	/// Returns the radius of the indexed object in relation to Terra.
-	///
-	/// # Arguments
-	/// * `index` See [`self.name()`].
-	///
-	/// If the system index is used (`&[]`), this method returns the radius of the main star.
-	pub fn radius_terra( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
-		self.radius( index ).map( |x| x / calc::RADIUS_TERRA )
-	}
-
-	/// Returns the mass in kg of the indexed object.
-	///
-	/// # Arguments
-	/// * `index` See [`self.name()`].
-	///
-	/// If the system index is used (`&[]`), this method returns the radius of the main star.
-	pub fn mass( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
+	pub fn mass( &self, index: &[usize] ) -> Result<Mass, CelestialSystemError> {
 		if index.is_empty() {
 			match &self.body {
 				CelestialBody::GravitationalCenter( _ ) => {
@@ -724,26 +652,6 @@ impl CelestialSystem {
 
 		let body_got = &satellite_getter( &self.body, &index )?;
 		Ok( body_got.mass() )
-	}
-
-	/// Returns the mass in relation to Sol of the indexed object.
-	///
-	/// # Arguments
-	/// * `index` See [`self.name()`].
-	///
-	/// If the system index is used (`&[]`), this method returns the radius of the main star.
-	pub fn mass_sol( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
-		self.mass( index ).map( |x| x / calc::MASS_SOL )
-	}
-
-	/// Returns the mass in relation to Terra of the indexed object.
-	///
-	/// # Arguments
-	/// * `index` See [`self.name()`].
-	///
-	/// If the system index is used (`&[]`), this method returns the radius of the main star.
-	pub fn mass_terra( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
-		self.mass( index ).map( |x| x / calc::MASS_TERRA )
 	}
 
 	/// Returns the spectral class of the indexed object.
@@ -783,19 +691,20 @@ impl CelestialSystem {
 		return Ok( &star.spectral_class );
 	}
 
-	/// Returns the semi major axis (in AU) of the indexed object to the center it orbits.
+	/// Returns the semi major axis of the indexed object to the center it orbits.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
 	///
 	/// Since the system itself and the center object of the system are not orbiting anything, the indices `&[]` and `&[0]` are illegal and cause an error to be returned.
-	pub fn axis_semi_major( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
+	pub fn axis_semi_major( &self, index: &[usize] ) -> Result<Length, CelestialSystemError> {
 		if index.is_empty() || index[0] == 0 {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
 
-		let orbit_got = &orbit_getter( &self.body, &index )?;
-		Ok( orbit_got.axis_semi_major )
+		let orbit_got = orbit_getter( &self.body, &index )?;
+
+		Ok( orbit_got.axis_semi_major() )
 	}
 
 	/// Returns the orbit of the indexed object to the center it orbits.
@@ -816,7 +725,7 @@ impl CelestialSystem {
 	///
 	/// If the object at `index` does not have an orbit center, this method returns an error.
 	pub fn orbital_period( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
-		let axis_semi_major = self.axis_semi_major( index )? * calc::ASTRONOMICAL_UNIT;
+		let axis_semi_major = self.axis_semi_major( index )?;
 		let mass_center = self.mass( &self.index_of_center_of( index )? )?;
 		let mass_orbiter = self.mass( index )?;
 
@@ -847,7 +756,7 @@ impl CelestialSystem {
 	}
 
 	/// Returns the mass of this system's main star in kg.
-	pub fn mass_main_star( &self ) -> f32 {
+	pub fn mass_main_star( &self ) -> Mass {
 		let star_main = self.stars().nth( 0 )
 			.expect( "Each system should have at least one star." );
 		star_main.mass()
@@ -958,14 +867,16 @@ pub struct Orbit {
 }
 
 impl Orbit {
-	/// Returns the semi major axis of this orbit.
-	pub fn axis_semi_major( &self ) -> f32 {
-		self.axis_semi_major
+	/// Returns the semi major axis of this orbit in meter.
+	pub fn axis_semi_major( &self ) -> Length {
+		Length::from_au( self.axis_semi_major )
 	}
 
-	/// Returns the semi minor axis of this orbit.
-	pub fn axis_semi_minor( &self ) -> f32 {
-		( self.axis_semi_major.powi( 2 ) - ( self.eccentricity * self.axis_semi_major ).powi( 2 ) ).sqrt()
+	/// Returns the semi minor axis of this orbit in meter.
+	pub fn axis_semi_minor( &self ) -> Length {
+		let res_in_au = ( self.axis_semi_major.powi( 2 ) - ( self.eccentricity * self.axis_semi_major ).powi( 2 ) ).sqrt();
+
+		Length::from_au( res_in_au )
 	}
 
 	/// Returns the eccentricity of this orbit.
@@ -974,20 +885,24 @@ impl Orbit {
 	}
 
 	/// Calculates the periapsis of the orbit.
-	pub fn periapsis( &self ) -> f32 {
-		self.axis_semi_major * ( 1.0 - self.eccentricity )
+	pub fn periapsis( &self ) -> Length {
+		let res = self.axis_semi_major * ( 1.0 - self.eccentricity );
+
+		Length::from_au( res )
 	}
 
 	/// Calculates the apoapsis of the orbit.
-	pub fn apoapsis( &self ) -> f32 {
-		self.axis_semi_major * ( 1.0 + self.eccentricity )
+	pub fn apoapsis( &self ) -> Length {
+		let res = self.axis_semi_major * ( 1.0 + self.eccentricity );
+
+		Length::from_au( res )
 	}
 
 	/// Radius of the border to the focal point 1 at `angle`. This is the distance of the ellipsis to focal point at `angle`. `angle` is in radians.
-	pub fn radius_from_focal( &self, angle: f32 ) -> f32 {
+	pub fn radius_from_focal( &self, angle: f32 ) -> Length {
 		let p = self.axis_semi_minor().powi( 2 ) / self.axis_semi_major();
 
-		p / ( 1.0 + self.eccentricity() * angle.cos() )
+		p / ( 1.0 + self.eccentricity * angle.cos() )
 	}
 }
 
@@ -1032,13 +947,13 @@ impl AstronomicalObject for GravitationalCenter {
 		&self.satellites
 	}
 
-	fn mass( &self ) -> f32 {
-		0.0
+	fn mass( &self ) -> Mass {
+		Mass::ZERO
 	}
 
 	/// Returns the radius of this gravitational center, which is always 0.0.
-	fn radius( &self ) -> f32 {
-		0.0
+	fn radius( &self ) -> Length {
+		Length::ZERO
 	}
 }
 
@@ -1109,17 +1024,13 @@ impl AstronomicalObject for Star {
 		&self.satellites
 	}
 
-	fn mass( &self ) -> f32 {
-		self.mass_sol() * calc::MASS_SOL
-	}
-
-	fn mass_sol( &self ) -> f32 {
-		self.mass
+	fn mass( &self ) -> Mass {
+		Mass::from_mass_sol( self.mass )
 	}
 
 	/// Returns the star's radius in meter.
-	fn radius( &self ) -> f32 {
-		self.radius * calc::RADIUS_SOL
+	fn radius( &self ) -> Length {
+		Length::from_radius_sol( self.radius )
 	}
 }
 
@@ -1160,17 +1071,13 @@ impl AstronomicalObject for Trabant {
 		&self.satellites
 	}
 
-	fn mass( &self ) -> f32 {
-		self.mass_terra() * calc::MASS_TERRA
+	fn mass( &self ) -> Mass {
+		let mass_terra = self.gravity * self.radius.powi( 2 );
+		Mass::from_mass_terra( mass_terra )
 	}
 
-	fn mass_terra( &self ) -> f32 {
-		self.gravity * self.radius.powi( 2 )
-	}
-
-	/// Returns the star's radius in meter.
-	fn radius( &self ) -> f32 {
-		self.radius * calc::RADIUS_TERRA
+	fn radius( &self ) -> Length {
+		Length::from_radius_terra( self.radius )
 	}
 }
 
@@ -1184,8 +1091,8 @@ pub struct Ring {
 
 impl Ring {
 	/// The width of the ring in AU.
-	pub fn width( &self ) -> f32 {
-		self.width
+	pub fn width( &self ) -> Length {
+		Length::from( self.width )
 	}
 }
 
@@ -1229,13 +1136,13 @@ impl AstronomicalObject for Station {
 		&self.satellites
 	}
 
-	fn mass( &self ) -> f32 {
-		self.mass
+	fn mass( &self ) -> Mass {
+		Mass::from( self.mass )
 	}
 
-	/// Returns the station's radius in meter. This is mostly useless, since stations are rarely spherical.
-	fn radius( &self ) -> f32 {
-		self.size.max_element()
+	/// Returns the station's radius. This is mostly useless, since stations are rarely spherical.
+	fn radius( &self ) -> Length {
+		Length::from( self.size.max_element() )
 	}
 }
 

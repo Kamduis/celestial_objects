@@ -4,6 +4,15 @@
 
 
 //=============================================================================
+// Crates
+
+
+use crate::units::{Mass, Length};
+
+
+
+
+//=============================================================================
 // Constants
 
 
@@ -46,8 +55,8 @@ pub const MASS_TERRA: f32 = 5.97219e24;
 /// * `axis`: Semi major axis in meters.
 /// * `mass_central`: Mass of the central body in kg.
 /// * `mass_satellite`: Mass of the orbiting satellite in kg.
-pub fn orbital_period( axis: f32, mass_central: f32, mass_satellite: f32 ) -> f32 {
-	let temp = axis.powi( 3 ) / ( G * ( mass_central + mass_satellite ) );
+pub fn orbital_period( axis: Length, mass_central: Mass, mass_satellite: Mass ) -> f32 {
+	let temp = axis.powi( 3 ).meter() / ( G * ( mass_central + mass_satellite ) ).kg();
 	2.0 * std::f32::consts::PI * temp.sqrt()
 }
 
@@ -64,7 +73,7 @@ mod tests {
 
 	#[test]
 	fn test_orbital_periods() {
-		let period = orbital_period( 384.399e6, 5.972168e24, 7.342e22 );
+		let period = orbital_period( 384.399e6.into(), 5.972168e24.into(), 7.342e22.into() );
 		let abs_difference = ( period - 27.2845857371 * 86400.0 ).abs();
 
 		assert!( abs_difference < 1e-6 );
