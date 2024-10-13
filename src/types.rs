@@ -453,6 +453,7 @@ impl CelestialSystem {
 	/// If `name` cannot be found in the system, this method returns `None`.
 	pub fn index_of( &self, name: &str ) -> Option<Vec<usize>> {
 		self.indices().iter()
+			.skip( 1 )  // Skipping the empty index (the system itself).
 			.map( |x| ( x, self.name( x ).expect( "Index should have been existed!" ) ) )
 			.find( |( _, y )| y == name )
 			.map( |( x, _ )| x )
@@ -1138,6 +1139,13 @@ mod tests {
 		assert_eq!( sol.index_of( "Sol" ).unwrap(), vec![ 0 ] );
 		assert_eq!( sol.index_of( "Mercury" ).unwrap(), vec![ 1 ] );
 		assert_eq!( sol.index_of( "Luna" ).unwrap(), vec![ 3, 1 ] );
+
+		let centauri = &systems[1];
+
+		assert_eq!( centauri.index_of( "Centauri AB A" ).unwrap(), vec![ 1 ] );
+		assert_eq!( centauri.index_of( "Minos" ).unwrap(), vec![ 1, 1 ] );
+		assert_eq!( centauri.index_of( "Centauri AB B" ).unwrap(), vec![ 2 ] );
+		assert_eq!( centauri.index_of( "Taurus" ).unwrap(), vec![ 2, 1 ] );
 	}
 
 	#[test]
