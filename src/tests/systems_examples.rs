@@ -165,7 +165,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 					Orbit {
 						axis_semi_major: 8700.0,
 						eccentricity: 0.50,
-						body: CelestialBody::Star( Star::new( 1.221, 0.1542, 0.001567, "M5.5" )
+						body: CelestialBody::Star( Star::new( 0.1221, 0.1542, 0.001567, "M5.5" )
 							.with_name( "Proxima" ),
 						),
 					},

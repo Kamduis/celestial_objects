@@ -261,7 +261,7 @@
 					eccentricity: 0.50,
 					body: Star((
 						name: "Proxima",
-						mass: 1.221,
+						mass: 0.1221,
 						radius: 0.1542,
 						luminosity: 0.001567,
 						spectral_class: "M5.5",

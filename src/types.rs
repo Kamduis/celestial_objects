@@ -669,7 +669,7 @@ impl CelestialSystem {
 		star_main.mass()
 	}
 
-	/// Returns the spectral class of this system's main star.
+	/// Returns an iterator of all stars within this system.
 	pub fn stars( &self ) -> CelestialSystemStarsIterator {
 		let mut iter_obj = CelestialSystemStarsIterator {
 			body: &self.body,
@@ -1172,5 +1172,32 @@ mod tests {
 		assert_eq!( centauri.name( &[1,0] ).unwrap(), "Centauri AB A" );  // The first star
 		assert_eq!( centauri.name( &[1,1] ).unwrap(), "Minos" );  // The first planet of the first star
 		assert_eq!( centauri.name( &[2,1] ).unwrap(), "Taurus" );  // The first planet of the second star
+	}
+
+	#[test]
+	fn test_stars_of_system() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert_eq!(
+			sol.stars()
+				.map( |x| x.mass )
+				.collect::<Vec<_>>(),
+			vec![ 1.0 ]
+		);
+
+		let centauri = &systems[1];
+
+		dbg!( centauri.stars()
+				.map( |x| x.mass )
+				.collect::<Vec<_>>() );
+
+		assert_eq!(
+			centauri.stars()
+				.map( |x| x.mass )
+				.collect::<Vec<_>>(),
+			vec![ 1.0788, 0.9092, 0.1221 ]
+		);
 	}
 }
