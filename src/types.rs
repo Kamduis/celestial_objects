@@ -9,6 +9,7 @@
 
 use std::fmt;
 
+use chrono::TimeDelta;
 use glam::Vec3;
 use serde::{Serialize, Deserialize};
 use thiserror::Error;
@@ -59,6 +60,9 @@ pub enum CelestialSystemError {
 	#[error( "No celestial body at index: `{0}`" )]
 	IllegalIndex( String ),
 
+	#[error( "Body at index `{0}` does not have a center object." )]
+	NoCenterObject( String ),
+
 	#[error( "The object at index `{0}` is a gravitational center, not a real object." )]
 	NotARealObject( String ),
 
@@ -91,6 +95,11 @@ pub trait AstronomicalObject {
 
 	/// Returns the radius of the astronomical object in meter.
 	fn radius( &self ) -> Length;
+
+	/// Returns the duration of one rotation of the `AstronomicalObject`. If it's rotation is locked, this method returns `None`.
+	fn rotation_period( &self ) -> Option<TimeDelta> {
+		None
+	}
 }
 
 
@@ -110,14 +119,15 @@ fn orbit_getter<'a>(
 	center: &'a CelestialBody,
 	index: &'a [usize]
 ) -> Result<&'a Orbit, CelestialSystemError> {
+	dbg!( index );
 	if index.is_empty() || index[0] == 0 {
 		return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 	}
-
 	let orbit = &center.satellites().get( index[0] - 1 )
 		.ok_or( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) )?;
 
-	if index.len() == 1 {
+	// An index ending in 0 (`&[3,0]`) is identical to the same index without the 0 (`&[3]`).
+	if index.len() == 1 || ( index.len() == 2 && index[1] == 0 ) {
 		return Ok( &orbit );
 	}
 
@@ -327,6 +337,16 @@ impl AstronomicalObject for CelestialBody {
 			Self::Trabant( x ) => x.radius(),
 			Self::Ring( x ) => x.width() / 2.0,
 			Self::Station( x ) => x.radius(),
+		}
+	}
+
+	fn rotation_period( &self ) -> Option<TimeDelta> {
+		match self {
+			Self::GravitationalCenter( x ) => x.rotation_period(),
+			Self::Star( x ) => x.rotation_period(),
+			Self::Trabant( x ) => x.rotation_period(),
+			Self::Ring( _ ) => None,
+			Self::Station( x ) => x.rotation_period(),
 		}
 	}
 }
@@ -699,7 +719,7 @@ impl CelestialSystem {
 	/// Since the system itself and the center object of the system are not orbiting anything, the indices `&[]` and `&[0]` are illegal and cause an error to be returned.
 	pub fn axis_semi_major( &self, index: &[usize] ) -> Result<Length, CelestialSystemError> {
 		if index.is_empty() || index[0] == 0 {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::NoCenterObject( format!( "{:?}", index ) ) );
 		}
 
 		let orbit_got = orbit_getter( &self.body, &index )?;
@@ -721,17 +741,62 @@ impl CelestialSystem {
 		orbit_getter( &self.body, &index )
 	}
 
-	/// Returns the orbital period of the indexed object around it's center in seconds.
+	/// Returns the orbital period of the indexed object around it's center.
 	///
 	/// If the object at `index` does not have an orbit center, this method returns an error.
-	pub fn orbital_period( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
+	pub fn orbital_period( &self, index: &[usize] ) -> Result<TimeDelta, CelestialSystemError> {
 		let axis_semi_major = self.axis_semi_major( index )?;
 		let mass_center = self.mass( &self.index_of_center_of( index )? )?;
 		let mass_orbiter = self.mass( index )?;
 
 		let seconds = calc::orbital_period( axis_semi_major, mass_center, mass_orbiter );
 
-		Ok( seconds )
+		Ok( TimeDelta::seconds( seconds as i64 ) )
+	}
+
+	/// Returns the rotation period of the `index`ed object in `TimeDelta`.
+	///
+	/// If the indexed object's rotation is locked to the orbiting body, this is the same as the orbital period of the indexed object. An example of a moon with locked rotation is Luna orbiting Terra.
+	/// If the object at `index` does not have an orbit center, this method returns an error.
+	pub fn rotation_period( &self, index: &[usize] ) -> Result<TimeDelta, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		let body_got = satellite_getter( &self.body, &index )?;
+
+		let res = match body_got.rotation_period() {
+			Some( x ) => x,
+			None => self.orbital_period( index )?,
+		};
+
+		Ok( res )
+	}
+
+	/// Returns the duration of the local day (solar day) of the indexed object in `TimeDelta`.
+	///
+	/// If the object at `index` is a world orbiting it's center (which is a star) with a locked rotation, this method returns `None`, since it has effectively a day of infinite length.
+	/// If the object at `index` does not have an orbit center, this method returns an error.
+	pub fn day_solar( &self, index: &[usize] ) -> Result<Option<TimeDelta>, CelestialSystemError> {
+		let orbital_period = self.orbital_period( index )?;
+		let sideral_day = self.rotation_period( index )?;
+
+		let orbital_period_float = orbital_period.num_seconds() as f64 + ( orbital_period.subsec_nanos() as f64 / 1e9 );
+		let sideral_day_float = sideral_day.num_seconds() as f64 + ( sideral_day.subsec_nanos() as f64 / 1e9 );
+
+		if orbital_period_float == sideral_day_float {
+			// Planets with a locked rotation around the sun have a solar day of infinite duration.
+			let idx_cent = self.index_of_center_of( index )?;
+			if let BodyType::Star = self.body_type( &idx_cent )? {
+				return Ok( None );
+			} else {
+				return self.day_solar( &idx_cent );
+			}
+		}
+
+		let res = ( orbital_period_float * sideral_day_float ) / ( orbital_period_float - sideral_day_float );
+
+		Ok( Some(  TimeDelta::seconds( res as i64 ) ) )
 	}
 
 	/// Returns the index of the center object of the orbit of the object of `index`.
@@ -742,7 +807,7 @@ impl CelestialSystem {
 	/// Since the system itself and the center object of the system are not orbiting anything, the indices `&[]` and `&[0]` are illegal and cause an error to be returned.
 	pub fn index_of_center_of( &self, index: &[usize] ) -> Result<Vec<usize>, CelestialSystemError> {
 		if index.is_empty() || index[0] == 0 {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::NoCenterObject( format!( "{:?}", index ) ) );
 		}
 
 		let mut idx = index.to_vec();
@@ -955,6 +1020,12 @@ impl AstronomicalObject for GravitationalCenter {
 	fn radius( &self ) -> Length {
 		Length::ZERO
 	}
+
+	/// Always returns a rotation period of 0.0. `None` is considered to be bound rotation.
+	/// TODO: Return an enum that reflects valid, invalid and bound rotation.
+	fn rotation_period( &self ) -> Option<TimeDelta> {
+		Some( TimeDelta::zero() )
+	}
 }
 
 
@@ -979,6 +1050,13 @@ pub struct Star {
 	/// The spectral class.
 	pub(super) spectral_class: String,
 
+	/// The rotation period (sidereal time). This is the time duration it takes for the star to make a full rotation in relation to a fixed star.
+	/// If this is `None`, this means the body's representation is gravitational bound around the object it orbits.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::timedelta_option" )]
+	pub(super) rotation_period: Option<TimeDelta>,
+
 	/// Special properties of the star.
 	#[serde( default )]
 	properties: Vec<StarProperty>,
@@ -996,9 +1074,16 @@ impl Star {
 			radius,
 			luminosity,
 			spectral_class: spectral_class.to_string(),
+			rotation_period: None,
 			properties: Vec::new(),
 			satellites: Vec::new(),
 		}
+	}
+
+	/// Returns a `Star` from `self` with the `rotation_period`.
+	pub fn with_rotation_period( mut self, rotation_period: TimeDelta ) -> Self {
+		self.rotation_period = Some( rotation_period );
+		self
 	}
 
 	/// Returns the spectral class of the star.
@@ -1028,9 +1113,12 @@ impl AstronomicalObject for Star {
 		Mass::from_mass_sol( self.mass )
 	}
 
-	/// Returns the star's radius in meter.
 	fn radius( &self ) -> Length {
 		Length::from_radius_sol( self.radius )
+	}
+
+	fn rotation_period( &self ) -> Option<TimeDelta> {
+		self.rotation_period
 	}
 }
 
@@ -1050,7 +1138,14 @@ pub struct Trabant {
 	/// The surface gravity of this trabant in relation to the surface gravity of Terra.
 	pub(super) gravity: f32,
 
-	/// The objects oribitng this trabant.
+	/// The rotation period (sidereal time). This is the time duration it takes for the body to make a full rotation. This is different from the "day" duration, which may be a little bit longer. Since when the body performed a full rotation it moved along it's orbit and is therefore not facing the same angle to it's sun.
+	/// If this is `None`, this means the body's representation is gravitational bound around the object it orbits.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::timedelta_option" )]
+	pub(super) rotation_period: Option<TimeDelta>,
+
+	/// The objects orbiting this trabant.
 	pub(super) satellites: Vec<Orbit>,
 }
 
@@ -1078,6 +1173,12 @@ impl AstronomicalObject for Trabant {
 
 	fn radius( &self ) -> Length {
 		Length::from_radius_terra( self.radius )
+	}
+
+	/// The rotation period (sidereal time). This is the time duration it takes for the body to make a full rotation. This is different from the "day" duration, which may be a little bit longer. Since when the body performed a full rotation it moved along it's orbit and is therefore not facing the same angle to it's sun.
+	/// If this is `None`, this means the body's representation is gravitational bound around the object it orbits.
+	fn rotation_period( &self ) -> Option<TimeDelta> {
+		self.rotation_period
 	}
 }
 
@@ -1350,5 +1451,46 @@ mod tests {
 				.collect::<Vec<_>>(),
 			vec![ 1.0788, 0.9092, 0.1221 ]
 		);
+	}
+
+	#[test]
+	fn test_rotation_period() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert!( sol.rotation_period( &[] ).is_err() );  // <- The system itself
+		assert_eq!( sol.rotation_period( &[0] ).unwrap(), TimeDelta::seconds( 2192832 ) );  // <- The singular star
+		assert_eq!( sol.rotation_period( &[1] ).unwrap(), TimeDelta::seconds( 5067360 ) );  // <- The first planet
+		assert_eq!( sol.rotation_period( &[2] ).unwrap(), TimeDelta::seconds( -20997360 ) );  // <- The second planet
+		assert_eq!( sol.rotation_period( &[3] ).unwrap(), TimeDelta::seconds( 86164 ) );  // <- The third planet
+		assert_eq!( sol.rotation_period( &[3,0] ).unwrap(), TimeDelta::seconds( 86164 ) );  // <- The third planet
+		assert_eq!( sol.rotation_period( &[3,1] ).unwrap(), TimeDelta::seconds( 2357955 ) );  // <- The first moon of the third planet
+
+		let centauri = &systems[1];
+
+		assert!( centauri.rotation_period( &[] ).is_err() );  // <- The system itself
+		assert_eq!( centauri.rotation_period( &[0] ).unwrap(), TimeDelta::zero() );  // <- Gravitational center of the trinary star system.
+		assert_eq!( centauri.rotation_period( &[1] ).unwrap(), TimeDelta::seconds( 1900800 ) );  // The first star
+		assert_eq!( centauri.rotation_period( &[2] ).unwrap(), TimeDelta::seconds( 3542400 ) );  // The second star
+		assert_eq!( centauri.rotation_period( &[3] ).unwrap(), TimeDelta::seconds( 7776000 ) );  // The third star
+		assert_eq!( centauri.rotation_period( &[1,0] ).unwrap(), TimeDelta::seconds( 1900800 ) );  // The first star
+		assert_eq!( centauri.rotation_period( &[1,1] ).unwrap(), TimeDelta::seconds( 65220 ) );  // The first planet of the first star
+		assert_eq!( centauri.rotation_period( &[2,1] ).unwrap(), TimeDelta::seconds( 110520 ) );  // The first planet of the second star
+	}
+
+	#[test]
+	fn test_local_day_solar() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert!( sol.day_solar( &[] ).is_err() );  // <- The system itself
+		assert!( sol.day_solar( &[0] ).is_err() );  // <- The singular star (is not orbiting anything, so has no "day")
+		assert_eq!( sol.day_solar( &[1] ).unwrap().unwrap(), TimeDelta::seconds( 15205216 ) );  // <- The first planet
+		assert_eq!( sol.day_solar( &[2] ).unwrap().unwrap(), TimeDelta::seconds( -10087183 ) );  // <- The second planet
+		assert_eq!( sol.day_solar( &[3] ).unwrap().unwrap(), TimeDelta::seconds( 86399 ) );  // <- The third planet
+		assert_eq!( sol.day_solar( &[3,0] ).unwrap().unwrap(), TimeDelta::seconds( 86399 ) );  // <- The third planet
+		assert_eq!( sol.day_solar( &[3,1] ).unwrap().unwrap(), TimeDelta::seconds( 86399 ) );  // <- The first moon of the third planet
 	}
 }

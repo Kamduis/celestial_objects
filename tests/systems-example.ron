@@ -9,6 +9,7 @@
 			radius: 1.0,
 			luminosity: 1.0,
 			spectral_class: "G2",
+			rotation_period: "25d 9h 7m 12s",
 			satellites: [
 				(
 					axis_semi_major: 0.387098,
@@ -17,7 +18,7 @@
 						name: "Mercury",
 						radius: 0.3829,
 						gravity: 0.38,
-						rotation_period: 5067360.0,
+						rotation_period: "58d 15h 36m",
 						temperature: (-173.0, 427.0),
 						satellites: [],
 					)),
@@ -29,7 +30,7 @@
 						name: "Venus",
 						radius: 0.9499,
 						gravity: 0.904,
-						rotation_period: -20996820.0,
+						rotation_period: "-243d 36m",
 						temperature: (437.0, 497.0),
 						atmosphere: (
 							pressure: 92.0,
@@ -53,7 +54,7 @@
 						name: "Terra",
 						radius: 1.0,
 						gravity: 1.0,
-						rotation_period: 86164.10035,
+						rotation_period: "23h 56m 4s",
 						temperature: (-89.0, 58.0),
 						atmosphere: (
 							pressure: 1.01,
@@ -114,7 +115,7 @@
 						name: "Saturn",
 						radius: 9.449,
 						gravity: 1.065,
-						rotation_period: 38018,
+						rotation_period: "10h 33m",
 						temperature: (-185.0, -120.0),
 						atmosphere: (
 							pressure: 1.4,
@@ -144,7 +145,7 @@
 						name: "Neptun",
 						radius: 3.829,
 						gravity: 1.137,
-						rotation_period: 57479.0,
+						rotation_period: "15h 57m 59s",
 						temperature: (-201.0, -201.0),
 						atmosphere: (
 							pressure: 1.0,
@@ -192,6 +193,7 @@
 						radius: 1.2175,
 						luminosity: 1.5059,
 						spectral_class: "G2",
+						rotation_period: "22d",
 						satellites: [
 							(
 								axis_semi_major: 1.1,
@@ -200,7 +202,7 @@
 									name: "Minos",
 									radius: 1.1,
 									gravity: 1.05,
-									rotation_period: 65220.0,
+									rotation_period: "18h 7m",
 									temperature: (-7.0, 89.0),
 									atmosphere: (
 										pressure: 1.2,
@@ -228,6 +230,7 @@
 						radius: 0.8591,
 						luminosity: 0.4981,
 						spectral_class: "K4",
+						rotation_period: "41d",
 						satellites: [
 							(
 								axis_semi_major: 0.8,
@@ -236,7 +239,7 @@
 									name: "Taurus",
 									radius: 0.9,
 									gravity: 1.1,
-									rotation_period: 110520.0,
+									rotation_period: "30h 42m",
 									temperature: (-120.0, 127.0),
 									atmosphere: (
 										pressure: 0.36,
@@ -265,6 +268,7 @@
 						radius: 0.1542,
 						luminosity: 0.001567,
 						spectral_class: "M5.5",
+						rotation_period: "90d",
 						satellites: [],
 					)),
 				),

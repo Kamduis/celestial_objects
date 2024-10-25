@@ -19,7 +19,7 @@ use crate::calc;
 
 
 /// Representing a length that can be expressed in different units.
-#[derive( Clone, Copy, PartialEq, Debug )]
+#[derive( Clone, Copy, PartialEq, PartialOrd, Debug )]
 pub struct Length( f32 );
 
 impl Length {
@@ -140,7 +140,7 @@ impl Div<Length> for f32 {
 
 
 /// Representing a mass that can be expressed in different units.
-#[derive( Clone, Copy, PartialEq, Debug )]
+#[derive( Clone, Copy, PartialEq, PartialOrd, Debug )]
 pub struct Mass( f32 );
 
 impl Mass {
