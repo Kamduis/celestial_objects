@@ -254,6 +254,18 @@ impl From<&CelestialBody> for BodyType {
 	}
 }
 
+impl fmt::Display for BodyType {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		match self {
+			Self::GravitationalCenter => write!( f, "Planet" ),
+			Self::Star => write!( f, "Star" ),
+			Self::Trabant => write!( f, "Trabant" ),
+			Self::Ring => write!( f, "Ring" ),
+			Self::Station => write!( f, "Station" ),
+		}
+	}
+}
+
 
 /// Classification of trabants.
 #[derive( Clone, Copy, PartialEq, Eq, Debug )]
