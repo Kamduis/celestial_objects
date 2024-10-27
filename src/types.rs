@@ -96,6 +96,11 @@ pub trait AstronomicalObject {
 	/// Returns the radius of the astronomical object in meter.
 	fn radius( &self ) -> Length;
 
+	/// Returns the surface gravity of the astronomical object in m/s².
+	///
+	/// This method returns `None` if the astronomical object has no sensible surface gravitation. A G2 star (loke Sol) for example has no surface, so it would return `None`.
+	fn gravitation( &self ) -> Option<f32>;
+
 	/// Returns the duration of one rotation of the `AstronomicalObject`. If it's rotation is locked, this method returns `None`.
 	fn rotation_period( &self ) -> Option<TimeDelta> {
 		None
@@ -349,6 +354,16 @@ impl AstronomicalObject for CelestialBody {
 			Self::Trabant( x ) => x.radius(),
 			Self::Ring( x ) => x.width() / 2.0,
 			Self::Station( x ) => x.radius(),
+		}
+	}
+
+	fn gravitation( &self ) -> Option<f32> {
+		match self {
+			Self::GravitationalCenter( x ) => x.gravitation(),
+			Self::Star( x ) => x.gravitation(),
+			Self::Trabant( x ) => x.gravitation(),
+			Self::Ring( _ ) => None,
+			Self::Station( x ) => x.gravitation(),
 		}
 	}
 
@@ -684,6 +699,46 @@ impl CelestialSystem {
 
 		let body_got = &satellite_getter( &self.body, &index )?;
 		Ok( body_got.mass() )
+	}
+
+	/// Returns the surface gravitation of the indexed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn gravitation( &self, index: &[usize] ) -> Result<Option<f32>, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		if index[0] == 0 {
+			return Ok( self.body.gravitation() );
+		}
+
+		let body_got = satellite_getter( &self.body, &index )?;
+		Ok( body_got.gravitation() )
+	}
+
+	/// Returns the luminosity of the indexed object relative to the luminosity Sol. Sol itself has therefor a `luminosity()` of 1.0.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn luminosity( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		// if index[0] == 0 {
+		// 	if let CelestialBody::Star( x ) = self.body {
+		// 		return Ok( x.luminosity() );
+		// 	}
+		// }
+
+		let body_got = satellite_getter( &self.body, &index )?;
+		if let CelestialBody::Star( x ) = body_got {
+			return Ok( x.luminosity() );
+		}
+
+		Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) )
 	}
 
 	/// Returns the spectral class of the indexed object.
@@ -1033,6 +1088,10 @@ impl AstronomicalObject for GravitationalCenter {
 		Length::ZERO
 	}
 
+	fn gravitation( &self ) -> Option<f32> {
+		Some( 0.0 )
+	}
+
 	/// Always returns a rotation period of 0.0. `None` is considered to be bound rotation.
 	/// TODO: Return an enum that reflects valid, invalid and bound rotation.
 	fn rotation_period( &self ) -> Option<TimeDelta> {
@@ -1098,6 +1157,11 @@ impl Star {
 		self
 	}
 
+	/// Returns the luminosity of the star in relation to the luminosity of Sol.
+	pub fn luminosity( &self ) -> f32 {
+		self.luminosity
+	}
+
 	/// Returns the spectral class of the star.
 	pub fn spectral_class( &self ) -> &str {
 		&self.spectral_class
@@ -1127,6 +1191,10 @@ impl AstronomicalObject for Star {
 
 	fn radius( &self ) -> Length {
 		Length::from_radius_sol( self.radius )
+	}
+
+	fn gravitation( &self ) -> Option<f32> {
+		None
 	}
 
 	fn rotation_period( &self ) -> Option<TimeDelta> {
@@ -1185,6 +1253,10 @@ impl AstronomicalObject for Trabant {
 
 	fn radius( &self ) -> Length {
 		Length::from_radius_terra( self.radius )
+	}
+
+	fn gravitation( &self ) -> Option<f32> {
+		Some( self.gravity )
 	}
 
 	/// The rotation period (sidereal time). This is the time duration it takes for the body to make a full rotation. This is different from the "day" duration, which may be a little bit longer. Since when the body performed a full rotation it moved along it's orbit and is therefore not facing the same angle to it's sun.
@@ -1256,6 +1328,10 @@ impl AstronomicalObject for Station {
 	/// Returns the station's radius. This is mostly useless, since stations are rarely spherical.
 	fn radius( &self ) -> Length {
 		Length::from( self.size.max_element() )
+	}
+
+	fn gravitation( &self ) -> Option<f32> {
+		Some( self.gravity )
 	}
 }
 
