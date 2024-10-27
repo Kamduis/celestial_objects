@@ -808,6 +808,32 @@ impl CelestialSystem {
 		orbit_getter( &self.body, &index )
 	}
 
+	/// Returns the minimum and maximum range of the habitable zone of the star at `index`.
+	///
+	/// If `index` does not point to a star of this system, the method returns an error.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn habitable_zone( &self, index: &[usize] ) -> Result<[Length; 2], CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		if index[0] == 0 {
+			let CelestialBody::Star( ref star ) = self.body else {
+				return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
+			};
+			return Ok( star.habitable_zone() );
+		}
+
+		let body_got = satellite_getter( &self.body, &index )?;
+		let CelestialBody::Star( ref star ) = body_got else {
+			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
+		};
+
+		Ok( star.habitable_zone() )
+	}
+
 	/// Returns the orbital period of the indexed object around it's center.
 	///
 	/// If the object at `index` does not have an orbit center, this method returns an error.
@@ -1165,6 +1191,15 @@ impl Star {
 	/// Returns the spectral class of the star.
 	pub fn spectral_class( &self ) -> &str {
 		&self.spectral_class
+	}
+
+	/// Returns the inner and outer radius of the habitable zone around the star.
+	pub fn habitable_zone( &self ) -> [Length; 2] {
+		let lengths: Vec<Length> = calc::habitable_zone( self.luminosity() ).iter()
+			.map( |x| Length::from( *x ) )
+			.collect();
+
+		lengths.try_into().unwrap()
 	}
 }
 

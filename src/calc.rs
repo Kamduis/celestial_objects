@@ -40,6 +40,36 @@ pub const MASS_SOL: f32 = 1.98855e30;
 pub const MASS_TERRA: f32 = 5.97219e24;
 
 
+/// The luminosity of Sol in Lumen.
+const LUMINOSITY_SOL: f64 = 3.75e28;
+
+
+
+
+//=============================================================================
+// Star
+
+
+/// Calculates the radius of the habitable zone around a star.
+///
+/// **Note:** The current implementation does only provide a rough estimation since it does not take star temperature nor it's mass into account.
+///
+/// # Arguments
+/// * `luminosity` The luminosity of the star in relation to the luminosity of Sol.
+///
+/// # Returns
+/// The returned array contains:
+/// 1. The inner radius of the habitable zone in meter.
+/// 2. The outer radius of the habitable zone in meter.
+pub fn habitable_zone( luminosity: f32 ) -> [f32; 2] {
+	// Radii in Astronomical units.
+	let inner = ( 0.9 * luminosity ).sqrt();
+	let outer = ( 2.9 * luminosity ).sqrt();
+
+	[ inner * ASTRONOMICAL_UNIT, outer * ASTRONOMICAL_UNIT ]
+}
+
+
 
 
 //=============================================================================
