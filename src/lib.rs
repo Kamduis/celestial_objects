@@ -16,12 +16,14 @@
 // Crates
 
 
+mod traits;
 mod units;
 mod coords;
 mod types;
 mod calc;
 mod serde_helpers;
 
+#[cfg( feature = "tex" )] pub use traits::{Latex, LatexSym};
 pub use crate::coords::{EquatorialCoords, GalacticCoords};
 pub use crate::types::{CelestialSystem, BodyType, Affiliation, StarProperty};
 pub use crate::types::CelestialSystemError;

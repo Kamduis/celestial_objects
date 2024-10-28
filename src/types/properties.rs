@@ -7,10 +7,12 @@
 // Crates
 
 
+use std::collections::BTreeMap;
 use std::fmt;
 
 use serde::{Serialize, Deserialize};
 
+#[cfg( feature = "tex" )] use crate::traits::Latex;
 use crate::units::Length;
 
 use super::CelestialBody;
@@ -161,4 +163,183 @@ pub enum StarProperty {
 
 	/// Higher-mass stars leave the main sequence to become blue giants, then bright blue giants, and then blue supergiants, before expanding into red supergiants.
 	BlueGiant,
+}
+
+
+/// The composition of an atmosphere.
+#[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
+pub struct Atmosphere {
+	/// The pressure of the atmosphere in bar.
+	pub(crate) pressure: f32,
+
+	/// The quality of the atmosphere to humans.
+	pub(crate) quality: AtmosphereQuality,
+
+	/// The composition of the atmosphere.
+	pub(crate) composition: GasComposition,
+}
+
+impl Atmosphere {
+	/// Returns the pressure of the atmosphere in bar.
+	pub fn pressure( &self ) -> f32 {
+		self.pressure
+	}
+
+	/// Returns the quality of the atmosphere.
+	pub fn quality( &self ) -> AtmosphereQuality {
+		self.quality
+	}
+
+	/// Returns the composition of the atmosphere.
+	pub fn composition( &self ) -> &GasComposition {
+		&self.composition
+	}
+}
+
+
+/// The composition of the atmosphere.
+#[derive( Serialize, Deserialize, Clone, PartialEq, Default, Debug )]
+pub struct GasComposition( BTreeMap<Molecule, f64> );
+
+impl GasComposition {
+	/// Return the amount of other/unknown elements.
+	#[cfg( feature = "tex" )]
+	fn other( &self ) -> f64 {
+		let known: f64 = self.0.values().sum();
+
+		1.0 - known
+	}
+}
+
+impl<const N: usize> From<[( Molecule, f64 ); N]> for GasComposition {
+	fn from( arr: [( Molecule, f64 ); N] ) -> Self {
+		if N == 0 {
+			return Self::default();
+		}
+
+		Self( BTreeMap::from( arr ) )
+	}
+}
+
+#[cfg( feature = "tex" )]
+impl Latex for GasComposition {
+	fn to_latex( &self ) -> String {
+		let mut tmp = self.clone();
+
+		tmp.0.insert( Molecule::Other, self.other() );
+
+		tmp.0.iter()
+			.map( |( k, v )| format!( r"{}\,\qty{{{:.1}}}{{\percent}}", k.to_latex(), v * 100.0 ) )
+			.collect::<Vec<String>>()
+			.join( ", " )
+	}
+}
+
+
+/// Represents the quality of an existing atmosphere.
+#[derive( Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Debug )]
+pub enum AtmosphereQuality {
+	/// The atmosphere is breathable to humans.
+	Breathable,
+
+	/// The atmosphere is non-toxic for humans, but they need oxygen masks, to support themselves.
+	NonToxic,
+
+	/// The atmosphere is toxic for humans and they need protective gear with a full air supply.
+	Toxic,
+}
+
+impl AtmosphereQuality {
+	#[cfg( feature = "tex" )]
+	pub fn to_latex_symbol( &self ) -> String {
+		match self {
+			Self::Breathable => r"\symbOkay{}".to_string(),
+			Self::NonToxic => r"\symbOxygen{}".to_string(),
+			Self::Toxic => r"\symbDeadly{}".to_string(),
+		}
+	}
+}
+
+impl fmt::Display for AtmosphereQuality {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		match self {
+			Self::Breathable => write!( f, "Atembar" ),
+			Self::NonToxic => write!( f, "Ungiftig" ),
+			Self::Toxic => write!( f, "Giftig" ),
+		}
+	}
+}
+
+
+/// Representing Molekules in an atmosphere.
+#[derive( Serialize, Deserialize, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug )]
+pub enum Molecule {
+	Ammonia,
+	Argon,
+	CarbonDioxide,
+	CarbonMonoxide,
+	Ethane,
+	Helium,
+	Hydrogen,
+	Kalium,
+	Methane,
+	Natrium,
+	Neon,
+	Nitrogen,
+	Oxygen,
+	SulfurDioxide,
+	SulfurMonoxide,
+	Water,
+	Other,
+}
+
+#[cfg( feature = "tex" )]
+impl Latex for Molecule {
+	fn to_latex( &self ) -> String {
+		let res = match self {
+			Self::Ammonia => r"\ce{NH3}",
+			Self::Argon => r"\ce{Ar}",
+			Self::CarbonDioxide => r"\ce{CO2}",
+			Self::CarbonMonoxide => r"\ce{CO}",
+			Self::Ethane => r"\ce{C2H6}",
+			Self::Helium => r"\ce{He}",
+			Self::Hydrogen => r"\ce{H}",
+			Self::Kalium => r"\ce{K}",
+			Self::Methane => r"\ce{CH4}",
+			Self::Natrium => r"\ce{Na}",
+			Self::Neon => r"\ce{Ne}",
+			Self::Nitrogen => r"\ce{N2}",
+			Self::Oxygen => r"\ce{O2}",
+			Self::SulfurDioxide => r"\ce{SO2}",
+			Self::SulfurMonoxide => r"\ce{SO}",
+			Self::Water => r"\ce{H2O}",
+			Self::Other => r"andere",
+		};
+
+		res.to_string()
+	}
+}
+
+impl fmt::Display for Molecule {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		match self {
+			Self::Ammonia =>        write!( f, "NH3" ),
+			Self::Argon =>          write!( f, "Ar" ),
+			Self::CarbonDioxide =>  write!( f, "CO2" ),
+			Self::CarbonMonoxide => write!( f, "CO" ),
+			Self::Ethane =>         write!( f, "C2H6" ),
+			Self::Helium =>         write!( f, "He" ),
+			Self::Hydrogen =>       write!( f, "H" ),
+			Self::Kalium =>         write!( f, "K" ),
+			Self::Methane =>        write!( f, "CH4" ),
+			Self::Natrium =>        write!( f, "Na" ),
+			Self::Neon =>           write!( f, "Ne" ),
+			Self::Nitrogen =>       write!( f, "N2" ),
+			Self::Oxygen =>         write!( f, "O2" ),
+			Self::SulfurDioxide =>  write!( f, "SO2" ),
+			Self::SulfurMonoxide => write!( f, "SO" ),
+			Self::Water =>          write!( f, "H2O" ),
+			Self::Other =>          write!( f, r"andere" ),
+		}
+	}
 }

@@ -3,6 +3,9 @@ name = "celestial_objects"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+tex = []
+
 [dependencies]
 approx = "0.5.1"
 chrono = { version = "0.4.38", features = ["serde"] }

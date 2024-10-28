@@ -14,7 +14,7 @@ use crate::CelestialSystem;
 use crate::coords::EquatorialCoords;
 use crate::types::AstronomicalObject;
 use crate::types::CelestialBody;
-use crate::types::properties::{Affiliation, Orbit};
+use crate::types::properties::{Affiliation, Orbit, Atmosphere, AtmosphereQuality, GasComposition, Molecule};
 use crate::types::objects::{GravitationalCenter, Star, Trabant, Ring, Station};
 
 
@@ -42,6 +42,8 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							radius: 0.3829,
 							gravity: 0.38,
 							rotation_period: Some( TimeDelta::days( 58 ) + TimeDelta::hours( 15 ) + TimeDelta::minutes( 36 ) ),
+							temperature: [ -173.0, 167.0, 427.0 ],
+							atmosphere: None,
 							satellites: Vec::new(),
 						} ),
 					},
@@ -53,6 +55,17 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							radius: 0.9499,
 							gravity: 0.904,
 							rotation_period: Some( ( TimeDelta::days( 243 ) + TimeDelta::minutes( 36 ) ) * -1 ),
+							temperature: [ 437.0, 464.0, 497.0 ],
+							atmosphere: Some( Atmosphere {
+								pressure: 92.0,
+								quality: AtmosphereQuality::Toxic,
+								composition: GasComposition::from( [
+									( Molecule::CarbonDioxide, 0.912 ),
+									( Molecule::Nitrogen, 0.035 ),
+									( Molecule::Oxygen, 0.051 ),
+									( Molecule::SulfurDioxide, 0.001 ),
+								] ),
+							} ),
 							satellites: Vec::new(),
 						} ),
 					},
@@ -64,6 +77,18 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							radius: 1.0,
 							gravity: 1.0,
 							rotation_period: Some( TimeDelta::hours( 23 ) + TimeDelta::minutes( 56 ) + TimeDelta::seconds( 4 ) ),
+							temperature: [ -89.0, 15.0, 58.0 ],
+							atmosphere: Some( Atmosphere {
+								pressure: 1.01,
+								quality: AtmosphereQuality::Toxic,
+								composition: GasComposition::from( [
+									( Molecule::Argon, 0.0093 ),
+									( Molecule::CarbonDioxide, 0.17038 ),
+									( Molecule::Nitrogen, 0.7808 ),
+									( Molecule::Oxygen, 0.00095 ),
+									( Molecule::SulfurDioxide, 0.0301 ),
+								] ),
+							} ),
 							satellites: vec![
 								Orbit {
 									axis_semi_major: 0.00257,
@@ -73,6 +98,8 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										radius: 0.2731,
 										gravity: 0.1654,
 										rotation_period: None,
+										temperature: [ -173.0, -23.0, 116.0 ],
+										atmosphere: None,
 										satellites: Vec::new(),
 									} ),
 								},
@@ -84,6 +111,16 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										mass: 4180e3,
 										size: Vec3::new( 200.0, 200.0, 6e3 ),
 										gravity: 1.0,
+										temperature: [ 15.0, 21.0, 27.0 ],
+										atmosphere: Some( Atmosphere {
+											pressure: 1.0,
+											quality: AtmosphereQuality::Breathable,
+											composition: GasComposition::from( [
+												( Molecule::CarbonDioxide, 0.004 ),
+												( Molecule::Nitrogen, 0.787 ),
+												( Molecule::Oxygen, 0.207 ),
+											] ),
+										} ),
 										satellites: Vec::new(),
 									} )
 								},
@@ -98,6 +135,17 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							radius: 9.449,
 							gravity: 1.065,
 							rotation_period: Some( TimeDelta::hours( 10 ) + TimeDelta::minutes( 33 ) ),
+							temperature: [ -185.0, -152.0, -120.0 ],
+							atmosphere: Some( Atmosphere {
+								pressure: 1.4,
+								quality: AtmosphereQuality::Toxic,
+								composition: GasComposition::from( [
+									( Molecule::Ammonia, 0.125e-3 ),
+									( Molecule::Helium, 0.0325 ),
+									( Molecule::Hydrogen, 0.963 ),
+									( Molecule::Methane, 4.5e-3 ),
+								] ),
+							} ),
 							satellites: vec![
 								Orbit {
 									axis_semi_major: 425.574205e-6,
@@ -117,6 +165,16 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							radius: 3.829,
 							gravity: 1.137,
 							rotation_period: Some( TimeDelta::hours( 15 ) + TimeDelta::minutes( 57 ) + TimeDelta::seconds( 59 ) ),
+							temperature: [ -218.0, -209.0, -201.0 ],
+							atmosphere: Some( Atmosphere {
+								pressure: 1.0,
+								quality: AtmosphereQuality::Toxic,
+								composition: GasComposition::from( [
+									( Molecule::Hydrogen, 0.79 ),
+									( Molecule::Helium, 0.19 ),
+									( Molecule::Methane, 0.015 ),
+								] ),
+							} ),
 							satellites: vec![
 								Orbit {
 									axis_semi_major: 0.00237,
@@ -126,6 +184,8 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										radius: 0.2122,
 										gravity: 0.0794,
 										rotation_period: None,
+										temperature: [ -235.0, -235.0, -235.0 ],
+										atmosphere: None,
 										satellites: Vec::new(),
 									} ),
 								},
@@ -156,6 +216,17 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										radius: 1.1,
 										gravity: 1.05,
 										rotation_period: Some( TimeDelta::hours( 18 ) + TimeDelta::minutes( 7 ) ),
+										temperature: [ -7.0, 12.0, 89.0 ],
+										atmosphere: Some( Atmosphere {
+											pressure: 1.2,
+											quality: AtmosphereQuality::Breathable,
+											composition: GasComposition::from( [
+												( Molecule::CarbonDioxide, 0.00054 ),
+												( Molecule::Nitrogen, 0.77 ),
+												( Molecule::Oxygen, 0.214 ),
+												( Molecule::Argon, 0.002 ),
+											] ),
+										} ),
 										satellites: Vec::new(),
 									} ),
 								},
@@ -176,6 +247,17 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										radius: 0.9,
 										gravity: 1.1,
 										rotation_period: Some( TimeDelta::hours( 30 ) + TimeDelta::minutes( 42 ) ),
+										temperature: [ -120.0, 5.0, 127.0 ],
+										atmosphere: Some( Atmosphere {
+											pressure: 0.36,
+											quality: AtmosphereQuality::Breathable,
+											composition: GasComposition::from( [
+												( Molecule::CarbonDioxide, 0.00092 ),
+												( Molecule::Nitrogen, 0.792 ),
+												( Molecule::Oxygen, 0.179 ),
+												( Molecule::Argon, 0.015 ),
+											] ),
+										} ),
 										satellites: Vec::new(),
 									} ),
 								},

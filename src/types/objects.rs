@@ -15,7 +15,7 @@ use crate::calc;
 use crate::units::{Mass, Length};
 
 use super::AstronomicalObject;
-use super::properties::{StarProperty, Orbit};
+use super::properties::{StarProperty, Orbit, Atmosphere};
 
 
 
@@ -64,6 +64,14 @@ impl AstronomicalObject for GravitationalCenter {
 	/// TODO: Return an enum that reflects valid, invalid and bound rotation.
 	fn rotation_period( &self ) -> Option<TimeDelta> {
 		Some( TimeDelta::zero() )
+	}
+
+	fn temperature( &self ) -> Option<&[f32; 3]> {
+		None
+	}
+
+	fn atmosphere( &self ) -> Option<&Atmosphere> {
+		None
 	}
 }
 
@@ -177,6 +185,14 @@ impl AstronomicalObject for Star {
 	fn rotation_period( &self ) -> Option<TimeDelta> {
 		self.rotation_period
 	}
+
+	fn temperature( &self ) -> Option<&[f32; 3]> {
+		None
+	}
+
+	fn atmosphere( &self ) -> Option<&Atmosphere> {
+		None
+	}
 }
 
 
@@ -194,6 +210,15 @@ pub struct Trabant {
 
 	/// The surface gravity of this trabant in relation to the surface gravity of Terra.
 	pub(crate) gravity: f32,
+
+	/// The min, mean and max temperature of the trabant.
+	pub(crate) temperature: [f32; 3],
+
+	/// The composition of the atmosphere. Can be `None` if the world does not have an atmosphere.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(crate) atmosphere: Option<Atmosphere>,
 
 	/// The rotation period (sidereal time). This is the time duration it takes for the body to make a full rotation. This is different from the "day" duration, which may be a little bit longer. Since when the body performed a full rotation it moved along it's orbit and is therefore not facing the same angle to it's sun.
 	/// If this is `None`, this means the body's representation is gravitational bound around the object it orbits.
@@ -241,6 +266,14 @@ impl AstronomicalObject for Trabant {
 	fn rotation_period( &self ) -> Option<TimeDelta> {
 		self.rotation_period
 	}
+
+	fn temperature( &self ) -> Option<&[f32; 3]> {
+		Some( &self.temperature )
+	}
+
+	fn atmosphere( &self ) -> Option<&Atmosphere> {
+		self.atmosphere.as_ref()
+	}
 }
 
 
@@ -277,6 +310,15 @@ pub struct Station {
 	/// The gravity within the station in relation to the surface gravity of Terra.
 	pub(crate) gravity: f32,
 
+	/// The min, mean and max temperature of the trabant.
+	pub(crate) temperature: [f32; 3],
+
+	/// The composition of the atmosphere. Can be `None` if the world does not have an atmosphere.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(crate) atmosphere: Option<Atmosphere>,
+
 	/// The objects orbiting this station.
 	pub(crate) satellites: Vec<Orbit>,
 }
@@ -309,5 +351,13 @@ impl AstronomicalObject for Station {
 
 	fn gravitation( &self ) -> Option<f32> {
 		Some( self.gravity )
+	}
+
+	fn temperature( &self ) -> Option<&[f32; 3]> {
+		Some( &self.temperature )
+	}
+
+	fn atmosphere( &self ) -> Option<&Atmosphere> {
+		self.atmosphere.as_ref()
 	}
 }

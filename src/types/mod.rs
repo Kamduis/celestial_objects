@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{BodyType, StarProperty, Affiliation};
+pub use properties::{BodyType, StarProperty, Affiliation, Atmosphere};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -109,6 +109,19 @@ pub trait AstronomicalObject {
 	fn rotation_period( &self ) -> Option<TimeDelta> {
 		None
 	}
+
+	/// Returns the surface temperatures of the astronomical object. The three values are in this order:
+	/// 1. Minimum temperature
+	/// 2. Mean temperature
+	/// 3. Maximum temperature
+	///
+	/// Objects without a defined temperature (e.g. gravitational centers or stars) return `None`.
+	fn temperature( &self ) -> Option<&[f32; 3]>;
+
+	/// Returns the atmosphere of the astronomical object.
+	///
+	/// Objects without an atmosphere return `None`.
+	fn atmosphere( &self ) -> Option<&Atmosphere>;
 }
 
 
@@ -325,6 +338,26 @@ impl AstronomicalObject for CelestialBody {
 			Self::Trabant( x ) => x.rotation_period(),
 			Self::Ring( _ ) => None,
 			Self::Station( x ) => x.rotation_period(),
+		}
+	}
+
+	fn temperature( &self ) -> Option<&[f32; 3]> {
+		match self {
+			Self::GravitationalCenter( x ) => x.temperature(),
+			Self::Star( x ) => x.temperature(),
+			Self::Trabant( x ) => x.temperature(),
+			Self::Ring( _ ) => None,
+			Self::Station( x ) => x.temperature(),
+		}
+	}
+
+	fn atmosphere( &self ) -> Option<&Atmosphere> {
+		match self {
+			Self::GravitationalCenter( x ) => x.atmosphere(),
+			Self::Star( x ) => x.atmosphere(),
+			Self::Trabant( x ) => x.atmosphere(),
+			Self::Ring( _ ) => None,
+			Self::Station( x ) => x.atmosphere(),
 		}
 	}
 }
@@ -841,6 +874,43 @@ impl CelestialSystem {
 		let res = ( orbital_period_float * sideral_day_float ) / ( orbital_period_float - sideral_day_float );
 
 		Ok( Some(  TimeDelta::seconds( res as i64 ) ) )
+	}
+
+	/// Returns the surface temperatures of the `index`ed body. The three values are in this order:
+	/// 1. Minimum temperature
+	/// 2. Mean temperature
+	/// 3. Maximum temperature
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn temperature<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a [f32; 3]>, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		if index[0] == 0 {
+			return Ok( self.body.temperature() );
+		}
+
+		let body_got = satellite_getter( &self.body, &index )?;
+		Ok( body_got.temperature() )
+	}
+
+	/// Returns the `Atmosphere` if the `index`ed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn atmosphere<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&Atmosphere>, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		if index[0] == 0 {
+			return Ok( self.body.atmosphere() );
+		}
+
+		let body_got = satellite_getter( &self.body, &index )?;
+		Ok( body_got.atmosphere() )
 	}
 
 	/// Returns the index of the center object of the orbit of the object of `index`.
