@@ -944,7 +944,6 @@ impl CelestialSystem {
 	/// Returns an iterator of all stars within this system.
 	pub fn stars( &self ) -> CelestialSystemStarsIterator {
 		let mut iter_obj = CelestialSystemStarsIterator {
-			body: &self.body,
 			stars: Vec::new(),
 			index: 0,
 		};
@@ -960,9 +959,6 @@ impl CelestialSystem {
 ///
 /// TODO: The implementation is very inefficient, creating a `Vec` each time the iterator is newly created.
 pub struct CelestialSystemStarsIterator<'a> {
-	/// The central body of the system.
-	body: &'a CelestialBody,
-
 	stars: Vec<&'a Star>,
 
 	index: usize,

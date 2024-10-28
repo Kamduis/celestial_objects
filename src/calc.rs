@@ -40,8 +40,8 @@ pub const MASS_SOL: f32 = 1.98855e30;
 pub const MASS_TERRA: f32 = 5.97219e24;
 
 
-/// The luminosity of Sol in Lumen.
-const LUMINOSITY_SOL: f64 = 3.75e28;
+// /// The luminosity of Sol in Lumen.
+// const LUMINOSITY_SOL: f64 = 3.75e28;
 
 
 
