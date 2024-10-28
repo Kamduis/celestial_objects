@@ -13,7 +13,9 @@ use glam::Vec3;
 use crate::CelestialSystem;
 use crate::coords::EquatorialCoords;
 use crate::types::AstronomicalObject;
-use crate::types::{CelestialBody, Affiliation, Orbit, GravitationalCenter, Star, Trabant, Ring, Station};
+use crate::types::CelestialBody;
+use crate::types::properties::{Affiliation, Orbit};
+use crate::types::objects::{GravitationalCenter, Star, Trabant, Ring, Station};
 
 
 
