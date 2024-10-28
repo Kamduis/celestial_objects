@@ -227,8 +227,30 @@ pub struct Trabant {
 	#[serde( with = "crate::serde_helpers::timedelta_option" )]
 	pub(crate) rotation_period: Option<TimeDelta>,
 
+	/// The typical tech level of this world. Can be `None` for uninhabitated worlds.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(crate) techlevel: Option<u32>,
+
+	/// The number of jump gates on this world.
+	#[serde( default )]
+	pub(crate) gates: u32,
+
 	/// The objects orbiting this trabant.
 	pub(crate) satellites: Vec<Orbit>,
+}
+
+impl Trabant {
+	/// Returns the tech level of this trabant.
+	pub fn techlevel( &self ) -> Option<u32> {
+		self.techlevel
+	}
+
+	/// Returns the number of hyperspace gates of this trabant.
+	pub fn gates( &self ) -> u32 {
+		self.gates
+	}
 }
 
 impl AstronomicalObject for Trabant {
@@ -319,8 +341,30 @@ pub struct Station {
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
 	pub(crate) atmosphere: Option<Atmosphere>,
 
+	/// The typical tech level of this station. Can be `None` for uninhabitated stations, but since almost all stations are technical in essence, they should all have a valid tech level.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(crate) techlevel: Option<u32>,
+
+	/// The number of jump gates on this world.
+	#[serde( default )]
+	pub(crate) gates: u32,
+
 	/// The objects orbiting this station.
 	pub(crate) satellites: Vec<Orbit>,
+}
+
+impl Station {
+	/// Returns the tech level of this station.
+	pub fn techlevel( &self ) -> Option<u32> {
+		self.techlevel
+	}
+
+	/// Returns the number of hyperspace gates of this station.
+	pub fn gates( &self ) -> u32 {
+		self.gates
+	}
 }
 
 impl AstronomicalObject for Station {

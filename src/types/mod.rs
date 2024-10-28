@@ -73,6 +73,9 @@ pub enum CelestialSystemError {
 	#[error( "The body at index `{0}` is not a star." )]
 	NotAStar( String ),
 
+	#[error( "The body at index `{0}` cannot be colonized." )]
+	NotColonizable( String ),
+
 	#[error( "There is no star present in the system." )]
 	NoStarPresent,
 }
@@ -896,7 +899,7 @@ impl CelestialSystem {
 		Ok( body_got.temperature() )
 	}
 
-	/// Returns the `Atmosphere` if the `index`ed object.
+	/// Returns the `Atmosphere` of the `index`ed object.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
@@ -911,6 +914,56 @@ impl CelestialSystem {
 
 		let body_got = satellite_getter( &self.body, &index )?;
 		Ok( body_got.atmosphere() )
+	}
+
+	/// Returns the tech level of the `index`ed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// This method returns `None` for worlds without civilization and therefore no tech level.
+	pub fn techlevel( &self, index: &[usize] ) -> Result<Option<u32>, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, &index )?
+		};
+
+		let res = match body {
+			CelestialBody::Trabant( x ) => x.techlevel(),
+			CelestialBody::Station( x ) => x.techlevel(),
+			_ => return Err( CelestialSystemError::NotColonizable( format!( "{:?}", index ) ) ),
+		};
+
+		Ok( res )
+	}
+
+	/// Returns the number of hyperspace gates of this world.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn gates( &self, index: &[usize] ) -> Result<u32, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, &index )?
+		};
+
+		let res = match body {
+			CelestialBody::Trabant( x ) => x.gates(),
+			CelestialBody::Station( x ) => x.gates(),
+			_ => return Err( CelestialSystemError::NotColonizable( format!( "{:?}", index ) ) ),
+		};
+
+		Ok( res )
 	}
 
 	/// Returns the index of the center object of the orbit of the object of `index`.
