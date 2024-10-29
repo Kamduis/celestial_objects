@@ -239,7 +239,7 @@ fn satellite_getter_hierarchical<'a>( center: &'a CelestialBody, index: &'a [usi
 ///
 /// # Returns
 /// The first `CelestialBody` encountered. If no star has been encountered, this returns `None`.
-fn get_main_star<'a>( center: &'a CelestialBody ) -> Option<&'a CelestialBody> {
+fn get_main_star( center: &CelestialBody ) -> Option<&CelestialBody> {
 	if let CelestialBody::Star( _ ) = center {
 		return Some( center );
 	}
