@@ -570,7 +570,7 @@ impl CelestialSystem {
 		if index[0] == 0 {
 			match &self.body {
 				CelestialBody::GravitationalCenter( _ ) => {
-					return Ok( format!( "{} AB", self.name( &[] )? ) );
+					Ok( format!( "{} AB", self.name( &[] )? ) )
 				},
 				CelestialBody::Star( x ) => {
 					// If no name is given, is the name of the central star equal to the name of the system.
@@ -595,7 +595,7 @@ impl CelestialSystem {
 
 			};
 
-			return Ok( res )
+			Ok( res )
 		}
 	}
 
@@ -774,7 +774,8 @@ impl CelestialSystem {
 		let CelestialBody::Star( star ) = body else {
 			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
 		};
-		return Ok( &star.spectral_class );
+
+		Ok( &star.spectral_class )
 	}
 
 	/// Returns the semi major axis of the indexed object to the center it orbits.
@@ -1030,8 +1031,6 @@ impl<'a> CelestialSystemStarsIterator<'a> {
 				for sat in &x.satellites {
 					self.walker( &sat.body );
 				}
-
-				return;
 			},
 
 			// A star may orbit another star.
@@ -1041,12 +1040,10 @@ impl<'a> CelestialSystemStarsIterator<'a> {
 				for sat in &x.satellites {
 					self.walker( &sat.body );
 				}
-
-				return;
 			},
 
 			// No star will be orbiting a trabant or station.
-			_ => return,
+			_ => (),
 		}
 	}
 }

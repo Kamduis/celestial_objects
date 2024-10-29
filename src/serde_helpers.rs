@@ -161,6 +161,6 @@ pub mod timedelta_option {
 		let td = dhms_to_timedelta( &deserialized )
 			.map_err( D::Error::custom )?;
 
-		return Ok( Some( td ) )
+		Ok( Some( td ) )
 	}
 }
