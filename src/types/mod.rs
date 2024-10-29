@@ -157,7 +157,7 @@ fn orbit_getter<'a>(
 
 	// An index ending in 0 (`&[3,0]`) is identical to the same index without the 0 (`&[3]`).
 	if index.len() == 1 || ( index.len() == 2 && index[1] == 0 ) {
-		return Ok( &orbit );
+		return Ok( orbit );
 	}
 
 	orbit_getter( &orbit.body, &index[1..] )
@@ -503,7 +503,7 @@ impl CelestialSystem {
 		let mut res = Vec::new();
 
 		for ( i, _ ) in body.satellites().iter().enumerate() {
-			let mut idx_new = if index == &[0] {
+			let mut idx_new = if index == [0] {
 				Vec::new()
 			} else {
 				index.to_vec()
@@ -579,7 +579,7 @@ impl CelestialSystem {
 				_ => unimplemented!( "Center bodies should never by planets, moons or stations." ),
 			}
 		} else {
-			let ( body_got, hierarchy ) = &satellite_getter_hierarchical( &self.body, &index, "" )?;
+			let ( body_got, hierarchy ) = &satellite_getter_hierarchical( &self.body, index, "" )?;
 
 			let name = match &body_got {
 				CelestialBody::GravitationalCenter( _ ) => unreachable!( "No gravitational center expected." ),
@@ -630,7 +630,7 @@ impl CelestialSystem {
 			return Ok( BodyType::from( &self.body ) );
 		}
 
-		let body_got = &satellite_getter( &self.body, &index )?;
+		let body_got = &satellite_getter( &self.body, index )?;
 		Ok( BodyType::from( *body_got ) )
 	}
 
@@ -691,7 +691,7 @@ impl CelestialSystem {
 		let body = if index[0] == 0 {
 			&self.body
 		} else {
-			satellite_getter( &self.body, &index )?
+			satellite_getter( &self.body, index )?
 		};
 
 		Ok( body.radius() )
@@ -709,7 +709,7 @@ impl CelestialSystem {
 		let body = if index[0] == 0 {
 			&self.body
 		} else {
-			satellite_getter( &self.body, &index )?
+			satellite_getter( &self.body, index )?
 		};
 
 		Ok( body.mass() )
@@ -727,7 +727,7 @@ impl CelestialSystem {
 		let body = if index[0] == 0 {
 			&self.body
 		} else {
-			satellite_getter( &self.body, &index )?
+			satellite_getter( &self.body, index )?
 		};
 
 		Ok( body.gravitation() )
@@ -748,7 +748,7 @@ impl CelestialSystem {
 		// 	}
 		// }
 
-		let body_got = satellite_getter( &self.body, &index )?;
+		let body_got = satellite_getter( &self.body, index )?;
 		if let CelestialBody::Star( x ) = body_got {
 			return Ok( x.luminosity() );
 		}
@@ -768,7 +768,7 @@ impl CelestialSystem {
 		let body = if index[0] == 0 {
 			&self.body
 		} else {
-			satellite_getter( &self.body, &index )?
+			satellite_getter( &self.body, index )?
 		};
 
 		let CelestialBody::Star( star ) = body else {
@@ -789,7 +789,7 @@ impl CelestialSystem {
 			return Err( CelestialSystemError::NoCenterObject( format!( "{:?}", index ) ) );
 		}
 
-		let orbit_got = orbit_getter( &self.body, &index )?;
+		let orbit_got = orbit_getter( &self.body, index )?;
 
 		Ok( orbit_got.axis_semi_major() )
 	}
@@ -805,7 +805,7 @@ impl CelestialSystem {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
 
-		orbit_getter( &self.body, &index )
+		orbit_getter( &self.body, index )
 	}
 
 	/// Returns the minimum and maximum range of the habitable zone of the star at `index`.
@@ -822,7 +822,7 @@ impl CelestialSystem {
 		let body = if index[0] == 0 {
 			&self.body
 		} else {
-			satellite_getter( &self.body, &index )?
+			satellite_getter( &self.body, index )?
 		};
 
 		let CelestialBody::Star( ref star ) = body else {
@@ -854,7 +854,7 @@ impl CelestialSystem {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
 
-		let body_got = satellite_getter( &self.body, &index )?;
+		let body_got = satellite_getter( &self.body, index )?;
 
 		let res = match body_got.rotation_period() {
 			Some( x ) => x,
@@ -895,7 +895,7 @@ impl CelestialSystem {
 	/// If the object at `index` is a world orbiting it's center (which is a star) with a locked rotation, this method returns `None`, since it has effectively a day of infinite length.
 	/// If the object at `index` does not have an orbit center, this method returns an error.
 	pub fn day( &self, index: &[usize] ) -> Result<Option<TimeDelta>, CelestialSystemError> {
-		let body = satellite_getter( &self.body, &index )?;
+		let body = satellite_getter( &self.body, index )?;
 
 		if let Some( day ) = body.day_artificial() {
 			return Ok( Some( day.clone() ) );
@@ -920,7 +920,7 @@ impl CelestialSystem {
 			return Ok( self.body.temperature() );
 		}
 
-		let body_got = satellite_getter( &self.body, &index )?;
+		let body_got = satellite_getter( &self.body, index )?;
 		Ok( body_got.temperature() )
 	}
 
@@ -936,7 +936,7 @@ impl CelestialSystem {
 		let body = if index[0] == 0 {
 			&self.body
 		} else {
-			satellite_getter( &self.body, &index )?
+			satellite_getter( &self.body, index )?
 		};
 
 		Ok( body.atmosphere() )
@@ -956,7 +956,7 @@ impl CelestialSystem {
 		let body = if index[0] == 0 {
 			&self.body
 		} else {
-			satellite_getter( &self.body, &index )?
+			satellite_getter( &self.body, index )?
 		};
 
 		let res = match body {
@@ -980,7 +980,7 @@ impl CelestialSystem {
 		let body = if index[0] == 0 {
 			&self.body
 		} else {
-			satellite_getter( &self.body, &index )?
+			satellite_getter( &self.body, index )?
 		};
 
 		let res = match body {
