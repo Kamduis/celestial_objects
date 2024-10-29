@@ -144,7 +144,6 @@ fn orbit_getter<'a>(
 	center: &'a CelestialBody,
 	index: &'a [usize]
 ) -> Result<&'a Orbit, CelestialSystemError> {
-	dbg!( index );
 	if index.is_empty() || index[0] == 0 {
 		return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 	}
@@ -732,34 +731,18 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	///
-	/// If the system index is used (`&[]`), this method returns the spectral class of the main star.
 	pub fn spectral_class<'a>( &'a self, index: &'a [usize] ) -> Result<&'a str, CelestialSystemError> {
 		if index.is_empty() {
-			match &self.body {
-				CelestialBody::GravitationalCenter( _ ) => {
-					let Some( body ) = get_main_star( &self.body ) else {
-						return Err( CelestialSystemError::NoStarPresent );
-					};
-					let CelestialBody::Star( ref star ) = body else {
-						unreachable!( "`get_main_star()` should only ever return stars." );
-					};
-					return Ok( star.spectral_class.as_str() );
-				},
-				CelestialBody::Star( x ) => return Ok( &x.spectral_class ),
-				_ => unreachable!( "Only gravitational centers or stars should be the center object of a planetary system." ),
-			}
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
 
-		if index[0] == 0 {
-			let CelestialBody::Star( ref star ) = self.body else {
-				return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
-			};
-			return Ok( &star.spectral_class );
-		}
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, &index )?
+		};
 
-		let body_got = &satellite_getter( &self.body, &index )?;
-		let CelestialBody::Star( star ) = body_got else {
+		let CelestialBody::Star( star ) = body else {
 			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
 		};
 		return Ok( &star.spectral_class );
@@ -806,15 +789,13 @@ impl CelestialSystem {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
 
-		if index[0] == 0 {
-			let CelestialBody::Star( ref star ) = self.body else {
-				return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
-			};
-			return Ok( star.habitable_zone() );
-		}
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, &index )?
+		};
 
-		let body_got = satellite_getter( &self.body, &index )?;
-		let CelestialBody::Star( ref star ) = body_got else {
+		let CelestialBody::Star( ref star ) = body else {
 			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
 		};
 
@@ -1255,10 +1236,6 @@ mod tests {
 		);
 
 		let centauri = &systems[1];
-
-		dbg!( centauri.stars()
-				.map( |x| x.mass )
-				.collect::<Vec<_>>() );
 
 		assert_eq!(
 			centauri.stars()
