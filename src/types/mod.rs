@@ -583,10 +583,10 @@ impl CelestialSystem {
 
 			let name = match &body_got {
 				CelestialBody::GravitationalCenter( _ ) => unreachable!( "No gravitational center expected." ),
-				CelestialBody::Star( x ) => x.name.as_ref().map( |y| y.as_str() ),
-				CelestialBody::Trabant( x ) => x.name.as_ref().map( |y| y.as_str() ),
+				CelestialBody::Star( x ) => x.name.as_deref(),
+				CelestialBody::Trabant( x ) => x.name.as_deref(),
 				CelestialBody::Ring( _ ) => None,
-				CelestialBody::Station( x ) => x.name.as_ref().map( |y| y.as_str() ),
+				CelestialBody::Station( x ) => x.name.as_deref(),
 			};
 
 			let res = match name {
@@ -611,7 +611,7 @@ impl CelestialSystem {
 
 	/// Returns the description of the system.
 	pub fn description( &self ) -> Option<&str> {
-		self.description.as_ref().map( |x| x.as_str() )
+		self.description.as_deref()
 	}
 
 	/// Returns the body type of the indexed object.
@@ -898,7 +898,7 @@ impl CelestialSystem {
 		let body = satellite_getter( &self.body, index )?;
 
 		if let Some( day ) = body.day_artificial() {
-			return Ok( Some( day.clone() ) );
+			return Ok( Some( *day ) );
 		}
 
 		self.day_solar( index )
