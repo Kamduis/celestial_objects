@@ -131,7 +131,7 @@ pub mod timedelta_option {
 		let mut elements = Vec::new();
 		let td_abs = td.abs();
 		if td_abs.num_days() != 0 {
-			elements.push( format!( "{}d", td_abs.num_days().to_string() ) );
+			elements.push( format!( "{}d", td_abs.num_days() ) );
 		}
 
 		let hours_seg = ( td_abs - TimeDelta::days( td_abs.num_days() ) ).num_hours();
