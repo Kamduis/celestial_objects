@@ -25,7 +25,7 @@ mod serde_helpers;
 
 #[cfg( feature = "tex" )] pub use traits::{Latex, LatexSym};
 pub use crate::coords::{EquatorialCoords, GalacticCoords};
-pub use crate::types::{CelestialSystem, BodyType, Affiliation, StarProperty};
+pub use crate::types::{CelestialSystem, BodyType, Affiliation, StarProperty, Atmosphere, AtmosphereQuality, GasComposition};
 pub use crate::types::CelestialSystemError;
 pub use crate::units::{Length, Mass};
 

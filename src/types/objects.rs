@@ -332,6 +332,12 @@ pub struct Station {
 	/// The gravity within the station in relation to the surface gravity of Terra.
 	pub(crate) gravity: f32,
 
+	/// The duration of an artificial day of this station. If the station does not have an artificial day period, this returns `None`.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::timedelta_option" )]
+	pub(crate) day_artificial: Option<TimeDelta>,
+
 	/// The min, mean and max temperature of the trabant.
 	pub(crate) temperature: [f32; 3],
 
@@ -395,6 +401,10 @@ impl AstronomicalObject for Station {
 
 	fn gravitation( &self ) -> Option<f32> {
 		Some( self.gravity )
+	}
+
+	fn day_artificial( &self ) -> Option<&TimeDelta> {
+		self.day_artificial.as_ref()
 	}
 
 	fn temperature( &self ) -> Option<&[f32; 3]> {

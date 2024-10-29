@@ -119,6 +119,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										mass: 4180e3,
 										size: Vec3::new( 200.0, 200.0, 6e3 ),
 										gravity: 1.0,
+										day_artificial: Some( TimeDelta::hours( 24 ) ),
 										temperature: [ 15.0, 21.0, 27.0 ],
 										atmosphere: Some( Atmosphere {
 											pressure: 1.0,

@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{BodyType, StarProperty, Affiliation, Atmosphere};
+pub use properties::{BodyType, StarProperty, Affiliation, Atmosphere, AtmosphereQuality, GasComposition};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -110,6 +110,11 @@ pub trait AstronomicalObject {
 
 	/// Returns the duration of one rotation of the `AstronomicalObject`. If it's rotation is locked, this method returns `None`.
 	fn rotation_period( &self ) -> Option<TimeDelta> {
+		None
+	}
+
+	///  Returns the duration of an artificial day period. Most objects don't have such an artificial day, but stations may. This method returns `None` if there is no artificial day.
+	fn day_artificial( &self ) -> Option<&TimeDelta> {
 		None
 	}
 
@@ -343,6 +348,16 @@ impl AstronomicalObject for CelestialBody {
 		}
 	}
 
+	fn day_artificial( &self ) -> Option<&TimeDelta> {
+		match self {
+			Self::GravitationalCenter( x ) => x.day_artificial(),
+			Self::Star( x ) => x.day_artificial(),
+			Self::Trabant( x ) => x.day_artificial(),
+			Self::Ring( _ ) => None,
+			Self::Station( x ) => x.day_artificial(),
+		}
+	}
+
 	fn temperature( &self ) -> Option<&[f32; 3]> {
 		match self {
 			Self::GravitationalCenter( x ) => x.temperature(),
@@ -513,6 +528,27 @@ impl CelestialSystem {
 			.cloned()
 	}
 
+	/// Returns the index of the center object of the orbit of the object of `index`.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// Since the system itself and the center object of the system are not orbiting anything, the indices `&[]` and `&[0]` are illegal and cause an error to be returned.
+	pub fn index_of_center_of( &self, index: &[usize] ) -> Result<Vec<usize>, CelestialSystemError> {
+		if index.is_empty() || index[0] == 0 {
+			return Err( CelestialSystemError::NoCenterObject( format!( "{:?}", index ) ) );
+		}
+
+		let mut idx = index.to_vec();
+		if index[index.len()-1] == 0 {
+			let _ = std::mem::replace( &mut idx[index.len()-2], 0 );
+		} else {
+			let _ = std::mem::replace( &mut idx[index.len()-1], 0 );
+		}
+
+		Ok( idx )
+	}
+
 	/// Returns the identifier of the `CelestialSystem`.
 	pub fn identifier( &self ) -> &str {
 		&self.identifier
@@ -652,39 +688,31 @@ impl CelestialSystem {
 			}
 		}
 
-		if index[0] == 0 {
-			return Ok( self.body.radius() );
-		}
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, &index )?
+		};
 
-		let body_got = &satellite_getter( &self.body, &index )?;
-		Ok( body_got.radius() )
+		Ok( body.radius() )
 	}
 
 	/// Returns the mass of the indexed object.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	///
-	/// If the system index is used (`&[]`), this method returns the radius of the main star.
 	pub fn mass( &self, index: &[usize] ) -> Result<Mass, CelestialSystemError> {
 		if index.is_empty() {
-			match &self.body {
-				CelestialBody::GravitationalCenter( _ ) => {
-					let Some( body ) = get_main_star( &self.body ) else {
-						return Err( CelestialSystemError::NoStarPresent );
-					};
-					return Ok( body.mass() );
-				},
-				_ => return Ok( self.body.mass() ),
-			}
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
 
-		if index[0] == 0 {
-			return Ok( self.body.mass() );
-		}
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, &index )?
+		};
 
-		let body_got = &satellite_getter( &self.body, &index )?;
-		Ok( body_got.mass() )
+		Ok( body.mass() )
 	}
 
 	/// Returns the surface gravitation of the indexed object.
@@ -696,12 +724,13 @@ impl CelestialSystem {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
 
-		if index[0] == 0 {
-			return Ok( self.body.gravitation() );
-		}
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, &index )?
+		};
 
-		let body_got = satellite_getter( &self.body, &index )?;
-		Ok( body_got.gravitation() )
+		Ok( body.gravitation() )
 	}
 
 	/// Returns the luminosity of the indexed object relative to the luminosity Sol. Sol itself has therefor a `luminosity()` of 1.0.
@@ -860,6 +889,20 @@ impl CelestialSystem {
 		Ok( Some(  TimeDelta::seconds( res as i64 ) ) )
 	}
 
+	/// Returns the duration of the local day of the indexed object in `TimeDelta`. This is identical to `day_solor()` most of the times, but some worlds may have an artificial day that differs from `day_solor()`.
+	///
+	/// If the object at `index` is a world orbiting it's center (which is a star) with a locked rotation, this method returns `None`, since it has effectively a day of infinite length.
+	/// If the object at `index` does not have an orbit center, this method returns an error.
+	pub fn day( &self, index: &[usize] ) -> Result<Option<TimeDelta>, CelestialSystemError> {
+		let body = satellite_getter( &self.body, &index )?;
+
+		if let Some( day ) = body.day_artificial() {
+			return Ok( Some( day.clone() ) );
+		}
+
+		self.day_solar( index )
+	}
+
 	/// Returns the surface temperatures of the `index`ed body. The three values are in this order:
 	/// 1. Minimum temperature
 	/// 2. Mean temperature
@@ -889,12 +932,13 @@ impl CelestialSystem {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
 
-		if index[0] == 0 {
-			return Ok( self.body.atmosphere() );
-		}
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, &index )?
+		};
 
-		let body_got = satellite_getter( &self.body, &index )?;
-		Ok( body_got.atmosphere() )
+		Ok( body.atmosphere() )
 	}
 
 	/// Returns the tech level of the `index`ed object.
@@ -945,27 +989,6 @@ impl CelestialSystem {
 		};
 
 		Ok( res )
-	}
-
-	/// Returns the index of the center object of the orbit of the object of `index`.
-	///
-	/// # Arguments
-	/// * `index` See [`self.name()`].
-	///
-	/// Since the system itself and the center object of the system are not orbiting anything, the indices `&[]` and `&[0]` are illegal and cause an error to be returned.
-	pub fn index_of_center_of( &self, index: &[usize] ) -> Result<Vec<usize>, CelestialSystemError> {
-		if index.is_empty() || index[0] == 0 {
-			return Err( CelestialSystemError::NoCenterObject( format!( "{:?}", index ) ) );
-		}
-
-		let mut idx = index.to_vec();
-		if index[index.len()-1] == 0 {
-			let _ = std::mem::replace( &mut idx[index.len()-2], 0 );
-		} else {
-			let _ = std::mem::replace( &mut idx[index.len()-1], 0 );
-		}
-
-		Ok( idx )
 	}
 
 	/// Returns the mass of this system's main star in kg.

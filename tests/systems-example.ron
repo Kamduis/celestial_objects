@@ -91,6 +91,7 @@
 									size: ( 200.0, 200.0, 6e3 ),
 									gravity: 1.0,
 									temperature: (15.0, 21.0, 27.0),
+									day_artificial: "24h",
 									atmosphere: (
 										pressure: 1.0,
 										quality: Breathable,
