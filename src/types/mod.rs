@@ -992,11 +992,25 @@ impl CelestialSystem {
 		Ok( res )
 	}
 
-	/// Returns the mass of this system's main star in kg.
-	pub fn mass_main_star( &self ) -> Mass {
+	/// Returns the mass of this system's main star.
+	pub fn mass_main( &self ) -> Mass {
 		let star_main = self.stars().nth( 0 )
 			.expect( "Each system should have at least one star." );
 		star_main.mass()
+	}
+
+	/// Returns the radius of this system's main star.
+	pub fn radius_main( &self ) -> Length {
+		let star_main = self.stars().nth( 0 )
+			.expect( "Each system should have at least one star." );
+		star_main.radius()
+	}
+
+	/// Returns the spectral class of this system's main star.
+	pub fn spectral_class_main<'a>( &'a self ) -> &'a str {
+		let star_main = self.stars().nth( 0 )
+			.expect( "Each system should have at least one star." );
+		star_main.spectral_class()
 	}
 
 	/// Returns an iterator of all stars within this system.
