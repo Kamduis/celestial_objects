@@ -213,7 +213,7 @@ fn satellite_getter_hierarchical<'a>( center: &'a CelestialBody, index: &'a [usi
 		.ok_or( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) )?;
 
 	let hierarchy_letter = match ( center, &orbit.body ) {
-		( _, CelestialBody::GravitationalCenter( _ ) ) => unimplemented!( "Gravitational center not expected!" ),
+		( _, CelestialBody::GravitationalCenter( _ ) ) => LETTERS[index[0]].to_uppercase(),
 		( _, CelestialBody::Star( _ ) ) => LETTERS[index[0] - 1].to_uppercase(),
 		( CelestialBody::Trabant( _ ), CelestialBody::Trabant( _ ) ) => LETTERS_GREEK[index[0] - 1].to_string(),
 		( _, CelestialBody::Trabant( _ ) ) => LETTERS[index[0] - 1].to_string(),
@@ -582,7 +582,7 @@ impl CelestialSystem {
 			let ( body_got, hierarchy ) = &satellite_getter_hierarchical( &self.body, index, "" )?;
 
 			let name = match &body_got {
-				CelestialBody::GravitationalCenter( _ ) => unreachable!( "No gravitational center expected." ),
+				CelestialBody::GravitationalCenter( _ ) => Some( "Gravitational Center" ),
 				CelestialBody::Star( x ) => x.name.as_deref(),
 				CelestialBody::Trabant( x ) => x.name.as_deref(),
 				CelestialBody::Ring( _ ) => None,
