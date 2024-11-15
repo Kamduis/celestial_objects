@@ -9,6 +9,7 @@
 			radius: 1.0,
 			luminosity: 1.0,
 			spectral_class: "G2",
+			rotation_period: "25d 9h 7m 12s",
 			satellites: [
 				(
 					axis_semi_major: 0.387098,
@@ -17,8 +18,8 @@
 						name: "Mercury",
 						radius: 0.3829,
 						gravity: 0.38,
-						rotation_period: 5067360.0,
-						temperature: (-173.0, 427.0),
+						rotation_period: "58d 15h 36m",
+						temperature: (-173.0, 167.0, 427.0),
 						satellites: [],
 					)),
 				),
@@ -29,8 +30,8 @@
 						name: "Venus",
 						radius: 0.9499,
 						gravity: 0.904,
-						rotation_period: -20996820.0,
-						temperature: (437.0, 497.0),
+						rotation_period: "-243d 36m",
+						temperature: (437.0, 464.0, 497.0),
 						atmosphere: (
 							pressure: 92.0,
 							quality: Toxic,
@@ -47,14 +48,14 @@
 					)),
 				),
 				(
-					axis_semi_major: 149.598261e9,
+					axis_semi_major: 1.0,
 					eccentricity: 0.01671123,
 					body: Trabant((
 						name: "Terra",
 						radius: 1.0,
 						gravity: 1.0,
-						rotation_period: 86164.10035,
-						temperature: (-89.0, 58.0),
+						rotation_period: "23h 56m 4s",
+						temperature: (-89.0, 15.0, 58.0),
 						atmosphere: (
 							pressure: 1.01,
 							quality: Toxic,
@@ -69,27 +70,28 @@
 						gates: 0,
 						satellites: [
 							(
-								axis_semi_major: 1.0000010180626,
+								axis_semi_major: 0.00257,
 								eccentricity: 0.0549,
 								body: Trabant((
 									name: "Luna",
 									radius: 0.2731,
 									gravity: 0.1654,
-									temperature: (-160.0, 130.0),
+									temperature: (-173.0, -23.0, 116.0 ),
 									techlevel: 11,
 									gates: 1,
 									satellites: [],
 								)),
 							),
 							(
-								axis_semi_major: 497.7e6,
+								axis_semi_major: 0.0001,
 								eccentricity: 0.001,
 								body: Station((
 									name: "Argus",
 									mass: 4180e3,
 									size: ( 200.0, 200.0, 6e3 ),
 									gravity: 1.0,
-									temperature: (18.0, 26.0),
+									temperature: (15.0, 21.0, 27.0),
+									day_artificial: "24h",
 									atmosphere: (
 										pressure: 1.0,
 										quality: Breathable,
@@ -108,14 +110,44 @@
 					)),
 				),
 				(
+					axis_semi_major: 9.5826,
+					eccentricity: 0.0565,
+					body: Trabant((
+						name: "Saturn",
+						radius: 9.449,
+						gravity: 1.065,
+						rotation_period: "10h 33m",
+						temperature: (-185.0, -152.0, -120.0),
+						atmosphere: (
+							pressure: 1.4,
+							quality: Toxic,
+							composition: GasComposition({
+								Ammonia: 0.125e-3,
+								Helium: 0.0325,
+								Hydrogen: 0.963,
+								Methane: 4.5e-3,
+							}),
+						),
+						satellites: [
+							(
+								axis_semi_major: 425.574205e-6,
+								eccentricity: 0.0,
+								body: Ring((
+									width: 762.51079e-6,
+								)),
+							),
+						],
+					)),
+				),
+				(
 					axis_semi_major: 30.07,
 					eccentricity: 0.0113,
 					body: Trabant((
 						name: "Neptun",
 						radius: 3.829,
 						gravity: 1.137,
-						rotation_period: 57479.0,
-						temperature: (-201.0, -201.0),
+						rotation_period: "15h 57m 59s",
+						temperature: (-218.0, -209.0, -201.0),
 						atmosphere: (
 							pressure: 1.0,
 							quality: Toxic,
@@ -134,7 +166,7 @@
 									name: "Triton",
 									radius: 0.2122,
 									gravity: 0.0794,
-									temperature: (-237.5, -237.5),
+									temperature: (-235.0, -235.0, -235.0),
 									techlevel: 12,
 									gates: 0,
 									satellites: [],
@@ -162,6 +194,7 @@
 						radius: 1.2175,
 						luminosity: 1.5059,
 						spectral_class: "G2",
+						rotation_period: "22d",
 						satellites: [
 							(
 								axis_semi_major: 1.1,
@@ -170,8 +203,8 @@
 									name: "Minos",
 									radius: 1.1,
 									gravity: 1.05,
-									rotation_period: 65220.0,
-									temperature: (-7.0, 89.0),
+									rotation_period: "18h 7m",
+									temperature: (-7.0, 12.0, 89.0),
 									atmosphere: (
 										pressure: 1.2,
 										quality: Breathable,
@@ -198,6 +231,7 @@
 						radius: 0.8591,
 						luminosity: 0.4981,
 						spectral_class: "K4",
+						rotation_period: "41d",
 						satellites: [
 							(
 								axis_semi_major: 0.8,
@@ -206,8 +240,8 @@
 									name: "Taurus",
 									radius: 0.9,
 									gravity: 1.1,
-									rotation_period: 110520.0,
-									temperature: (-120.0, 127.0),
+									rotation_period: "30h 42m",
+									temperature: (-120.0, 5.0, 127.0),
 									atmosphere: (
 										pressure: 0.36,
 										quality: Breathable,
@@ -231,10 +265,11 @@
 					eccentricity: 0.50,
 					body: Star((
 						name: "Proxima",
-						mass: 1.221,
+						mass: 0.1221,
 						radius: 0.1542,
 						luminosity: 0.001567,
 						spectral_class: "M5.5",
+						rotation_period: "90d",
 						satellites: [],
 					)),
 				),

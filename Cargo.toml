@@ -1,10 +1,14 @@
 [package]
 name = "celestial_objects"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
+
+[features]
+tex = []
 
 [dependencies]
 approx = "0.5.1"
+chrono = { version = "0.4.38", features = ["serde"] }
 glam = { version = "0.29.0", features = ["serde"] }
 regex = "1.10.6"
 ron = "0.8.1"
