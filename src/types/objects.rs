@@ -211,6 +211,13 @@ pub struct Trabant {
 	/// The surface gravity of this trabant in relation to the surface gravity of Terra.
 	pub(crate) gravity: f32,
 
+	/// The mass of this trabant in relation to the mass of Terra.
+	/// The mass is normally calculated from `radius` and surface `gravity`, but it is possible that the real mass deviates slightly.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(crate) mass: Option<f32>,
+
 	/// The min, mean and max temperature of the trabant.
 	pub(crate) temperature: [f32; 3],
 
@@ -270,7 +277,12 @@ impl AstronomicalObject for Trabant {
 		&self.satellites
 	}
 
+	/// There is the possibility that the real mass deviates from the mass calculated from gravity and radius. If the mass is provided as data point, this data point is returned instead of the calculated mass.
 	fn mass( &self ) -> Mass {
+		if let Some( mass ) = self.mass {
+			return Mass::from_mass_terra( mass );
+		}
+
 		let mass_terra = self.gravity * self.radius.powi( 2 );
 		Mass::from_mass_terra( mass_terra )
 	}
