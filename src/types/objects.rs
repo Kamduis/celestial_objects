@@ -321,7 +321,7 @@ pub struct Ring {
 impl Ring {
 	/// The width of the ring in AU.
 	pub fn width( &self ) -> Length {
-		Length::from( self.width )
+		Length::from_au( self.width )
 	}
 }
 

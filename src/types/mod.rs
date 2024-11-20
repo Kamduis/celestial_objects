@@ -992,6 +992,24 @@ impl CelestialSystem {
 		Ok( res )
 	}
 
+	/// Returns the object at `index`.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn object<'a>( &'a self, index: &'a [usize] ) -> Result<&'a CelestialBody, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		Ok( body )
+	}
+
 	/// Returns the mass of this system's main star.
 	pub fn mass_main( &self ) -> Mass {
 		let star_main = self.stars().nth( 0 )
