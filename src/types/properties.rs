@@ -195,6 +195,32 @@ pub enum StarType {
 	DZ,
 }
 
+impl StarType {
+	/// Returns all available star types.
+	pub const ALL: [Self; 12] = [
+		Self::O,
+		Self::B,
+		Self::A,
+		Self::F,
+		Self::G,
+		Self::K,
+		Self::M,
+		Self::T,
+		Self::DA,
+		Self::DC,
+		Self::DQ,
+		Self::DZ,
+	];
+
+	/// Returns `true` if the star type refers to a white dwarf star.
+	pub fn is_white_dwarf( &self ) -> bool {
+		match self {
+			Self::DA | Self::DC | Self::DQ | Self::DZ => true,
+			_ => false,
+		}
+	}
+}
+
 impl FromStr for StarType {
 	type Err = SpectralClassError;
 
