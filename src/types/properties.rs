@@ -13,7 +13,7 @@ use std::str::FromStr;
 use std::sync::LazyLock;
 
 use regex::Regex;
-use serde::{Serialize, Deserialize, Deserializer};
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
 use thiserror::Error;
 
 #[cfg( feature = "tex" )] use crate::traits::Latex;
@@ -29,7 +29,7 @@ use super::CelestialBody;
 
 
 #[derive( Error, Debug )]
-pub enum PropertiesError {
+pub enum SpectralClassError {
 	#[error( "Cannot derive type from string: {0}" )]
 	FromStrError( String ),
 }
@@ -179,8 +179,8 @@ impl Orbit {
 
 
 /// The star type based on the spectral type. Only the letter part of the spectral class.
-#[derive( PartialEq, Eq, PartialOrd, Ord, Debug )]
-enum StarType {
+#[derive( Clone, PartialEq, Eq, PartialOrd, Ord, Debug )]
+pub enum StarType {
 	O,
 	B,
 	A,
@@ -193,7 +193,7 @@ enum StarType {
 }
 
 impl FromStr for StarType {
-	type Err = PropertiesError;
+	type Err = SpectralClassError;
 
 	fn from_str( s: &str ) -> Result<Self, Self::Err> {
 		let res = match s.to_uppercase().as_str() {
@@ -205,7 +205,7 @@ impl FromStr for StarType {
 			"K" => Self::K,
 			"M" => Self::M,
 			"T" => Self::T,
-			_ => return Err( PropertiesError::FromStrError( s.to_string() ) ),
+			_ => return Err( SpectralClassError::FromStrError( s.to_string() ) ),
 		};
 
 		Ok( res )
@@ -232,8 +232,8 @@ impl fmt::Display for StarType {
 
 
 /// The spectral class of a star.
-#[derive( PartialEq, PartialOrd, Debug )]
-struct SpectralClass {
+#[derive( Clone, PartialEq, PartialOrd, Debug )]
+pub struct SpectralClass {
 	star_type: StarType,
 	subdivision: f32,
 }
@@ -246,25 +246,30 @@ impl SpectralClass {
 			subdivision,
 		}
 	}
+
+	/// Returns the type of star.
+	pub fn type_star( &self ) -> &StarType {
+		&self.star_type
+	}
 }
 
 impl FromStr for SpectralClass {
-	type Err = PropertiesError;
+	type Err = SpectralClassError;
 
 	fn from_str( s: &str ) -> Result<Self, Self::Err> {
 		let caps = REGEX_SPECTRAL_CLASS.captures( s )
-			.ok_or( PropertiesError::FromStrError( s.to_string() ) )?;
+			.ok_or( SpectralClassError::FromStrError( s.to_string() ) )?;
 
 		let star_type = caps.name( "st" )
-			.ok_or_else( || PropertiesError::FromStrError( s.to_string() ) )?
+			.ok_or_else( || SpectralClassError::FromStrError( s.to_string() ) )?
 			.as_str()
 			.parse::<StarType>()?;
 
 		let subdivision = caps.name( "sdiv" )
-			.ok_or_else( || PropertiesError::FromStrError( s.to_string() ) )?
+			.ok_or_else( || SpectralClassError::FromStrError( s.to_string() ) )?
 			.as_str()
 			.parse::<f32>()
-			.map_err( |_| PropertiesError::FromStrError( s.to_string() ) )?;
+			.map_err( |_| SpectralClassError::FromStrError( s.to_string() ) )?;
 
 		let res = Self {
 			star_type,
@@ -278,6 +283,14 @@ impl FromStr for SpectralClass {
 impl fmt::Display for SpectralClass {
 	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
 		write!( f, "{}{:.1}", self.star_type, self.subdivision )
+	}
+}
+
+impl Serialize for SpectralClass {
+	fn serialize<S>( &self, serializer: S ) -> Result<S::Ok, S::Error>
+		where S: Serializer
+	{
+		serializer.serialize_str( &self.to_string() )
 	}
 }
 

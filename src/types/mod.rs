@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{BodyType, StarProperty, Affiliation, Atmosphere, AtmosphereQuality, GasComposition};
+pub use properties::{BodyType, StarProperty, SpectralClass, Affiliation, Atmosphere, AtmosphereQuality, GasComposition};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -760,7 +760,7 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn spectral_class<'a>( &'a self, index: &'a [usize] ) -> Result<&'a str, CelestialSystemError> {
+	pub fn spectral_class<'a>( &'a self, index: &'a [usize] ) -> Result<&'a SpectralClass, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
@@ -1025,7 +1025,7 @@ impl CelestialSystem {
 	}
 
 	/// Returns the spectral class of this system's main star.
-	pub fn spectral_class_main<'a>( &'a self ) -> &'a str {
+	pub fn spectral_class_main<'a>( &'a self ) -> &'a SpectralClass {
 		let star_main = self.stars().nth( 0 )
 			.expect( "Each system should have at least one star." );
 		star_main.spectral_class()
