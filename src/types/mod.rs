@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{BodyType, StarProperty, SpectralClass, Affiliation, Atmosphere, AtmosphereQuality, GasComposition};
+pub use properties::{BodyType, StarProperty, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};

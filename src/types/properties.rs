@@ -43,7 +43,7 @@ pub enum SpectralClassError {
 
 /// The regular expression used to get star type and star type subdivision a string.
 static REGEX_SPECTRAL_CLASS: LazyLock<Regex> = LazyLock::new( || {
-	Regex::new( r"^(?<st>[A-Z]+)?(?<sdiv>\d+\.?\d*)$" ).unwrap()
+	Regex::new( r"^(?<st>[A-Z]+)?((?<sdiv>\d+\.?\d*)?)$" ).unwrap()
 } );
 
 
@@ -189,7 +189,10 @@ pub enum StarType {
 	K,
 	M,
 	T,
-	WhiteDwarf,
+	DA,
+	DC,
+	DQ,
+	DZ,
 }
 
 impl FromStr for StarType {
@@ -205,6 +208,10 @@ impl FromStr for StarType {
 			"K" => Self::K,
 			"M" => Self::M,
 			"T" => Self::T,
+			"DA" => Self::DA,
+			"DC" => Self::DC,
+			"DQ" => Self::DQ,
+			"DZ" => Self::DZ,
 			_ => return Err( SpectralClassError::FromStrError( s.to_string() ) ),
 		};
 
@@ -223,7 +230,10 @@ impl fmt::Display for StarType {
 			Self::K => "K",
 			Self::M => "M",
 			Self::T => "T",
-			Self::WhiteDwarf => "White Dwarfs",
+			Self::DA => "DA",
+			Self::DC => "DC",
+			Self::DQ => "DQ",
+			Self::DZ => "DZ",
 		};
 
 		write!( f, "{}", res )
@@ -235,15 +245,20 @@ impl fmt::Display for StarType {
 #[derive( Clone, PartialEq, PartialOrd, Debug )]
 pub struct SpectralClass {
 	star_type: StarType,
-	subdivision: f32,
+	subdivision: Option<f32>,
 }
 
 impl SpectralClass {
-	/// Create a new `SpectralClass` from type and subdivision.
+	/// Create a new `SpectralClass` from type and `subdivision`. If `tar_type` is one of the white dwarf types, `subdivision` is ignored.
 	pub fn new( star_type: StarType, subdivision: f32 ) -> Self {
+		let sdiv = match star_type {
+			StarType::DA | StarType::DC | StarType::DQ | StarType::DZ => None,
+			_ => Some( subdivision )
+		};
+
 		Self {
 			star_type,
-			subdivision,
+			subdivision: sdiv,
 		}
 	}
 
@@ -265,11 +280,15 @@ impl FromStr for SpectralClass {
 			.as_str()
 			.parse::<StarType>()?;
 
-		let subdivision = caps.name( "sdiv" )
-			.ok_or_else( || SpectralClassError::FromStrError( s.to_string() ) )?
-			.as_str()
-			.parse::<f32>()
-			.map_err( |_| SpectralClassError::FromStrError( s.to_string() ) )?;
+		let subdivision = match caps.name( "sdiv" ) {
+			Some( x ) => {
+				let sdiv = x.as_str()
+					.parse::<f32>()
+					.map_err( |_| SpectralClassError::FromStrError( s.to_string() ) )?;
+					Some( sdiv )
+			},
+			None => None,
+		};
 
 		let res = Self {
 			star_type,
@@ -282,7 +301,11 @@ impl FromStr for SpectralClass {
 
 impl fmt::Display for SpectralClass {
 	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
-		write!( f, "{}{:.1}", self.star_type, self.subdivision )
+		match self.subdivision {
+			Some( x ) if x.fract() == 0.0 => write!( f, "{}{}", self.star_type, x ),
+			Some( x ) => write!( f, "{}{:.1}", self.star_type, x ),
+			None => write!( f, "{}", self.star_type ),
+		}
 	}
 }
 
