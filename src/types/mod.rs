@@ -928,7 +928,7 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn atmosphere<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&Atmosphere>, CelestialSystemError> {
+	pub fn atmosphere<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a Atmosphere>, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
@@ -1025,7 +1025,7 @@ impl CelestialSystem {
 	}
 
 	/// Returns the spectral class of this system's main star.
-	pub fn spectral_class_main<'a>( &'a self ) -> &'a SpectralClass {
+	pub fn spectral_class_main( &self ) -> &SpectralClass {
 		let star_main = self.stars().nth( 0 )
 			.expect( "Each system should have at least one star." );
 		star_main.spectral_class()
