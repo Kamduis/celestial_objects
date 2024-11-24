@@ -123,6 +123,19 @@ pub enum Affiliation {
 	Uninhabited,
 }
 
+impl fmt::Display for Affiliation {
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
+		let res = match self {
+			Self::Union => "Union",
+			Self::BorderWorld => "Border World",
+			Self::Free => "Free Territories",
+			Self::Uninhabited => "Uninhabited",
+		};
+
+		write!( f, "{}", res )
+	}
+}
+
 
 /// Representing the orbit of a `CelestialBody` around another `CelestialBody`.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
