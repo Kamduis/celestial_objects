@@ -171,7 +171,7 @@ impl Star {
 
 	/// Returns the star type.
 	pub fn star_type( &self ) -> &StarType {
-		&self.spectral_class.type_star()
+		self.spectral_class.type_star()
 	}
 }
 

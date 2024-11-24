@@ -574,7 +574,7 @@ impl CelestialSystem {
 				},
 				CelestialBody::Star( x ) => {
 					// If no name is given, is the name of the central star equal to the name of the system.
-					return Ok( x.name.as_ref().cloned().unwrap_or( self.name( &[] )? ) );
+					Ok( x.name.as_ref().cloned().unwrap_or( self.name( &[] )? ) )
 				},
 				_ => unimplemented!( "Center bodies should never by planets, moons or stations." ),
 			}

@@ -214,10 +214,7 @@ impl StarType {
 
 	/// Returns `true` if the star type refers to a white dwarf star.
 	pub fn is_white_dwarf( &self ) -> bool {
-		match self {
-			Self::DA | Self::DC | Self::DQ | Self::DZ => true,
-			_ => false,
-		}
+		matches!( self, Self::DA | Self::DC | Self::DQ | Self::DZ )
 	}
 }
 
