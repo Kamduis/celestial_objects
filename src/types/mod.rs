@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{BodyType, StarProperty, Affiliation, Atmosphere, AtmosphereQuality, GasComposition};
+pub use properties::{BodyType, StarProperty, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -574,7 +574,7 @@ impl CelestialSystem {
 				},
 				CelestialBody::Star( x ) => {
 					// If no name is given, is the name of the central star equal to the name of the system.
-					return Ok( x.name.as_ref().cloned().unwrap_or( self.name( &[] )? ) );
+					Ok( x.name.as_ref().cloned().unwrap_or( self.name( &[] )? ) )
 				},
 				_ => unimplemented!( "Center bodies should never by planets, moons or stations." ),
 			}
@@ -760,7 +760,7 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn spectral_class<'a>( &'a self, index: &'a [usize] ) -> Result<&'a str, CelestialSystemError> {
+	pub fn spectral_class<'a>( &'a self, index: &'a [usize] ) -> Result<&'a SpectralClass, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
@@ -928,7 +928,7 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn atmosphere<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&Atmosphere>, CelestialSystemError> {
+	pub fn atmosphere<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a Atmosphere>, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
@@ -992,6 +992,24 @@ impl CelestialSystem {
 		Ok( res )
 	}
 
+	/// Returns the object at `index`.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn object<'a>( &'a self, index: &'a [usize] ) -> Result<&'a CelestialBody, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		Ok( body )
+	}
+
 	/// Returns the mass of this system's main star.
 	pub fn mass_main( &self ) -> Mass {
 		let star_main = self.stars().nth( 0 )
@@ -1007,7 +1025,7 @@ impl CelestialSystem {
 	}
 
 	/// Returns the spectral class of this system's main star.
-	pub fn spectral_class_main<'a>( &'a self ) -> &'a str {
+	pub fn spectral_class_main( &self ) -> &SpectralClass {
 		let star_main = self.stars().nth( 0 )
 			.expect( "Each system should have at least one star." );
 		star_main.spectral_class()

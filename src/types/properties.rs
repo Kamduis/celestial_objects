@@ -9,13 +9,42 @@
 
 use std::collections::BTreeMap;
 use std::fmt;
+use std::str::FromStr;
+use std::sync::LazyLock;
 
-use serde::{Serialize, Deserialize};
+use regex::Regex;
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
+use thiserror::Error;
 
 #[cfg( feature = "tex" )] use crate::traits::Latex;
 use crate::units::Length;
 
 use super::CelestialBody;
+
+
+
+
+//=============================================================================
+// Errors
+
+
+#[derive( Error, Debug )]
+pub enum SpectralClassError {
+	#[error( "Cannot derive type from string: {0}" )]
+	FromStrError( String ),
+}
+
+
+
+
+//=============================================================================
+// Constants
+
+
+/// The regular expression used to get star type and star type subdivision a string.
+static REGEX_SPECTRAL_CLASS: LazyLock<Regex> = LazyLock::new( || {
+	Regex::new( r"^(?<st>[A-Z]+)?((?<sdiv>\d+\.?\d*)?)$" ).unwrap()
+} );
 
 
 
@@ -94,6 +123,19 @@ pub enum Affiliation {
 	Uninhabited,
 }
 
+impl fmt::Display for Affiliation {
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
+		let res = match self {
+			Self::Union => "Union",
+			Self::BorderWorld => "Border World",
+			Self::Free => "Free Territories",
+			Self::Uninhabited => "Uninhabited",
+		};
+
+		write!( f, "{}", res )
+	}
+}
+
 
 /// Representing the orbit of a `CelestialBody` around another `CelestialBody`.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
@@ -145,6 +187,178 @@ impl Orbit {
 		let p = self.axis_semi_minor().powi( 2 ) / self.axis_semi_major();
 
 		p / ( 1.0 + self.eccentricity * angle.cos() )
+	}
+}
+
+
+/// The star type based on the spectral type. Only the letter part of the spectral class.
+#[derive( Clone, PartialEq, Eq, PartialOrd, Ord, Debug )]
+pub enum StarType {
+	O,
+	B,
+	A,
+	F,
+	G,
+	K,
+	M,
+	T,
+	DA,
+	DC,
+	DQ,
+	DZ,
+}
+
+impl StarType {
+	/// Returns all available star types.
+	pub const ALL: [Self; 12] = [
+		Self::O,
+		Self::B,
+		Self::A,
+		Self::F,
+		Self::G,
+		Self::K,
+		Self::M,
+		Self::T,
+		Self::DA,
+		Self::DC,
+		Self::DQ,
+		Self::DZ,
+	];
+
+	/// Returns `true` if the star type refers to a white dwarf star.
+	pub fn is_white_dwarf( &self ) -> bool {
+		matches!( self, Self::DA | Self::DC | Self::DQ | Self::DZ )
+	}
+}
+
+impl FromStr for StarType {
+	type Err = SpectralClassError;
+
+	fn from_str( s: &str ) -> Result<Self, Self::Err> {
+		let res = match s.to_uppercase().as_str() {
+			"O" => Self::O,
+			"B" => Self::B,
+			"A" => Self::A,
+			"F" => Self::F,
+			"G" => Self::G,
+			"K" => Self::K,
+			"M" => Self::M,
+			"T" => Self::T,
+			"DA" => Self::DA,
+			"DC" => Self::DC,
+			"DQ" => Self::DQ,
+			"DZ" => Self::DZ,
+			_ => return Err( SpectralClassError::FromStrError( s.to_string() ) ),
+		};
+
+		Ok( res )
+	}
+}
+
+impl fmt::Display for StarType {
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
+		let res = match self {
+			Self::O => "O",
+			Self::B => "B",
+			Self::A => "A",
+			Self::F => "F",
+			Self::G => "G",
+			Self::K => "K",
+			Self::M => "M",
+			Self::T => "T",
+			Self::DA => "DA",
+			Self::DC => "DC",
+			Self::DQ => "DQ",
+			Self::DZ => "DZ",
+		};
+
+		write!( f, "{}", res )
+	}
+}
+
+
+/// The spectral class of a star.
+#[derive( Clone, PartialEq, PartialOrd, Debug )]
+pub struct SpectralClass {
+	star_type: StarType,
+	subdivision: Option<f32>,
+}
+
+impl SpectralClass {
+	/// Create a new `SpectralClass` from type and `subdivision`. If `tar_type` is one of the white dwarf types, `subdivision` is ignored.
+	pub fn new( star_type: StarType, subdivision: f32 ) -> Self {
+		let sdiv = match star_type {
+			StarType::DA | StarType::DC | StarType::DQ | StarType::DZ => None,
+			_ => Some( subdivision )
+		};
+
+		Self {
+			star_type,
+			subdivision: sdiv,
+		}
+	}
+
+	/// Returns the type of star.
+	pub fn type_star( &self ) -> &StarType {
+		&self.star_type
+	}
+}
+
+impl FromStr for SpectralClass {
+	type Err = SpectralClassError;
+
+	fn from_str( s: &str ) -> Result<Self, Self::Err> {
+		let caps = REGEX_SPECTRAL_CLASS.captures( s )
+			.ok_or( SpectralClassError::FromStrError( s.to_string() ) )?;
+
+		let star_type = caps.name( "st" )
+			.ok_or_else( || SpectralClassError::FromStrError( s.to_string() ) )?
+			.as_str()
+			.parse::<StarType>()?;
+
+		let subdivision = match caps.name( "sdiv" ) {
+			Some( x ) => {
+				let sdiv = x.as_str()
+					.parse::<f32>()
+					.map_err( |_| SpectralClassError::FromStrError( s.to_string() ) )?;
+					Some( sdiv )
+			},
+			None => None,
+		};
+
+		let res = Self {
+			star_type,
+			subdivision,
+		};
+
+		Ok( res )
+	}
+}
+
+impl fmt::Display for SpectralClass {
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
+		match self.subdivision {
+			Some( x ) if x.fract() == 0.0 => write!( f, "{}{}", self.star_type, x ),
+			Some( x ) => write!( f, "{}{:.1}", self.star_type, x ),
+			None => write!( f, "{}", self.star_type ),
+		}
+	}
+}
+
+impl Serialize for SpectralClass {
+	fn serialize<S>( &self, serializer: S ) -> Result<S::Ok, S::Error>
+		where S: Serializer
+	{
+		serializer.serialize_str( &self.to_string() )
+	}
+}
+
+impl<'de> Deserialize<'de> for SpectralClass {
+	fn deserialize<D>( deserializer: D ) -> Result<Self, D::Error>
+		where D: Deserializer<'de>
+	{
+		let s = String::deserialize( deserializer )?;
+		FromStr::from_str( &s ).map_err( serde::de::Error::custom )
 	}
 }
 
@@ -341,5 +555,29 @@ impl fmt::Display for Molecule {
 			Self::Water =>          write!( f, "H2O" ),
 			Self::Other =>          write!( f, r"andere" ),
 		}
+	}
+}
+
+
+
+
+//=============================================================================
+// Testing
+
+
+#[cfg( test )]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_spectral_class_from_str() {
+		assert_eq!( "O3".parse::<SpectralClass>().unwrap(), SpectralClass::new( StarType::O, 3.0 ) );
+		assert_eq!( "G3.5".parse::<SpectralClass>().unwrap(), SpectralClass::new( StarType::G, 3.5 ) );
+	}
+
+	#[test]
+	fn test_spectral_class_deserialize() {
+		assert_eq!( ron::from_str::<SpectralClass>( r#""O3""# ).unwrap(), SpectralClass::new( StarType::O, 3.0 ) );
+		assert_eq!( ron::from_str::<SpectralClass>( r#""G3.5""# ).unwrap(), SpectralClass::new( StarType::G, 3.5 ) );
 	}
 }

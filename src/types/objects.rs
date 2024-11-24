@@ -10,12 +10,27 @@
 use chrono::TimeDelta;
 use glam::Vec3;
 use serde::{Serialize, Deserialize};
+use thiserror::Error;
 
 use crate::calc;
 use crate::units::{Mass, Length};
 
 use super::AstronomicalObject;
-use super::properties::{StarProperty, Orbit, Atmosphere};
+use super::properties::SpectralClassError;
+use super::properties::{StarProperty, Orbit, StarType, SpectralClass, Atmosphere};
+
+
+
+
+//=============================================================================
+// Errors
+
+
+#[derive( Error, Debug )]
+pub enum StarError {
+	#[error( "Illegal spectral class: {0}" )]
+	IllegalSpectralClass( #[from] SpectralClassError ),
+}
 
 
 
@@ -95,7 +110,7 @@ pub struct Star {
 	pub(crate) luminosity: f32,
 
 	/// The spectral class.
-	pub(crate) spectral_class: String,
+	pub(crate) spectral_class: SpectralClass,
 
 	/// The rotation period (sidereal time). This is the time duration it takes for the star to make a full rotation in relation to a fixed star.
 	/// If this is `None`, this means the body's representation is gravitational bound around the object it orbits.
@@ -114,17 +129,19 @@ pub struct Star {
 
 impl Star {
 	/// Create a new `Star`.
-	pub fn new( mass: f32, radius: f32, luminosity: f32, spectral_class: &str ) -> Self {
-		Self {
+	pub fn new( mass: f32, radius: f32, luminosity: f32, spectral_class: &str ) -> Result<Self, StarError> {
+		let res = Self {
 			name: None,
 			mass,
 			radius,
 			luminosity,
-			spectral_class: spectral_class.to_string(),
+			spectral_class: spectral_class.parse::<SpectralClass>()?,
 			rotation_period: None,
 			properties: Vec::new(),
 			satellites: Vec::new(),
-		}
+		};
+
+		Ok( res )
 	}
 
 	/// Returns a `Star` from `self` with the `rotation_period`.
@@ -139,7 +156,7 @@ impl Star {
 	}
 
 	/// Returns the spectral class of the star.
-	pub fn spectral_class( &self ) -> &str {
+	pub fn spectral_class( &self ) -> &SpectralClass {
 		&self.spectral_class
 	}
 
@@ -150,6 +167,11 @@ impl Star {
 			.collect();
 
 		lengths.try_into().unwrap()
+	}
+
+	/// Returns the star type.
+	pub fn star_type( &self ) -> &StarType {
+		self.spectral_class.type_star()
 	}
 }
 
@@ -211,6 +233,13 @@ pub struct Trabant {
 	/// The surface gravity of this trabant in relation to the surface gravity of Terra.
 	pub(crate) gravity: f32,
 
+	/// The mass of this trabant in relation to the mass of Terra.
+	/// The mass is normally calculated from `radius` and surface `gravity`, but it is possible that the real mass deviates slightly.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(crate) mass: Option<f32>,
+
 	/// The min, mean and max temperature of the trabant.
 	pub(crate) temperature: [f32; 3],
 
@@ -270,7 +299,12 @@ impl AstronomicalObject for Trabant {
 		&self.satellites
 	}
 
+	/// There is the possibility that the real mass deviates from the mass calculated from gravity and radius. If the mass is provided as data point, this data point is returned instead of the calculated mass.
 	fn mass( &self ) -> Mass {
+		if let Some( mass ) = self.mass {
+			return Mass::from_mass_terra( mass );
+		}
+
 		let mass_terra = self.gravity * self.radius.powi( 2 );
 		Mass::from_mass_terra( mass_terra )
 	}
@@ -309,7 +343,7 @@ pub struct Ring {
 impl Ring {
 	/// The width of the ring in AU.
 	pub fn width( &self ) -> Length {
-		Length::from( self.width )
+		Length::from_au( self.width )
 	}
 }
 

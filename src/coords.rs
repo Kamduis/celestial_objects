@@ -393,7 +393,7 @@ impl<'de> Deserialize<'de> for EquatorialCoords {
 			{
 				struct FieldVisitor;
 
-				impl<'de> serde::de::Visitor<'de> for FieldVisitor {
+				impl serde::de::Visitor<'_> for FieldVisitor {
 					type Value = Field;
 
 					fn expecting( &self, formatter: &mut fmt::Formatter ) -> fmt::Result {
