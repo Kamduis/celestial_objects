@@ -173,6 +173,11 @@ impl Star {
 	pub fn star_type( &self ) -> &StarType {
 		self.spectral_class.type_star()
 	}
+
+	/// Returns the star's properties.
+	pub fn properties( &self ) -> &[StarProperty] {
+		&self.properties
+	}
 }
 
 impl AstronomicalObject for Star {

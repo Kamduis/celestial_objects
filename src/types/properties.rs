@@ -372,11 +372,26 @@ pub enum StarProperty {
 	/// A white dwarf star.
 	WhiteDwarf,
 
+	/// A subgiant is a star that is brighter than a normal main-sequence star of the same spectral class, but not as bright as giant stars.
+	Subgiant,
+
 	/// A red giant is a luminous giant star of low mass (between 0.25 to 8 M☉).
 	RedGiant,
 
 	/// Higher-mass stars leave the main sequence to become blue giants, then bright blue giants, and then blue supergiants, before expanding into red supergiants.
 	BlueGiant,
+}
+
+impl fmt::Display for StarProperty {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		match self {
+			Self::FlareStar => write!( f, "Flare Star" ),
+			Self::WhiteDwarf => write!( f, "White Dwarf" ),
+			Self::Subgiant => write!( f, "Subgiant" ),
+			Self::RedGiant => write!( f, "Red Giant" ),
+			Self::BlueGiant => write!( f, "Blue Giant" ),
+		}
+	}
 }
 
 

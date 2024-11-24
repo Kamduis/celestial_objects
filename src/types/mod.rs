@@ -808,6 +808,18 @@ impl CelestialSystem {
 		orbit_getter( &self.body, index )
 	}
 
+	/// Returns an iterator of all properties of the indexed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn properties<'a>( &'a self, index: &'a [usize] ) -> Result<&'a [StarProperty], CelestialSystemError> {
+		let CelestialBody::Star( star ) = self.object( index )? else {
+			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
+		};
+
+		Ok( star.properties() )
+	}
+
 	/// Returns the minimum and maximum range of the habitable zone of the star at `index`.
 	///
 	/// If `index` does not point to a star of this system, the method returns an error.
@@ -1010,6 +1022,18 @@ impl CelestialSystem {
 		Ok( body )
 	}
 
+	/// Returns an iterator of all stars within this system.
+	pub fn stars( &self ) -> CelestialSystemStarsIterator {
+		let mut iter_obj = CelestialSystemStarsIterator {
+			stars: Vec::new(),
+			index: 0,
+		};
+
+		iter_obj.walker( &self.body );
+
+		iter_obj
+	}
+
 	/// Returns the mass of this system's main star.
 	pub fn mass_main( &self ) -> Mass {
 		let star_main = self.stars().nth( 0 )
@@ -1031,16 +1055,12 @@ impl CelestialSystem {
 		star_main.spectral_class()
 	}
 
-	/// Returns an iterator of all stars within this system.
-	pub fn stars( &self ) -> CelestialSystemStarsIterator {
-		let mut iter_obj = CelestialSystemStarsIterator {
-			stars: Vec::new(),
-			index: 0,
-		};
+	/// Returns an iterator of all properties of the main star.
+	pub fn properties_main<'a>( &'a self ) -> &'a [StarProperty] {
+		let star_main = self.stars().nth( 0 )
+			.expect( "Each system should have at least one star." );
 
-		iter_obj.walker( &self.body );
-
-		iter_obj
+		star_main.properties()
 	}
 }
 
