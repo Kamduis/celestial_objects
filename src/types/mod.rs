@@ -106,7 +106,7 @@ pub trait AstronomicalObject {
 	/// Returns the surface gravity of the astronomical object in m/s².
 	///
 	/// This method returns `None` if the astronomical object has no sensible surface gravitation. A G2 star (loke Sol) for example has no surface, so it would return `None`.
-	fn gravitation( &self ) -> Option<f32>;
+	fn gravitation( &self ) -> Option<f64>;
 
 	/// Returns the duration of one rotation of the `AstronomicalObject`. If it's rotation is locked, this method returns `None`.
 	fn rotation_period( &self ) -> Option<TimeDelta> {
@@ -124,7 +124,7 @@ pub trait AstronomicalObject {
 	/// 3. Maximum temperature
 	///
 	/// Objects without a defined temperature (e.g. gravitational centers or stars) return `None`.
-	fn temperature( &self ) -> Option<&[f32; 3]>;
+	fn temperature( &self ) -> Option<&[f64; 3]>;
 
 	/// Returns the atmosphere of the astronomical object.
 	///
@@ -328,7 +328,7 @@ impl AstronomicalObject for CelestialBody {
 		}
 	}
 
-	fn gravitation( &self ) -> Option<f32> {
+	fn gravitation( &self ) -> Option<f64> {
 		match self {
 			Self::GravitationalCenter( x ) => x.gravitation(),
 			Self::Star( x ) => x.gravitation(),
@@ -358,7 +358,7 @@ impl AstronomicalObject for CelestialBody {
 		}
 	}
 
-	fn temperature( &self ) -> Option<&[f32; 3]> {
+	fn temperature( &self ) -> Option<&[f64; 3]> {
 		match self {
 			Self::GravitationalCenter( x ) => x.temperature(),
 			Self::Star( x ) => x.temperature(),
@@ -719,7 +719,7 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn gravitation( &self, index: &[usize] ) -> Result<Option<f32>, CelestialSystemError> {
+	pub fn gravitation( &self, index: &[usize] ) -> Result<Option<f64>, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
@@ -737,7 +737,7 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn luminosity( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
+	pub fn luminosity( &self, index: &[usize] ) -> Result<f64, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
@@ -852,7 +852,7 @@ impl CelestialSystem {
 		let mass_center = self.mass( &self.index_of_center_of( index )? )?;
 		let mass_orbiter = self.mass( index )?;
 
-		let seconds = calc::orbital_period( axis_semi_major, mass_center, mass_orbiter );
+		let seconds = dbg!(calc::orbital_period( axis_semi_major, mass_center, mass_orbiter ));
 
 		Ok( TimeDelta::seconds( seconds as i64 ) )
 	}
@@ -923,7 +923,7 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn temperature<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a [f32; 3]>, CelestialSystemError> {
+	pub fn temperature<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a [f64; 3]>, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}

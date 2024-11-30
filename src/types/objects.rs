@@ -71,7 +71,7 @@ impl AstronomicalObject for GravitationalCenter {
 		Length::ZERO
 	}
 
-	fn gravitation( &self ) -> Option<f32> {
+	fn gravitation( &self ) -> Option<f64> {
 		Some( 0.0 )
 	}
 
@@ -81,7 +81,7 @@ impl AstronomicalObject for GravitationalCenter {
 		Some( TimeDelta::zero() )
 	}
 
-	fn temperature( &self ) -> Option<&[f32; 3]> {
+	fn temperature( &self ) -> Option<&[f64; 3]> {
 		None
 	}
 
@@ -101,13 +101,13 @@ pub struct Star {
 	pub(crate) name: Option<String>,
 
 	/// The mass in relation to the mass of Sol.
-	pub(crate) mass: f32,
+	pub(crate) mass: f64,
 
 	/// The radius in relation to the radius of Sol.
-	pub(crate) radius: f32,
+	pub(crate) radius: f64,
 
 	/// The luminosity in relation to the luminosity of Sol.
-	pub(crate) luminosity: f32,
+	pub(crate) luminosity: f64,
 
 	/// The spectral class.
 	pub(crate) spectral_class: SpectralClass,
@@ -129,7 +129,7 @@ pub struct Star {
 
 impl Star {
 	/// Create a new `Star`.
-	pub fn new( mass: f32, radius: f32, luminosity: f32, spectral_class: &str ) -> Result<Self, StarError> {
+	pub fn new( mass: f64, radius: f64, luminosity: f64, spectral_class: &str ) -> Result<Self, StarError> {
 		let res = Self {
 			name: None,
 			mass,
@@ -151,7 +151,7 @@ impl Star {
 	}
 
 	/// Returns the luminosity of the star in relation to the luminosity of Sol.
-	pub fn luminosity( &self ) -> f32 {
+	pub fn luminosity( &self ) -> f64 {
 		self.luminosity
 	}
 
@@ -205,7 +205,7 @@ impl AstronomicalObject for Star {
 		Length::from_radius_sol( self.radius )
 	}
 
-	fn gravitation( &self ) -> Option<f32> {
+	fn gravitation( &self ) -> Option<f64> {
 		None
 	}
 
@@ -213,7 +213,7 @@ impl AstronomicalObject for Star {
 		self.rotation_period
 	}
 
-	fn temperature( &self ) -> Option<&[f32; 3]> {
+	fn temperature( &self ) -> Option<&[f64; 3]> {
 		None
 	}
 
@@ -233,20 +233,20 @@ pub struct Trabant {
 	pub(crate) name: Option<String>,
 
 	/// The radius in relation to the radius of Terra.
-	pub(crate) radius: f32,
+	pub(crate) radius: f64,
 
 	/// The surface gravity of this trabant in relation to the surface gravity of Terra.
-	pub(crate) gravity: f32,
+	pub(crate) gravity: f64,
 
 	/// The mass of this trabant in relation to the mass of Terra.
 	/// The mass is normally calculated from `radius` and surface `gravity`, but it is possible that the real mass deviates slightly.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	pub(crate) mass: Option<f32>,
+	pub(crate) mass: Option<f64>,
 
 	/// The min, mean and max temperature of the trabant.
-	pub(crate) temperature: [f32; 3],
+	pub(crate) temperature: [f64; 3],
 
 	/// The composition of the atmosphere. Can be `None` if the world does not have an atmosphere.
 	#[serde( default )]
@@ -318,7 +318,7 @@ impl AstronomicalObject for Trabant {
 		Length::from_radius_terra( self.radius )
 	}
 
-	fn gravitation( &self ) -> Option<f32> {
+	fn gravitation( &self ) -> Option<f64> {
 		Some( self.gravity )
 	}
 
@@ -328,7 +328,7 @@ impl AstronomicalObject for Trabant {
 		self.rotation_period
 	}
 
-	fn temperature( &self ) -> Option<&[f32; 3]> {
+	fn temperature( &self ) -> Option<&[f64; 3]> {
 		Some( &self.temperature )
 	}
 
@@ -342,7 +342,7 @@ impl AstronomicalObject for Trabant {
 #[derive( Serialize, Deserialize, Clone, PartialEq, Default, Debug )]
 pub struct Ring {
 	/// The width of the ring in AU.
-	pub(crate) width: f32,
+	pub(crate) width: f64,
 }
 
 impl Ring {
@@ -363,13 +363,13 @@ pub struct Station {
 	pub(crate) name: Option<String>,
 
 	/// The mass in kg.
-	pub(crate) mass: f32,
+	pub(crate) mass: f64,
 
 	/// The outline box of the station in meter. This is the box where the station is just fitting inside.
 	pub(crate) size: Vec3,
 
 	/// The gravity within the station in relation to the surface gravity of Terra.
-	pub(crate) gravity: f32,
+	pub(crate) gravity: f64,
 
 	/// The duration of an artificial day of this station. If the station does not have an artificial day period, this returns `None`.
 	#[serde( default )]
@@ -378,7 +378,7 @@ pub struct Station {
 	pub(crate) day_artificial: Option<TimeDelta>,
 
 	/// The min, mean and max temperature of the trabant.
-	pub(crate) temperature: [f32; 3],
+	pub(crate) temperature: [f64; 3],
 
 	/// The composition of the atmosphere. Can be `None` if the world does not have an atmosphere.
 	#[serde( default )]
@@ -438,7 +438,7 @@ impl AstronomicalObject for Station {
 		Length::from( self.size.max_element() )
 	}
 
-	fn gravitation( &self ) -> Option<f32> {
+	fn gravitation( &self ) -> Option<f64> {
 		Some( self.gravity )
 	}
 
@@ -446,7 +446,7 @@ impl AstronomicalObject for Station {
 		self.day_artificial.as_ref()
 	}
 
-	fn temperature( &self ) -> Option<&[f32; 3]> {
+	fn temperature( &self ) -> Option<&[f64; 3]> {
 		Some( &self.temperature )
 	}
 
