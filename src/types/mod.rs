@@ -852,7 +852,7 @@ impl CelestialSystem {
 		let mass_center = self.mass( &self.index_of_center_of( index )? )?;
 		let mass_orbiter = self.mass( index )?;
 
-		let seconds = dbg!(calc::orbital_period( axis_semi_major, mass_center, mass_orbiter ));
+		let seconds = calc::orbital_period( axis_semi_major, mass_center, mass_orbiter );
 
 		Ok( TimeDelta::seconds( seconds as i64 ) )
 	}
