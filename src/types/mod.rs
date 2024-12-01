@@ -106,7 +106,7 @@ pub trait AstronomicalObject {
 	/// Returns the surface gravity of the astronomical object in m/s².
 	///
 	/// This method returns `None` if the astronomical object has no sensible surface gravitation. A G2 star (loke Sol) for example has no surface, so it would return `None`.
-	fn gravitation( &self ) -> Option<f32>;
+	fn gravitation( &self ) -> Option<f64>;
 
 	/// Returns the duration of one rotation of the `AstronomicalObject`. If it's rotation is locked, this method returns `None`.
 	fn rotation_period( &self ) -> Option<TimeDelta> {
@@ -124,7 +124,7 @@ pub trait AstronomicalObject {
 	/// 3. Maximum temperature
 	///
 	/// Objects without a defined temperature (e.g. gravitational centers or stars) return `None`.
-	fn temperature( &self ) -> Option<&[f32; 3]>;
+	fn temperature( &self ) -> Option<&[f64; 3]>;
 
 	/// Returns the atmosphere of the astronomical object.
 	///
@@ -328,7 +328,7 @@ impl AstronomicalObject for CelestialBody {
 		}
 	}
 
-	fn gravitation( &self ) -> Option<f32> {
+	fn gravitation( &self ) -> Option<f64> {
 		match self {
 			Self::GravitationalCenter( x ) => x.gravitation(),
 			Self::Star( x ) => x.gravitation(),
@@ -358,7 +358,7 @@ impl AstronomicalObject for CelestialBody {
 		}
 	}
 
-	fn temperature( &self ) -> Option<&[f32; 3]> {
+	fn temperature( &self ) -> Option<&[f64; 3]> {
 		match self {
 			Self::GravitationalCenter( x ) => x.temperature(),
 			Self::Star( x ) => x.temperature(),
@@ -719,7 +719,7 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn gravitation( &self, index: &[usize] ) -> Result<Option<f32>, CelestialSystemError> {
+	pub fn gravitation( &self, index: &[usize] ) -> Result<Option<f64>, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
@@ -737,7 +737,7 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn luminosity( &self, index: &[usize] ) -> Result<f32, CelestialSystemError> {
+	pub fn luminosity( &self, index: &[usize] ) -> Result<f64, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
@@ -806,6 +806,18 @@ impl CelestialSystem {
 		}
 
 		orbit_getter( &self.body, index )
+	}
+
+	/// Returns an iterator of all properties of the indexed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn properties<'a>( &'a self, index: &'a [usize] ) -> Result<&'a [StarProperty], CelestialSystemError> {
+		let CelestialBody::Star( star ) = self.object( index )? else {
+			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
+		};
+
+		Ok( star.properties() )
 	}
 
 	/// Returns the minimum and maximum range of the habitable zone of the star at `index`.
@@ -911,7 +923,7 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn temperature<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a [f32; 3]>, CelestialSystemError> {
+	pub fn temperature<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a [f64; 3]>, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
@@ -1010,6 +1022,18 @@ impl CelestialSystem {
 		Ok( body )
 	}
 
+	/// Returns an iterator of all stars within this system.
+	pub fn stars( &self ) -> CelestialSystemStarsIterator {
+		let mut iter_obj = CelestialSystemStarsIterator {
+			stars: Vec::new(),
+			index: 0,
+		};
+
+		iter_obj.walker( &self.body );
+
+		iter_obj
+	}
+
 	/// Returns the mass of this system's main star.
 	pub fn mass_main( &self ) -> Mass {
 		let star_main = self.stars().nth( 0 )
@@ -1031,16 +1055,12 @@ impl CelestialSystem {
 		star_main.spectral_class()
 	}
 
-	/// Returns an iterator of all stars within this system.
-	pub fn stars( &self ) -> CelestialSystemStarsIterator {
-		let mut iter_obj = CelestialSystemStarsIterator {
-			stars: Vec::new(),
-			index: 0,
-		};
+	/// Returns an iterator of all properties of the main star.
+	pub fn properties_main<'a>( &'a self ) -> &'a [StarProperty] {
+		let star_main = self.stars().nth( 0 )
+			.expect( "Each system should have at least one star." );
 
-		iter_obj.walker( &self.body );
-
-		iter_obj
+		star_main.properties()
 	}
 }
 

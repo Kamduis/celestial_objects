@@ -141,10 +141,10 @@ impl fmt::Display for Affiliation {
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct Orbit {
 	/// The semi major axis of the `object`'s orbit in AU.
-	pub axis_semi_major: f32,
+	pub axis_semi_major: f64,
 
 	/// The eccentricity of the `object`'s orbit.
-	pub eccentricity: f32,
+	pub eccentricity: f64,
 
 	/// The object orbiting.
 	pub body: CelestialBody,
@@ -164,7 +164,7 @@ impl Orbit {
 	}
 
 	/// Returns the eccentricity of this orbit.
-	pub fn eccentricity( &self ) -> f32 {
+	pub fn eccentricity( &self ) -> f64 {
 		self.eccentricity
 	}
 
@@ -183,7 +183,7 @@ impl Orbit {
 	}
 
 	/// Radius of the border to the focal point 1 at `angle`. This is the distance of the ellipsis to focal point at `angle`. `angle` is in radians.
-	pub fn radius_from_focal( &self, angle: f32 ) -> Length {
+	pub fn radius_from_focal( &self, angle: f64 ) -> Length {
 		let p = self.axis_semi_minor().powi( 2 ) / self.axis_semi_major();
 
 		p / ( 1.0 + self.eccentricity * angle.cos() )
@@ -372,11 +372,26 @@ pub enum StarProperty {
 	/// A white dwarf star.
 	WhiteDwarf,
 
+	/// A subgiant is a star that is brighter than a normal main-sequence star of the same spectral class, but not as bright as giant stars.
+	Subgiant,
+
 	/// A red giant is a luminous giant star of low mass (between 0.25 to 8 M☉).
 	RedGiant,
 
 	/// Higher-mass stars leave the main sequence to become blue giants, then bright blue giants, and then blue supergiants, before expanding into red supergiants.
 	BlueGiant,
+}
+
+impl fmt::Display for StarProperty {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		match self {
+			Self::FlareStar => write!( f, "Flare Star" ),
+			Self::WhiteDwarf => write!( f, "White Dwarf" ),
+			Self::Subgiant => write!( f, "Subgiant" ),
+			Self::RedGiant => write!( f, "Red Giant" ),
+			Self::BlueGiant => write!( f, "Blue Giant" ),
+		}
+	}
 }
 
 
