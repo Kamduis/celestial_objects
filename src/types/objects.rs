@@ -282,7 +282,7 @@ impl Trabant {
 	}
 
 	/// Returns the number of hyperspace gates of this trabant.
-	pub fn gates( &self ) -> u32 {
+	pub fn gate_count( &self ) -> u32 {
 		self.gates
 	}
 }
@@ -407,7 +407,7 @@ impl Station {
 	}
 
 	/// Returns the number of hyperspace gates of this station.
-	pub fn gates( &self ) -> u32 {
+	pub fn gate_count( &self ) -> u32 {
 		self.gates
 	}
 }
