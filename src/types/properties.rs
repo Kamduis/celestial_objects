@@ -137,6 +137,24 @@ impl fmt::Display for Affiliation {
 }
 
 
+/// Representing an institution based or provided.
+#[derive( Serialize, Deserialize, PartialEq, Hash, Clone, Debug )]
+pub enum Institution {
+	/// A delegation of the Union space fleet is based.
+	UnionFleet,
+}
+
+impl fmt::Display for Institution {
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
+		let res = match self {
+			Self::UnionFleet => "Union Space Fleet",
+		};
+
+		write!( f, "{}", res )
+	}
+}
+
+
 /// Representing the orbit of a `CelestialBody` around another `CelestialBody`.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct Orbit {

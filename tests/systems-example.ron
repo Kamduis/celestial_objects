@@ -44,6 +44,9 @@
 						),
 						techlevel: 10,
 						gates: 14,
+						institutions: [
+							UnionFleet,
+						],
 						satellites: [],
 					)),
 				),
@@ -79,6 +82,9 @@
 									temperature: (-173.0, -23.0, 116.0 ),
 									techlevel: 11,
 									gates: 1,
+									institutions: [
+										UnionFleet,
+									],
 									satellites: [],
 								)),
 							),
@@ -90,8 +96,8 @@
 									mass: 4180e3,
 									size: ( 200.0, 200.0, 6e3 ),
 									gravity: 1.0,
-									temperature: (15.0, 21.0, 27.0),
 									day_artificial: "24h",
+									temperature: (15.0, 21.0, 27.0),
 									atmosphere: (
 										pressure: 1.0,
 										quality: Breathable,
@@ -103,6 +109,9 @@
 									),
 									techlevel: 11,
 									gates: 0,
+									institutions: [
+										UnionFleet,
+									],
 									satellites: [],
 								)),
 							),
@@ -131,6 +140,9 @@
 						),
 						techlevel: 11,
 						gates: 64,
+						institutions: [
+							UnionFleet,
+						],
 						satellites: [
 							(
 								axis_semi_major: 62.6746804e-6,
@@ -217,6 +229,9 @@
 									temperature: (-235.0, -235.0, -235.0),
 									techlevel: 12,
 									gates: 0,
+									institutions: [
+										UnionFleet,
+									],
 									satellites: [],
 								)),
 							),

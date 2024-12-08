@@ -1037,6 +1037,40 @@ impl CelestialSystem {
 		Ok( false )
 	}
 
+	/// Returns `true` if there is at one delegation of the Union space fleet.
+	///
+	/// If the index is `&[]` the method returns `true` if any of the worlds within this system has a delegation of the Union space fleet.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn has_fleet( &self, index: &[usize] ) -> Result<bool, CelestialSystemError> {
+		if index.is_empty() {
+			for idx in self.indices().iter()
+				.skip( 1 )  // Skipping `&[]`
+			{
+				if self.has_fleet( &idx )? {
+					return Ok( true );
+				}
+			}
+
+			return Ok( false );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		let res = match body {
+			CelestialBody::Trabant( x ) => x.has_fleet(),
+			CelestialBody::Station( x ) => x.has_fleet(),
+			_ => false,
+		};
+
+		Ok( res )
+	}
+
 	/// Returns the object at `index`.
 	///
 	/// # Arguments
@@ -1240,6 +1274,7 @@ mod tests {
 		let sol = &systems[0];
 
 		assert_eq!( sol.gates_count( &[0] ).unwrap(), 0 );
+		assert_eq!( sol.gates_count( &[1] ).unwrap(), 0 );
 		assert_eq!( sol.gates_count( &[2] ).unwrap(), 14 );
 		assert_eq!( sol.gates_count( &[3,1] ).unwrap(), 1 );
 		assert_eq!( sol.gates_count( &[3,2] ).unwrap(), 0 );
@@ -1254,11 +1289,28 @@ mod tests {
 		let sol = &systems[0];
 
 		assert!( !sol.has_gates( &[0] ).unwrap() );
+		assert!( !sol.has_gates( &[1] ).unwrap() );
 		assert!( sol.has_gates( &[2] ).unwrap() );
 		assert!( sol.has_gates( &[3,1] ).unwrap() );
 		assert!( !sol.has_gates( &[3,2] ).unwrap() );
 		assert!( sol.has_gates( &[4] ).unwrap() );
 		assert!( sol.has_gates( &[] ).unwrap() );
+	}
+
+	#[test]
+	fn test_has_fleet() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert!( !sol.has_fleet( &[0] ).unwrap() );
+		assert!( !sol.has_fleet( &[1] ).unwrap() );
+		assert!( sol.has_fleet( &[2] ).unwrap() );
+		assert!( !sol.has_fleet( &[3] ).unwrap() );
+		assert!( sol.has_fleet( &[3,1] ).unwrap() );
+		assert!( sol.has_fleet( &[3,2] ).unwrap() );
+		assert!( sol.has_fleet( &[4] ).unwrap() );
+		assert!( sol.has_fleet( &[] ).unwrap() );
 	}
 
 	#[test]

@@ -14,7 +14,7 @@ use crate::CelestialSystem;
 use crate::coords::EquatorialCoords;
 use crate::types::AstronomicalObject;
 use crate::types::CelestialBody;
-use crate::types::properties::{Affiliation, Orbit, Atmosphere, AtmosphereQuality, GasComposition, Molecule};
+use crate::types::properties::{Affiliation, Institution, Orbit, Atmosphere, AtmosphereQuality, GasComposition, Molecule};
 use crate::types::objects::{GravitationalCenter, Star, Trabant, Ring, Station};
 
 
@@ -47,6 +47,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							atmosphere: None,
 							techlevel: None,
 							gates: 0,
+							institutions: Vec::new(),
 							satellites: Vec::new(),
 						} ),
 					},
@@ -72,6 +73,9 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							} ),
 							techlevel: Some( 10 ),
 							gates: 14,
+							institutions: vec![
+								Institution::UnionFleet,
+							],
 							satellites: Vec::new(),
 						} ),
 					},
@@ -98,6 +102,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							} ),
 							techlevel: None,
 							gates: 0,
+							institutions: Vec::new(),
 							satellites: vec![
 								Orbit {
 									axis_semi_major: 0.00257,
@@ -112,6 +117,9 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										atmosphere: None,
 										techlevel: Some( 11 ),
 										gates: 1,
+										institutions: vec![
+											Institution::UnionFleet,
+										],
 										satellites: Vec::new(),
 									} ),
 								},
@@ -136,6 +144,9 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										} ),
 										techlevel: Some( 11 ),
 										gates: 0,
+										institutions: vec![
+											Institution::UnionFleet,
+										],
 										satellites: Vec::new(),
 									} )
 								},
@@ -165,6 +176,9 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							} ),
 							techlevel: Some( 11 ),
 							gates: 64,
+							institutions: vec![
+								Institution::UnionFleet,
+							],
 							satellites: vec![
 								Orbit {
 									axis_semi_major: 62.6746804e-6,
@@ -179,6 +193,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										atmosphere: None,
 										techlevel: None,
 										gates: 0,
+										institutions: Vec::new(),
 										satellites: Vec::new(),
 									} ),
 								},
@@ -195,6 +210,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										atmosphere: None,
 										techlevel: None,
 										gates: 0,
+										institutions: Vec::new(),
 										satellites: Vec::new(),
 									} ),
 								},
@@ -223,6 +239,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							} ),
 							techlevel: None,
 							gates: 0,
+							institutions: Vec::new(),
 							satellites: vec![
 								Orbit {
 									axis_semi_major: 425.574205e-6,
@@ -255,6 +272,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							} ),
 							techlevel: None,
 							gates: 0,
+							institutions: Vec::new(),
 							satellites: vec![
 								Orbit {
 									axis_semi_major: 0.00237,
@@ -269,6 +287,9 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										atmosphere: None,
 										techlevel: Some( 12 ),
 										gates: 0,
+										institutions: vec![
+											Institution::UnionFleet,
+										],
 										satellites: Vec::new(),
 									} ),
 								},
@@ -313,6 +334,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										} ),
 										techlevel: Some( 11 ),
 										gates: 122,
+										institutions: Vec::new(),
 										satellites: Vec::new(),
 									} ),
 								},
@@ -347,6 +369,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										} ),
 										techlevel: Some( 11 ),
 										gates: 58,
+										institutions: Vec::new(),
 										satellites: Vec::new(),
 									} ),
 								},
