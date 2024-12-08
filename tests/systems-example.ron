@@ -110,6 +110,54 @@
 					)),
 				),
 				(
+					axis_semi_major: 1.52368055,
+					eccentricity: 0.0934,
+					body: Trabant((
+						name: "Mars",
+						radius: 0.533,
+						gravity: 0.3794,
+						rotation_period: "24h 37m 22s",
+						temperature: (-110.0, 8.0, 35.0),
+						atmosphere: (
+							pressure: 6.36e-3,
+							quality: Toxic,
+							composition: GasComposition({
+								Argon: 0.0193,
+								CarbonDioxide: 0.9597,
+								Nitrogen: 0.0189,
+								Oxygen: 0.0146,
+								CarbonMonoxide: 0.557e-3,
+							}),
+						),
+						techlevel: 11,
+						gates: 64,
+						satellites: [
+							(
+								axis_semi_major: 62.6746804e-6,
+								eccentricity: 0.0151,
+								body: Trabant((
+									name: "Phobos",
+									radius: 1.737e-3,
+									gravity: 581.4e-6,
+									temperature: (-110.0, -57.0, -5.0),
+									satellites: [],
+								)),
+							),
+							(
+								axis_semi_major: 156.8418046e-6,
+								eccentricity: 0.00033,
+								body: Trabant((
+									name: "Deimos",
+									radius: 98.304e-3,
+									gravity: 306e-6,
+									temperature: (-40.0, -40.0, -40.0),
+									satellites: [],
+								)),
+							),
+						],
+					)),
+				),
+				(
 					axis_semi_major: 9.5826,
 					eccentricity: 0.0565,
 					body: Trabant((
