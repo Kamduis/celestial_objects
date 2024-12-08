@@ -986,11 +986,11 @@ impl CelestialSystem {
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn gate_count( &self, index: &[usize] ) -> Result<u32, CelestialSystemError> {
+	pub fn gates_count( &self, index: &[usize] ) -> Result<u32, CelestialSystemError> {
 		if index.is_empty() {
 			let res = self.indices().iter()
 				.skip( 1 )  // Skipping `&[]`
-				.map( |x| self.gate_count( x ).unwrap_or( 0 ) )
+				.map( |x| self.gates_count( x ).unwrap_or( 0 ) )
 				.sum();
 
 			return Ok( res );
@@ -1003,8 +1003,8 @@ impl CelestialSystem {
 		};
 
 		let res = match body {
-			CelestialBody::Trabant( x ) => x.gate_count(),
-			CelestialBody::Station( x ) => x.gate_count(),
+			CelestialBody::Trabant( x ) => x.gates_count(),
+			CelestialBody::Station( x ) => x.gates_count(),
 			_ => 0,
 		};
 
@@ -1030,7 +1030,7 @@ impl CelestialSystem {
 			return Ok( false );
 		}
 
-		if self.gate_count( index )? > 0 {
+		if self.gates_count( index )? > 0 {
 			return Ok( true );
 		}
 
@@ -1239,12 +1239,12 @@ mod tests {
 
 		let sol = &systems[0];
 
-		assert_eq!( sol.gate_count( &[0] ).unwrap(), 0 );
-		assert_eq!( sol.gate_count( &[2] ).unwrap(), 14 );
-		assert_eq!( sol.gate_count( &[3,1] ).unwrap(), 1 );
-		assert_eq!( sol.gate_count( &[3,2] ).unwrap(), 0 );
-		assert_eq!( sol.gate_count( &[4] ).unwrap(), 64 );
-		assert_eq!( sol.gate_count( &[] ).unwrap(), 14 + 1 + 64 );
+		assert_eq!( sol.gates_count( &[0] ).unwrap(), 0 );
+		assert_eq!( sol.gates_count( &[2] ).unwrap(), 14 );
+		assert_eq!( sol.gates_count( &[3,1] ).unwrap(), 1 );
+		assert_eq!( sol.gates_count( &[3,2] ).unwrap(), 0 );
+		assert_eq!( sol.gates_count( &[4] ).unwrap(), 64 );
+		assert_eq!( sol.gates_count( &[] ).unwrap(), 14 + 1 + 64 );
 	}
 
 	#[test]
