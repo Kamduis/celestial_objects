@@ -1004,6 +1004,32 @@ impl CelestialSystem {
 		Ok( res )
 	}
 
+	/// Returns `true` if there is at least one jump gate available. If the index is `&[]` the method returns `true` if any of the worlds within this system has a jump gate.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn has_gates( &self, index: &[usize] ) -> Result<bool> {
+		if index.is_empty() {
+			for idx in self.indices().iter()
+				.skip( 1 )  // Skipping `&[]`
+			{
+				if self.has_gates( &idx ) {
+					return Ok( true );
+				}
+			}
+
+			return Ok( false );
+		}
+
+		for idx in self.indices() {
+			if self.gates( &idx )? > 0 {
+				return Ok( true );
+			}
+		}
+
+		Ok( false )
+	}
+
 	/// Returns the object at `index`.
 	///
 	/// # Arguments
