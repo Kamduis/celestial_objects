@@ -7,7 +7,7 @@
 // Crates
 
 
-use std::collections::BTreeMap;
+use std::collections::{btree_map, BTreeMap};
 use std::fmt;
 use std::str::FromStr;
 use std::sync::LazyLock;
@@ -455,6 +455,28 @@ impl GasComposition {
 		let known: f64 = self.0.values().sum();
 
 		1.0 - known
+	}
+
+	/// Return an iterator of `GasComposition`.
+	pub fn iter( &self ) -> btree_map::Iter<Molecule, f64> {
+		self.into_iter()
+	}
+}
+
+impl IntoIterator for GasComposition {
+	type Item = ( Molecule, f64 );
+	type IntoIter = btree_map::IntoIter<Molecule, f64>;
+
+	fn into_iter( self ) -> Self::IntoIter {
+		self.0.into_iter()
+	}
+}
+
+impl<'a> IntoIterator for &'a GasComposition {
+	type Item = ( &'a Molecule, &'a f64 );
+	type IntoIter = btree_map::Iter<'a, Molecule, f64>;
+	fn into_iter( self ) -> Self::IntoIter {
+		self.0.iter()
 	}
 }
 
