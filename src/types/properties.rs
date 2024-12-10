@@ -512,8 +512,7 @@ pub struct GasComposition( BTreeMap<Molecule, f64> );
 
 impl GasComposition {
 	/// Return the amount of other/unknown elements.
-	#[cfg( feature = "tex" )]
-	fn other( &self ) -> f64 {
+	pub fn other( &self ) -> f64 {
 		let known: f64 = self.0.values().sum();
 
 		1.0 - known
