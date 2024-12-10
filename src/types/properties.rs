@@ -83,11 +83,24 @@ impl From<&CelestialBody> for BodyType {
 impl fmt::Display for BodyType {
 	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
 		match self {
-			Self::GravitationalCenter => write!( f, "Planet" ),
-			Self::Star => write!( f, "Star" ),
-			Self::Trabant => write!( f, "Trabant" ),
-			Self::Ring => write!( f, "Ring" ),
-			Self::Station => write!( f, "Station" ),
+			Self::GravitationalCenter => write!( f, "gravitational center" ),
+			Self::Star => write!( f, "star" ),
+			Self::Trabant => write!( f, "trabant" ),
+			Self::Ring => write!( f, "ring" ),
+			Self::Station => write!( f, "station" ),
+		}
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Localized for BodyType {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::GravitationalCenter => LOCALES.lookup( locale, "gravitational-center" ),
+			Self::Star => LOCALES.lookup( locale, "star" ),
+			Self::Trabant => LOCALES.lookup( locale, "trabant" ),
+			Self::Ring => LOCALES.lookup( locale, "ring" ),
+			Self::Station => LOCALES.lookup( locale, "station" ),
 		}
 	}
 }
@@ -103,8 +116,18 @@ pub enum TrabantType {
 impl fmt::Display for TrabantType {
 	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
 		match self {
-			Self::Planet => write!( f, "Planet" ),
-			Self::Moon => write!( f, "Moon" ),
+			Self::Planet => write!( f, "planet" ),
+			Self::Moon => write!( f, "moon" ),
+		}
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Localized for TrabantType {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::Planet => LOCALES.lookup( locale, "planet" ),
+			Self::Moon => LOCALES.lookup( locale, "moon" ),
 		}
 	}
 }
@@ -140,6 +163,18 @@ impl fmt::Display for Affiliation {
 	}
 }
 
+#[cfg( feature = "i18n" )]
+impl Localized for Affiliation {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::Union => LOCALES.lookup( locale, "Union" ),
+			Self::BorderWorld => LOCALES.lookup( locale, "Border-World" ),
+			Self::Free => LOCALES.lookup( locale, "Free-Territories" ),
+			Self::Uninhabited => LOCALES.lookup( locale, "Uninhabited" ),
+		}
+	}
+}
+
 
 /// Representing an institution based or provided.
 #[derive( Serialize, Deserialize, PartialEq, Hash, Clone, Debug )]
@@ -155,6 +190,15 @@ impl fmt::Display for Institution {
 		};
 
 		write!( f, "{}", res )
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Localized for Institution {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::UnionFleet => LOCALES.lookup( locale, "Union-Fleet" ),
+		}
 	}
 }
 
@@ -416,6 +460,19 @@ impl fmt::Display for StarProperty {
 	}
 }
 
+#[cfg( feature = "i18n" )]
+impl Localized for StarProperty {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::FlareStar => LOCALES.lookup( locale, "Flare-Star" ),
+			Self::WhiteDwarf => LOCALES.lookup( locale, "White-Dwarf" ),
+			Self::Subgiant => LOCALES.lookup( locale, "Subgiant" ),
+			Self::RedGiant => LOCALES.lookup( locale, "Red-Giant" ),
+			Self::BlueGiant => LOCALES.lookup( locale, "Blue-Giant" ),
+		}
+	}
+}
+
 
 /// The composition of an atmosphere.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
@@ -623,7 +680,17 @@ impl fmt::Display for Molecule {
 			Self::SulfurDioxide =>  write!( f, "SO2" ),
 			Self::SulfurMonoxide => write!( f, "SO" ),
 			Self::Water =>          write!( f, "H2O" ),
-			Self::Other =>          write!( f, r"andere" ),
+			Self::Other =>          write!( f, r"other" ),
+		}
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Localized for Molecule {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::Other => LOCALES.lookup( locale, "other" ),
+			_ => self.to_string(),
 		}
 	}
 }
