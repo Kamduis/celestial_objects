@@ -23,11 +23,29 @@ mod types;
 mod calc;
 mod serde_helpers;
 
-#[cfg( feature = "tex" )] pub use traits::{Latex, LatexSym};
+#[cfg( feature = "tex" )] pub use traits::{Locale, Latex, LatexSym, LocaleLatex};
 pub use crate::coords::{EquatorialCoords, GalacticCoords};
 pub use crate::types::{CelestialSystem, CelestialBody, BodyType, SpectralClass, StarType, Affiliation, StarProperty, Atmosphere, AtmosphereQuality, GasComposition};
 pub use crate::types::CelestialSystemError;
 pub use crate::units::{Length, Mass};
+
+
+
+
+//=============================================================================
+// Internationalization
+
+
+#[cfg( feature = "i18n" )]
+fluent_templates::static_loader! {
+	static LOCALES = {
+		// The directory of localisations and fluent resources.
+		locales: "./locales",
+
+		// The language to falback on if something is not present.
+		fallback_language: "en-US",
+	};
+}
 
 
 
