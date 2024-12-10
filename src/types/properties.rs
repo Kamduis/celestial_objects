@@ -12,12 +12,16 @@ use std::fmt;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
+#[cfg( feature = "i18n" )] use fluent_templates::Loader;
 use regex::Regex;
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 use thiserror::Error;
+#[cfg( feature = "i18n" )] use unic_langid::LanguageIdentifier;
 
 #[cfg( feature = "tex" )] use crate::traits::Latex;
 use crate::units::Length;
+#[cfg( feature = "i18n" )] use crate::traits::Localized;
+#[cfg( feature = "i18n" )] use crate::LOCALES;
 
 use super::CelestialBody;
 
@@ -532,9 +536,20 @@ impl AtmosphereQuality {
 impl fmt::Display for AtmosphereQuality {
 	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
 		match self {
-			Self::Breathable => write!( f, "Atembar" ),
-			Self::NonToxic => write!( f, "Ungiftig" ),
-			Self::Toxic => write!( f, "Giftig" ),
+			Self::Breathable => write!( f, "breathable" ),
+			Self::NonToxic => write!( f, "non-toxic" ),
+			Self::Toxic => write!( f, "toxic" ),
+		}
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Localized for AtmosphereQuality {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::Breathable => LOCALES.lookup( locale, "breathable" ),
+			Self::NonToxic => LOCALES.lookup( locale, "nontoxic" ),
+			Self::Toxic => LOCALES.lookup( locale, "toxic" ),
 		}
 	}
 }

@@ -33,6 +33,24 @@ pub use crate::units::{Length, Mass};
 
 
 //=============================================================================
+// Internationalization
+
+
+#[cfg( feature = "i18n" )]
+fluent_templates::static_loader! {
+	static LOCALES = {
+		// The directory of localisations and fluent resources.
+		locales: "./locales",
+
+		// The language to falback on if something is not present.
+		fallback_language: "en-US",
+	};
+}
+
+
+
+
+//=============================================================================
 // Testing
 
 
