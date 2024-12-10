@@ -23,7 +23,7 @@ mod types;
 mod calc;
 mod serde_helpers;
 
-#[cfg( feature = "tex" )] pub use traits::{Latex, LatexSym};
+#[cfg( feature = "tex" )] pub use traits::{Locale, Latex, LatexSym, LocaleLatex};
 pub use crate::coords::{EquatorialCoords, GalacticCoords};
 pub use crate::types::{CelestialSystem, CelestialBody, BodyType, SpectralClass, StarType, Affiliation, StarProperty, Atmosphere, AtmosphereQuality, GasComposition};
 pub use crate::types::CelestialSystemError;

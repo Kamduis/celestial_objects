@@ -18,9 +18,10 @@ use serde::{Serialize, Serializer, Deserialize, Deserializer};
 use thiserror::Error;
 #[cfg( feature = "i18n" )] use unic_langid::LanguageIdentifier;
 
-#[cfg( feature = "tex" )] use crate::traits::Latex;
 use crate::units::Length;
-#[cfg( feature = "i18n" )] use crate::traits::Localized;
+#[cfg( feature = "tex" )] use crate::traits::Latex;
+#[cfg( feature = "i18n" )] use crate::traits::Locale;
+#[cfg( all( feature = "i18n", feature = "tex" ) )] use crate::traits::LocaleLatex;
 #[cfg( feature = "i18n" )] use crate::LOCALES;
 
 use super::CelestialBody;
@@ -93,7 +94,7 @@ impl fmt::Display for BodyType {
 }
 
 #[cfg( feature = "i18n" )]
-impl Localized for BodyType {
+impl Locale for BodyType {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::GravitationalCenter => LOCALES.lookup( locale, "gravitational-center" ),
@@ -123,7 +124,7 @@ impl fmt::Display for TrabantType {
 }
 
 #[cfg( feature = "i18n" )]
-impl Localized for TrabantType {
+impl Locale for TrabantType {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::Planet => LOCALES.lookup( locale, "planet" ),
@@ -164,7 +165,7 @@ impl fmt::Display for Affiliation {
 }
 
 #[cfg( feature = "i18n" )]
-impl Localized for Affiliation {
+impl Locale for Affiliation {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::Union => LOCALES.lookup( locale, "Union" ),
@@ -194,7 +195,7 @@ impl fmt::Display for Institution {
 }
 
 #[cfg( feature = "i18n" )]
-impl Localized for Institution {
+impl Locale for Institution {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::UnionFleet => LOCALES.lookup( locale, "Union-Fleet" ),
@@ -461,7 +462,7 @@ impl fmt::Display for StarProperty {
 }
 
 #[cfg( feature = "i18n" )]
-impl Localized for StarProperty {
+impl Locale for StarProperty {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::FlareStar => LOCALES.lookup( locale, "Flare-Star" ),
@@ -551,6 +552,35 @@ impl<const N: usize> From<[( Molecule, f64 ); N]> for GasComposition {
 	}
 }
 
+impl fmt::Display for GasComposition {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		let mut tmp = self.clone();
+
+		tmp.0.insert( Molecule::Other, self.other() );
+
+		tmp.0.iter()
+			.map( |( k, v )| format!( r"{} {:.1}%", k, v * 100.0 ) )
+			.collect::<Vec<String>>()
+			.join( ", " );
+
+		write!( f, "{}", tmp )
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for GasComposition {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		let mut tmp = self.clone();
+
+		tmp.0.insert( Molecule::Other, self.other() );
+
+		tmp.0.iter()
+			.map( |( k, v )| format!( r"{} {:.1}%", k.to_string_locale( locale ), v * 100.0 ) )
+			.collect::<Vec<String>>()
+			.join( ", " )
+	}
+}
+
 #[cfg( feature = "tex" )]
 impl Latex for GasComposition {
 	fn to_latex( &self ) -> String {
@@ -560,6 +590,20 @@ impl Latex for GasComposition {
 
 		tmp.0.iter()
 			.map( |( k, v )| format!( r"{}\,\qty{{{:.1}}}{{\percent}}", k.to_latex(), v * 100.0 ) )
+			.collect::<Vec<String>>()
+			.join( ", " )
+	}
+}
+
+#[cfg( all( feature = "i18n", feature = "tex" ) )]
+impl LocaleLatex for GasComposition {
+	fn to_latex_locale( &self, locale: &LanguageIdentifier ) -> String {
+		let mut tmp = self.clone();
+
+		tmp.0.insert( Molecule::Other, self.other() );
+
+		tmp.0.iter()
+			.map( |( k, v )| format!( r"{}\,\qty{{{:.1}}}{{\percent}}", k.to_latex_locale( locale ), v * 100.0 ) )
 			.collect::<Vec<String>>()
 			.join( ", " )
 	}
@@ -601,7 +645,7 @@ impl fmt::Display for AtmosphereQuality {
 }
 
 #[cfg( feature = "i18n" )]
-impl Localized for AtmosphereQuality {
+impl Locale for AtmosphereQuality {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::Breathable => LOCALES.lookup( locale, "breathable" ),
@@ -634,33 +678,6 @@ pub enum Molecule {
 	Other,
 }
 
-#[cfg( feature = "tex" )]
-impl Latex for Molecule {
-	fn to_latex( &self ) -> String {
-		let res = match self {
-			Self::Ammonia => r"\ce{NH3}",
-			Self::Argon => r"\ce{Ar}",
-			Self::CarbonDioxide => r"\ce{CO2}",
-			Self::CarbonMonoxide => r"\ce{CO}",
-			Self::Ethane => r"\ce{C2H6}",
-			Self::Helium => r"\ce{He}",
-			Self::Hydrogen => r"\ce{H}",
-			Self::Kalium => r"\ce{K}",
-			Self::Methane => r"\ce{CH4}",
-			Self::Natrium => r"\ce{Na}",
-			Self::Neon => r"\ce{Ne}",
-			Self::Nitrogen => r"\ce{N2}",
-			Self::Oxygen => r"\ce{O2}",
-			Self::SulfurDioxide => r"\ce{SO2}",
-			Self::SulfurMonoxide => r"\ce{SO}",
-			Self::Water => r"\ce{H2O}",
-			Self::Other => r"andere",
-		};
-
-		res.to_string()
-	}
-}
-
 impl fmt::Display for Molecule {
 	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
 		match self {
@@ -686,11 +703,48 @@ impl fmt::Display for Molecule {
 }
 
 #[cfg( feature = "i18n" )]
-impl Localized for Molecule {
+impl Locale for Molecule {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::Other => LOCALES.lookup( locale, "other" ),
 			_ => self.to_string(),
+		}
+	}
+}
+
+#[cfg( feature = "tex" )]
+impl Latex for Molecule {
+	fn to_latex( &self ) -> String {
+		let res = match self {
+			Self::Ammonia => r"\ce{NH3}",
+			Self::Argon => r"\ce{Ar}",
+			Self::CarbonDioxide => r"\ce{CO2}",
+			Self::CarbonMonoxide => r"\ce{CO}",
+			Self::Ethane => r"\ce{C2H6}",
+			Self::Helium => r"\ce{He}",
+			Self::Hydrogen => r"\ce{H}",
+			Self::Kalium => r"\ce{K}",
+			Self::Methane => r"\ce{CH4}",
+			Self::Natrium => r"\ce{Na}",
+			Self::Neon => r"\ce{Ne}",
+			Self::Nitrogen => r"\ce{N2}",
+			Self::Oxygen => r"\ce{O2}",
+			Self::SulfurDioxide => r"\ce{SO2}",
+			Self::SulfurMonoxide => r"\ce{SO}",
+			Self::Water => r"\ce{H2O}",
+			Self::Other => r"other",
+		};
+
+		res.to_string()
+	}
+}
+
+#[cfg( all( feature = "i18n", feature = "tex" ) )]
+impl LocaleLatex for Molecule {
+	fn to_latex_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::Other => LOCALES.lookup( locale, "other" ),
+			_ => self.to_latex(),
 		}
 	}
 }

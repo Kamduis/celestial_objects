@@ -20,7 +20,7 @@
 ///
 /// **Note:** This trait is only available, if the **`i18n`** feature has been enabled.
 #[cfg( feature = "i18n" )]
-pub trait Localized {
+pub trait Locale {
 	/// Returns the string representation of `self` using the language according to the provided `locale`.
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String;
 }
@@ -45,4 +45,14 @@ pub trait LatexSym: Latex {
 	fn to_latex_sym( &self ) -> String {
 		self.to_latex()
 	}
+}
+
+
+/// Providing localized LaTeX code output.
+///
+/// **Note:** This trait is only available, if the **`i18n`** and **`tex`** features have been enabled.
+#[cfg( feature = "i18n" )]
+pub trait LocaleLatex: Locale + Latex {
+	/// Returns the LaTeX code representation of `self` using the language according to the provided `locale`.
+	fn to_latex_locale( &self, locale: &LanguageIdentifier ) -> String;
 }

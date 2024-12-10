@@ -4,7 +4,7 @@ gravitational-center = Gravitationszentrum
 star = Stern
 trabant = Trabant
 ring = Ring
-station = Station
+station = Raumstation
 
 Union = Union
 Border-World = Grenzwelt
