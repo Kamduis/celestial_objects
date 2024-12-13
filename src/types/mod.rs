@@ -982,11 +982,18 @@ impl CelestialSystem {
 
 	/// Returns the number of hyperspace gates of this world.
 	///
+	/// If the index is `&[]` the method returns the number of all gates within this system.
+	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn gates( &self, index: &[usize] ) -> Result<u32, CelestialSystemError> {
+	pub fn gates_count( &self, index: &[usize] ) -> Result<u32, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			let res = self.indices().iter()
+				.skip( 1 )  // Skipping `&[]`
+				.map( |x| self.gates_count( x ).unwrap_or( 0 ) )
+				.sum();
+
+			return Ok( res );
 		}
 
 		let body = if index[0] == 0 {
@@ -996,9 +1003,69 @@ impl CelestialSystem {
 		};
 
 		let res = match body {
-			CelestialBody::Trabant( x ) => x.gates(),
-			CelestialBody::Station( x ) => x.gates(),
-			_ => return Err( CelestialSystemError::NotColonizable( format!( "{:?}", index ) ) ),
+			CelestialBody::Trabant( x ) => x.gates_count(),
+			CelestialBody::Station( x ) => x.gates_count(),
+			_ => 0,
+		};
+
+		Ok( res )
+	}
+
+	/// Returns `true` if there is at least one jump gate available.
+	///
+	/// If the index is `&[]` the method returns `true` if any of the worlds within this system has a jump gate.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn has_gates( &self, index: &[usize] ) -> Result<bool, CelestialSystemError> {
+		if index.is_empty() {
+			for idx in self.indices().iter()
+				.skip( 1 )  // Skipping `&[]`
+			{
+				if self.has_gates( &idx )? {
+					return Ok( true );
+				}
+			}
+
+			return Ok( false );
+		}
+
+		if self.gates_count( index )? > 0 {
+			return Ok( true );
+		}
+
+		Ok( false )
+	}
+
+	/// Returns `true` if there is at one delegation of the Union space fleet.
+	///
+	/// If the index is `&[]` the method returns `true` if any of the worlds within this system has a delegation of the Union space fleet.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn has_fleet( &self, index: &[usize] ) -> Result<bool, CelestialSystemError> {
+		if index.is_empty() {
+			for idx in self.indices().iter()
+				.skip( 1 )  // Skipping `&[]`
+			{
+				if self.has_fleet( &idx )? {
+					return Ok( true );
+				}
+			}
+
+			return Ok( false );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		let res = match body {
+			CelestialBody::Trabant( x ) => x.has_fleet(),
+			CelestialBody::Station( x ) => x.has_fleet(),
+			_ => false,
 		};
 
 		Ok( res )
@@ -1165,8 +1232,9 @@ mod tests {
 			vec![1],
 			vec![2],
 			vec![3], vec![3,1], vec![3,2],
-			vec![4], vec![4,1],
+			vec![4], vec![4,1], vec![4,2],
 			vec![5], vec![5,1],
+			vec![6], vec![6,1],
 		] );
 
 		let centauri = &systems[1];
@@ -1191,11 +1259,58 @@ mod tests {
 			vec![3],
 			vec![4],
 			vec![5],
+			vec![6],
 		] );
 
 		assert_eq!( sol.indices_satellites( &[1] ).unwrap(), Vec::<Vec<usize>>::new() );
 
 		assert_eq!( sol.indices_satellites( &[3] ).unwrap(), vec![ vec![3,1], vec![3,2], ] );
+	}
+
+	#[test]
+	fn test_gates_count() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert_eq!( sol.gates_count( &[0] ).unwrap(), 0 );
+		assert_eq!( sol.gates_count( &[1] ).unwrap(), 0 );
+		assert_eq!( sol.gates_count( &[2] ).unwrap(), 14 );
+		assert_eq!( sol.gates_count( &[3,1] ).unwrap(), 1 );
+		assert_eq!( sol.gates_count( &[3,2] ).unwrap(), 0 );
+		assert_eq!( sol.gates_count( &[4] ).unwrap(), 64 );
+		assert_eq!( sol.gates_count( &[] ).unwrap(), 14 + 1 + 64 );
+	}
+
+	#[test]
+	fn test_has_gates() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert!( !sol.has_gates( &[0] ).unwrap() );
+		assert!( !sol.has_gates( &[1] ).unwrap() );
+		assert!( sol.has_gates( &[2] ).unwrap() );
+		assert!( sol.has_gates( &[3,1] ).unwrap() );
+		assert!( !sol.has_gates( &[3,2] ).unwrap() );
+		assert!( sol.has_gates( &[4] ).unwrap() );
+		assert!( sol.has_gates( &[] ).unwrap() );
+	}
+
+	#[test]
+	fn test_has_fleet() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert!( !sol.has_fleet( &[0] ).unwrap() );
+		assert!( !sol.has_fleet( &[1] ).unwrap() );
+		assert!( sol.has_fleet( &[2] ).unwrap() );
+		assert!( !sol.has_fleet( &[3] ).unwrap() );
+		assert!( sol.has_fleet( &[3,1] ).unwrap() );
+		assert!( sol.has_fleet( &[3,2] ).unwrap() );
+		assert!( sol.has_fleet( &[4] ).unwrap() );
+		assert!( sol.has_fleet( &[] ).unwrap() );
 	}
 
 	#[test]

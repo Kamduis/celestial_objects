@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 use super::AstronomicalObject;
 use super::properties::SpectralClassError;
-use super::properties::{StarProperty, Orbit, StarType, SpectralClass, Atmosphere};
+use super::properties::{StarProperty, Orbit, StarType, SpectralClass, Atmosphere, Institution};
 
 
 
@@ -271,6 +271,11 @@ pub struct Trabant {
 	#[serde( default )]
 	pub(crate) gates: u32,
 
+	/// The institutions provided by this station.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) institutions: Vec<Institution>,
+
 	/// The objects orbiting this trabant.
 	pub(crate) satellites: Vec<Orbit>,
 }
@@ -282,8 +287,13 @@ impl Trabant {
 	}
 
 	/// Returns the number of hyperspace gates of this trabant.
-	pub fn gates( &self ) -> u32 {
+	pub fn gates_count( &self ) -> u32 {
 		self.gates
+	}
+
+	/// Returns `true` if there is a delegation of the Union space fleet stationed at this body. Otherwise returns `false`.
+	pub fn has_fleet( &self ) -> bool {
+		self.institutions.iter().any( |x| matches!( x, Institution::UnionFleet ) )
 	}
 }
 
@@ -396,6 +406,11 @@ pub struct Station {
 	#[serde( default )]
 	pub(crate) gates: u32,
 
+	/// The institutions provided by this station.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) institutions: Vec<Institution>,
+
 	/// The objects orbiting this station.
 	pub(crate) satellites: Vec<Orbit>,
 }
@@ -407,8 +422,13 @@ impl Station {
 	}
 
 	/// Returns the number of hyperspace gates of this station.
-	pub fn gates( &self ) -> u32 {
+	pub fn gates_count( &self ) -> u32 {
 		self.gates
+	}
+
+	/// Returns `true` if there is a delegation of the Union space fleet stationed at this body. Otherwise returns `false`.
+	pub fn has_fleet( &self ) -> bool {
+		self.institutions.iter().any( |x| matches!( x, Institution::UnionFleet ) )
 	}
 }
 

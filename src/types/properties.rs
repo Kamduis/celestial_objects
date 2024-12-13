@@ -7,17 +7,22 @@
 // Crates
 
 
-use std::collections::BTreeMap;
+use std::collections::{btree_map, BTreeMap};
 use std::fmt;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
+#[cfg( feature = "i18n" )] use fluent_templates::Loader;
 use regex::Regex;
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 use thiserror::Error;
+#[cfg( feature = "i18n" )] use unic_langid::LanguageIdentifier;
 
-#[cfg( feature = "tex" )] use crate::traits::Latex;
 use crate::units::Length;
+#[cfg( feature = "tex" )] use crate::traits::Latex;
+#[cfg( feature = "i18n" )] use crate::traits::Locale;
+#[cfg( all( feature = "i18n", feature = "tex" ) )] use crate::traits::LocaleLatex;
+#[cfg( feature = "i18n" )] use crate::LOCALES;
 
 use super::CelestialBody;
 
@@ -79,11 +84,24 @@ impl From<&CelestialBody> for BodyType {
 impl fmt::Display for BodyType {
 	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
 		match self {
-			Self::GravitationalCenter => write!( f, "Planet" ),
-			Self::Star => write!( f, "Star" ),
-			Self::Trabant => write!( f, "Trabant" ),
-			Self::Ring => write!( f, "Ring" ),
-			Self::Station => write!( f, "Station" ),
+			Self::GravitationalCenter => write!( f, "gravitational center" ),
+			Self::Star => write!( f, "star" ),
+			Self::Trabant => write!( f, "trabant" ),
+			Self::Ring => write!( f, "ring" ),
+			Self::Station => write!( f, "station" ),
+		}
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for BodyType {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::GravitationalCenter => LOCALES.lookup( locale, "gravitational-center" ),
+			Self::Star => LOCALES.lookup( locale, "star" ),
+			Self::Trabant => LOCALES.lookup( locale, "trabant" ),
+			Self::Ring => LOCALES.lookup( locale, "ring" ),
+			Self::Station => LOCALES.lookup( locale, "station" ),
 		}
 	}
 }
@@ -99,8 +117,18 @@ pub enum TrabantType {
 impl fmt::Display for TrabantType {
 	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
 		match self {
-			Self::Planet => write!( f, "Planet" ),
-			Self::Moon => write!( f, "Moon" ),
+			Self::Planet => write!( f, "planet" ),
+			Self::Moon => write!( f, "moon" ),
+		}
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for TrabantType {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::Planet => LOCALES.lookup( locale, "planet" ),
+			Self::Moon => LOCALES.lookup( locale, "moon" ),
 		}
 	}
 }
@@ -133,6 +161,45 @@ impl fmt::Display for Affiliation {
 		};
 
 		write!( f, "{}", res )
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for Affiliation {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::Union => LOCALES.lookup( locale, "Union" ),
+			Self::BorderWorld => LOCALES.lookup( locale, "Border-World" ),
+			Self::Free => LOCALES.lookup( locale, "Free-Territories" ),
+			Self::Uninhabited => LOCALES.lookup( locale, "Uninhabited" ),
+		}
+	}
+}
+
+
+/// Representing an institution based or provided.
+#[derive( Serialize, Deserialize, PartialEq, Hash, Clone, Debug )]
+pub enum Institution {
+	/// A delegation of the Union space fleet is based.
+	UnionFleet,
+}
+
+impl fmt::Display for Institution {
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
+		let res = match self {
+			Self::UnionFleet => "Union Space Fleet",
+		};
+
+		write!( f, "{}", res )
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for Institution {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::UnionFleet => LOCALES.lookup( locale, "Union-Fleet" ),
+		}
 	}
 }
 
@@ -394,6 +461,19 @@ impl fmt::Display for StarProperty {
 	}
 }
 
+#[cfg( feature = "i18n" )]
+impl Locale for StarProperty {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::FlareStar => LOCALES.lookup( locale, "Flare-Star" ),
+			Self::WhiteDwarf => LOCALES.lookup( locale, "White-Dwarf" ),
+			Self::Subgiant => LOCALES.lookup( locale, "Subgiant" ),
+			Self::RedGiant => LOCALES.lookup( locale, "Red-Giant" ),
+			Self::BlueGiant => LOCALES.lookup( locale, "Blue-Giant" ),
+		}
+	}
+}
+
 
 /// The composition of an atmosphere.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
@@ -432,11 +512,32 @@ pub struct GasComposition( BTreeMap<Molecule, f64> );
 
 impl GasComposition {
 	/// Return the amount of other/unknown elements.
-	#[cfg( feature = "tex" )]
-	fn other( &self ) -> f64 {
+	pub fn other( &self ) -> f64 {
 		let known: f64 = self.0.values().sum();
 
 		1.0 - known
+	}
+
+	/// Return an iterator of `GasComposition`.
+	pub fn iter( &self ) -> btree_map::Iter<Molecule, f64> {
+		self.into_iter()
+	}
+}
+
+impl IntoIterator for GasComposition {
+	type Item = ( Molecule, f64 );
+	type IntoIter = btree_map::IntoIter<Molecule, f64>;
+
+	fn into_iter( self ) -> Self::IntoIter {
+		self.0.into_iter()
+	}
+}
+
+impl<'a> IntoIterator for &'a GasComposition {
+	type Item = ( &'a Molecule, &'a f64 );
+	type IntoIter = btree_map::Iter<'a, Molecule, f64>;
+	fn into_iter( self ) -> Self::IntoIter {
+		self.0.iter()
 	}
 }
 
@@ -450,6 +551,35 @@ impl<const N: usize> From<[( Molecule, f64 ); N]> for GasComposition {
 	}
 }
 
+impl fmt::Display for GasComposition {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		let mut tmp = self.clone();
+
+		tmp.0.insert( Molecule::Other, self.other() );
+
+		tmp.0.iter()
+			.map( |( k, v )| format!( r"{} {:.1}%", k, v * 100.0 ) )
+			.collect::<Vec<String>>()
+			.join( ", " );
+
+		write!( f, "{}", tmp )
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for GasComposition {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		let mut tmp = self.clone();
+
+		tmp.0.insert( Molecule::Other, self.other() );
+
+		tmp.0.iter()
+			.map( |( k, v )| format!( r"{} {:.1}%", k.to_string_locale( locale ), v * 100.0 ) )
+			.collect::<Vec<String>>()
+			.join( ", " )
+	}
+}
+
 #[cfg( feature = "tex" )]
 impl Latex for GasComposition {
 	fn to_latex( &self ) -> String {
@@ -459,6 +589,20 @@ impl Latex for GasComposition {
 
 		tmp.0.iter()
 			.map( |( k, v )| format!( r"{}\,\qty{{{:.1}}}{{\percent}}", k.to_latex(), v * 100.0 ) )
+			.collect::<Vec<String>>()
+			.join( ", " )
+	}
+}
+
+#[cfg( all( feature = "i18n", feature = "tex" ) )]
+impl LocaleLatex for GasComposition {
+	fn to_latex_locale( &self, locale: &LanguageIdentifier ) -> String {
+		let mut tmp = self.clone();
+
+		tmp.0.insert( Molecule::Other, self.other() );
+
+		tmp.0.iter()
+			.map( |( k, v )| format!( r"{}\,\qty{{{:.1}}}{{\percent}}", k.to_latex_locale( locale ), v * 100.0 ) )
 			.collect::<Vec<String>>()
 			.join( ", " )
 	}
@@ -492,9 +636,20 @@ impl AtmosphereQuality {
 impl fmt::Display for AtmosphereQuality {
 	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
 		match self {
-			Self::Breathable => write!( f, "Atembar" ),
-			Self::NonToxic => write!( f, "Ungiftig" ),
-			Self::Toxic => write!( f, "Giftig" ),
+			Self::Breathable => write!( f, "breathable" ),
+			Self::NonToxic => write!( f, "non-toxic" ),
+			Self::Toxic => write!( f, "toxic" ),
+		}
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for AtmosphereQuality {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::Breathable => LOCALES.lookup( locale, "breathable" ),
+			Self::NonToxic => LOCALES.lookup( locale, "nontoxic" ),
+			Self::Toxic => LOCALES.lookup( locale, "toxic" ),
 		}
 	}
 }
@@ -522,6 +677,40 @@ pub enum Molecule {
 	Other,
 }
 
+impl fmt::Display for Molecule {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		match self {
+			Self::Ammonia =>        write!( f, "NH3" ),
+			Self::Argon =>          write!( f, "Ar" ),
+			Self::CarbonDioxide =>  write!( f, "CO2" ),
+			Self::CarbonMonoxide => write!( f, "CO" ),
+			Self::Ethane =>         write!( f, "C2H6" ),
+			Self::Helium =>         write!( f, "He" ),
+			Self::Hydrogen =>       write!( f, "H" ),
+			Self::Kalium =>         write!( f, "K" ),
+			Self::Methane =>        write!( f, "CH4" ),
+			Self::Natrium =>        write!( f, "Na" ),
+			Self::Neon =>           write!( f, "Ne" ),
+			Self::Nitrogen =>       write!( f, "N2" ),
+			Self::Oxygen =>         write!( f, "O2" ),
+			Self::SulfurDioxide =>  write!( f, "SO2" ),
+			Self::SulfurMonoxide => write!( f, "SO" ),
+			Self::Water =>          write!( f, "H2O" ),
+			Self::Other =>          write!( f, r"other" ),
+		}
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for Molecule {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::Other => LOCALES.lookup( locale, "other" ),
+			_ => self.to_string(),
+		}
+	}
+}
+
 #[cfg( feature = "tex" )]
 impl Latex for Molecule {
 	fn to_latex( &self ) -> String {
@@ -542,33 +731,19 @@ impl Latex for Molecule {
 			Self::SulfurDioxide => r"\ce{SO2}",
 			Self::SulfurMonoxide => r"\ce{SO}",
 			Self::Water => r"\ce{H2O}",
-			Self::Other => r"andere",
+			Self::Other => r"other",
 		};
 
 		res.to_string()
 	}
 }
 
-impl fmt::Display for Molecule {
-	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+#[cfg( all( feature = "i18n", feature = "tex" ) )]
+impl LocaleLatex for Molecule {
+	fn to_latex_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
-			Self::Ammonia =>        write!( f, "NH3" ),
-			Self::Argon =>          write!( f, "Ar" ),
-			Self::CarbonDioxide =>  write!( f, "CO2" ),
-			Self::CarbonMonoxide => write!( f, "CO" ),
-			Self::Ethane =>         write!( f, "C2H6" ),
-			Self::Helium =>         write!( f, "He" ),
-			Self::Hydrogen =>       write!( f, "H" ),
-			Self::Kalium =>         write!( f, "K" ),
-			Self::Methane =>        write!( f, "CH4" ),
-			Self::Natrium =>        write!( f, "Na" ),
-			Self::Neon =>           write!( f, "Ne" ),
-			Self::Nitrogen =>       write!( f, "N2" ),
-			Self::Oxygen =>         write!( f, "O2" ),
-			Self::SulfurDioxide =>  write!( f, "SO2" ),
-			Self::SulfurMonoxide => write!( f, "SO" ),
-			Self::Water =>          write!( f, "H2O" ),
-			Self::Other =>          write!( f, r"andere" ),
+			Self::Other => LOCALES.lookup( locale, "other" ),
+			_ => self.to_latex(),
 		}
 	}
 }
