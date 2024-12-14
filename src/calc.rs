@@ -40,10 +40,6 @@ pub const RADIUS_SOL: f64 = 695e6;
 pub const RADIUS_TERRA: f64 = 6.378e6;
 
 
-/// The density of Terra in kg/m³.
-pub const DENSITY_TERRA: f64 = 5513.0;
-
-
 // /// The luminosity of Sol in Lumen.
 // const LUMINOSITY_SOL: f64 = 3.75e28;
 

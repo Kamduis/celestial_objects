@@ -7,15 +7,12 @@
 // Crates
 
 
-use std::f64::consts::PI;
-
 use chrono::TimeDelta;
 use serde::{Serialize, Deserialize};
 use thiserror::Error;
 
 use crate::coords::EquatorialCoords;
 use crate::calc;
-use crate::calc::DENSITY_TERRA;
 use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
@@ -108,10 +105,8 @@ pub trait AstronomicalObject {
 
 	/// Returns the mean density of the celestial object in relation to the density of Terra. Space stations or rings are currently returning a density of `None`.
 	fn density( &self ) -> Option<f64> {
-		let volume = ( 4.0 / 3.0 ) * PI * self.radius().meter().powi( 3 );
-		let dens = self.mass().kg() / volume;
-
-		Some( dens / DENSITY_TERRA )
+		let volume = self.radius().radius_terra().powi( 3 );
+		Some( self.mass().terra() / volume )
 	}
 
 	/// Returns the surface gravity of the astronomical object in m/s².
