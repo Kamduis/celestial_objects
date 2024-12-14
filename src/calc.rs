@@ -24,6 +24,14 @@ pub const ASTRONOMICAL_UNIT: f64 = 149_597_870_700.0;
 pub const G: f64 = 66.7430e-12;
 
 
+/// The mass of Sol in kg.
+pub const MASS_SOL: f64 = 1.98855e30;
+
+
+/// The mass of Terra in kg.
+pub const MASS_TERRA: f64 = 5.97219e24;
+
+
 /// The radius of Sol in meter.
 pub const RADIUS_SOL: f64 = 695e6;
 
@@ -32,12 +40,8 @@ pub const RADIUS_SOL: f64 = 695e6;
 pub const RADIUS_TERRA: f64 = 6.378e6;
 
 
-/// The mass of Sol in kg.
-pub const MASS_SOL: f64 = 1.98855e30;
-
-
-/// The mass of Terra in kg.
-pub const MASS_TERRA: f64 = 5.97219e24;
+/// The density of Terra in kg/m³.
+pub const DENSITY_TERRA: f64 = 5513.0;
 
 
 // /// The luminosity of Sol in Lumen.

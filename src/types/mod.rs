@@ -7,12 +7,15 @@
 // Crates
 
 
+use std::f64::consts::PI;
+
 use chrono::TimeDelta;
 use serde::{Serialize, Deserialize};
 use thiserror::Error;
 
 use crate::coords::EquatorialCoords;
 use crate::calc;
+use crate::calc::DENSITY_TERRA;
 use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
@@ -102,6 +105,14 @@ pub trait AstronomicalObject {
 
 	/// Returns the radius of the astronomical object in meter.
 	fn radius( &self ) -> Length;
+
+	/// Returns the mean density of the celestial object in relation to the density of Terra. Space stations or rings are currently returning a density of `None`.
+	fn density( &self ) -> Option<f64> {
+		let volume = ( 4.0 / 3.0 ) * PI * self.radius().meter().powi( 3 );
+		let dens = self.mass().kg() / volume;
+
+		Some( dens / DENSITY_TERRA )
+	}
 
 	/// Returns the surface gravity of the astronomical object in m/s².
 	///
@@ -325,6 +336,16 @@ impl AstronomicalObject for CelestialBody {
 			Self::Trabant( x ) => x.radius(),
 			Self::Ring( x ) => x.width() / 2.0,
 			Self::Station( x ) => x.radius(),
+		}
+	}
+
+	fn density( &self ) -> Option<f64> {
+		match self {
+			Self::GravitationalCenter( _ ) => Some( 0.0 ),
+			Self::Star( x ) => x.density(),
+			Self::Trabant( x ) => x.density(),
+			Self::Ring( _ ) => None,
+			Self::Station( _ ) => None,
 		}
 	}
 
@@ -669,6 +690,24 @@ impl CelestialSystem {
 		Ok( Some( res ) )
 	}
 
+	/// Returns the mass of the indexed object.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn mass( &self, index: &[usize] ) -> Result<Mass, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		Ok( body.mass() )
+	}
+
 	/// Returns the radius of the indexed object.
 	///
 	/// # Arguments
@@ -697,11 +736,13 @@ impl CelestialSystem {
 		Ok( body.radius() )
 	}
 
-	/// Returns the mass of the indexed object.
+	/// Returns the density of the indexed object.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn mass( &self, index: &[usize] ) -> Result<Mass, CelestialSystemError> {
+	///
+	/// If the system index is used (`&[]`), this method returns an error.
+	pub fn density( &self, index: &[usize] ) -> Result<Option<f64>, CelestialSystemError> {
 		if index.is_empty() {
 			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
 		}
@@ -712,7 +753,7 @@ impl CelestialSystem {
 			satellite_getter( &self.body, index )?
 		};
 
-		Ok( body.mass() )
+		Ok( body.density() )
 	}
 
 	/// Returns the surface gravitation of the indexed object.
