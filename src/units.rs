@@ -7,6 +7,7 @@
 // Crates
 
 
+use std::iter::Sum;
 use std::ops::{Add, Sub, Mul, Div};
 
 use crate::calc;
@@ -145,6 +146,15 @@ impl Div<Length> for f64 {
 	}
 }
 
+impl Sum<Self> for Length {
+	fn sum<I>( iter: I ) -> Self
+	where
+		I: Iterator<Item = Self>,
+	{
+		iter.fold( Self( 0.0 ), |x, y| Self( x.0 + y.0 ) )
+	}
+}
+
 
 /// Representing a mass that can be expressed in different units.
 #[derive( Clone, Copy, PartialEq, PartialOrd, Debug )]
@@ -260,5 +270,14 @@ impl Div<Mass> for f64 {
 
 	fn div( self, rhs: Mass ) -> Mass {
 		Mass::from( self / rhs.0 )
+	}
+}
+
+impl Sum<Self> for Mass {
+	fn sum<I>( iter: I ) -> Self
+	where
+		I: Iterator<Item = Self>,
+	{
+		iter.fold( Self( 0.0 ), |x, y| Self( x.0 + y.0 ) )
 	}
 }

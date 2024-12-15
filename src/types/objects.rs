@@ -68,7 +68,9 @@ impl AstronomicalObject for GravitationalCenter {
 	}
 
 	fn mass( &self ) -> Mass {
-		Mass::ZERO
+		self.satellites.iter()
+			.map( |x| x.body.mass() )
+			.sum()
 	}
 
 	/// Returns the radius of this gravitational center, which is always 0.0.
