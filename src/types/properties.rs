@@ -430,9 +430,34 @@ impl<'de> Deserialize<'de> for SpectralClass {
 }
 
 
-/// Some stars have special properties.
+/// Policies that can be enforced.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Eq, Debug )]
-pub enum StarProperty {
+pub enum Policy {
+	/// Visiting this system is forbidden without a special permit.
+	RestrictedArea,
+}
+
+impl fmt::Display for Policy {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		match self {
+			Self::RestrictedArea => write!( f, "restricted area" ),
+		}
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for Policy {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::RestrictedArea => LOCALES.lookup( locale, "restricted-area" ),
+		}
+	}
+}
+
+
+/// Special properties.
+#[derive( Serialize, Deserialize, Clone, PartialEq, Eq, Debug )]
+pub enum Property {
 	/// A star with this property exhibit unusually violent flare activity. Flares occur sporadically, with successive flares spaced anywhere from an hour to a few days apart. Flares may emit up to 10'000 times the amount of radioactive radiation as a comparably sized flare on Sol. This would be lethal to any life forms on planets near the flare star.
 	FlareStar,
 
@@ -449,7 +474,7 @@ pub enum StarProperty {
 	BlueGiant,
 }
 
-impl fmt::Display for StarProperty {
+impl fmt::Display for Property {
 	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
 		match self {
 			Self::FlareStar => write!( f, "Flare Star" ),
@@ -462,7 +487,7 @@ impl fmt::Display for StarProperty {
 }
 
 #[cfg( feature = "i18n" )]
-impl Locale for StarProperty {
+impl Locale for Property {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::FlareStar => LOCALES.lookup( locale, "Flare-Star" ),

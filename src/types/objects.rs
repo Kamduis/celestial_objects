@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 use super::AstronomicalObject;
 use super::properties::SpectralClassError;
-use super::properties::{StarProperty, Orbit, StarType, SpectralClass, Atmosphere, Institution};
+use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution};
 
 
 
@@ -42,6 +42,11 @@ pub enum StarError {
 /// Representing the theoretical gravitational center of two heavy masses orbiting each other.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Debug )]
 pub struct GravitationalCenter {
+	/// The properties of this gravitational center.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) properties: Vec<Property>,
+
 	/// The objects orbiting this gravitational center.
 	pub(crate) satellites: Vec<Orbit>,
 }
@@ -88,6 +93,10 @@ impl AstronomicalObject for GravitationalCenter {
 	fn atmosphere( &self ) -> Option<&Atmosphere> {
 		None
 	}
+
+	fn properties( &self ) -> &[Property] {
+		&self.properties
+	}
 }
 
 
@@ -121,7 +130,8 @@ pub struct Star {
 
 	/// Special properties of the star.
 	#[serde( default )]
-	properties: Vec<StarProperty>,
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	properties: Vec<Property>,
 
 	/// The objects oribitng this star.
 	pub(crate) satellites: Vec<Orbit>,
@@ -173,11 +183,6 @@ impl Star {
 	pub fn star_type( &self ) -> &StarType {
 		self.spectral_class.type_star()
 	}
-
-	/// Returns the star's properties.
-	pub fn properties( &self ) -> &[StarProperty] {
-		&self.properties
-	}
 }
 
 impl AstronomicalObject for Star {
@@ -219,6 +224,10 @@ impl AstronomicalObject for Star {
 
 	fn atmosphere( &self ) -> Option<&Atmosphere> {
 		None
+	}
+
+	fn properties( &self ) -> &[Property] {
+		&self.properties
 	}
 }
 
@@ -271,7 +280,12 @@ pub struct Trabant {
 	#[serde( default )]
 	pub(crate) gates: u32,
 
-	/// The institutions provided by this station.
+	/// The properties of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) properties: Vec<Property>,
+
+	/// The properties of this trabant.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) institutions: Vec<Institution>,
@@ -345,6 +359,10 @@ impl AstronomicalObject for Trabant {
 	fn atmosphere( &self ) -> Option<&Atmosphere> {
 		self.atmosphere.as_ref()
 	}
+
+	fn properties( &self ) -> &[Property] {
+		&self.properties
+	}
 }
 
 
@@ -353,12 +371,22 @@ impl AstronomicalObject for Trabant {
 pub struct Ring {
 	/// The width of the ring in AU.
 	pub(crate) width: f64,
+
+	/// The properties of this ring.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) properties: Vec<Property>,
 }
 
 impl Ring {
 	/// The width of the ring in AU.
 	pub fn width( &self ) -> Length {
 		Length::from_au( self.width )
+	}
+
+	/// The properties of this ring.
+	pub fn properties( &self ) -> &[Property] {
+		&self.properties
 	}
 }
 
@@ -405,6 +433,11 @@ pub struct Station {
 	/// The number of jump gates on this world.
 	#[serde( default )]
 	pub(crate) gates: u32,
+
+	/// The properties of this station.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) properties: Vec<Property>,
 
 	/// The institutions provided by this station.
 	#[serde( default )]
@@ -472,5 +505,9 @@ impl AstronomicalObject for Station {
 
 	fn atmosphere( &self ) -> Option<&Atmosphere> {
 		self.atmosphere.as_ref()
+	}
+
+	fn properties( &self ) -> &[Property] {
+		&self.properties
 	}
 }

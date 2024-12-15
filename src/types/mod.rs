@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{BodyType, StarProperty, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition};
+pub use properties::{BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -136,6 +136,9 @@ pub trait AstronomicalObject {
 	///
 	/// Objects without an atmosphere return `None`.
 	fn atmosphere( &self ) -> Option<&Atmosphere>;
+
+	/// Returns the properties of the celestial object.
+	fn properties( &self ) -> &[Property];
 }
 
 
@@ -393,6 +396,16 @@ impl AstronomicalObject for CelestialBody {
 			Self::Station( x ) => x.atmosphere(),
 		}
 	}
+
+	fn properties( &self ) -> &[Property] {
+		match self {
+			Self::GravitationalCenter( x ) => x.properties(),
+			Self::Star( x ) => x.properties(),
+			Self::Trabant( x ) => x.properties(),
+			Self::Ring( x ) => x.properties(),
+			Self::Station( x ) => x.properties(),
+		}
+	}
 }
 
 
@@ -421,6 +434,10 @@ pub struct CelestialSystem {
 	#[serde( default )]
 	affiliation: Affiliation,
 
+	/// The policies being enforced inside this system.
+	#[serde( default )]
+	policies: Vec<Policy>,
+
 	/// An optional description of this system.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
@@ -439,6 +456,7 @@ impl CelestialSystem {
 			name: None,
 			coordinates: coordinates.clone(),
 			affiliation: Default::default(),
+			policies: Default::default(),
 			description: None,
 			body,
 		}
@@ -453,6 +471,12 @@ impl CelestialSystem {
 	/// Return a new object from `self` with `affiliation`.
 	pub fn with_affiliation( mut self, affiliation: Affiliation ) -> Self {
 		self.affiliation = affiliation;
+		self
+	}
+
+	/// Return a new object from `self` with `policies`.
+	pub fn with_properties( mut self, policies: Vec<Policy> ) -> Self {
+		self.policies = policies;
 		self
 	}
 
@@ -844,16 +868,36 @@ impl CelestialSystem {
 		orbit_getter( &self.body, index )
 	}
 
-	/// Returns an iterator of all properties of the indexed object.
+	/// Returns a slice of all policies being enforced inside this system.
+	pub fn policies( &self ) -> &[Policy] {
+		&self.policies
+	}
+
+	/// Returns a vector of all properties of the indexed object.
+	///
+	/// If `index` is `&[]`, this method returns all properties of all bodies of the system.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn properties<'a>( &'a self, index: &'a [usize] ) -> Result<&'a [StarProperty], CelestialSystemError> {
-		let CelestialBody::Star( star ) = self.object( index )? else {
-			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
-		};
+	pub fn properties( &self, index: &[usize] ) -> Result<Vec<Property>, CelestialSystemError> {
+		if index.is_empty() {
+			let res = self.indices().iter()
+				.skip( 1 )  // Skipping `&[]`
+				.try_fold( Vec::new(), |mut acc, x| {
+					self.object( x )
+						.map( |y| acc.extend_from_slice( y.properties() ) )
+						.map( |_| acc )
+				} )?;
 
-		Ok( star.properties() )
+			return Ok( res );
+
+		}
+
+		let res = self.object( index )?
+			.properties()
+			.to_vec();
+
+		Ok( res )
 	}
 
 	/// Returns the minimum and maximum range of the habitable zone of the star at `index`.
@@ -1159,7 +1203,7 @@ impl CelestialSystem {
 	}
 
 	/// Returns an iterator of all properties of the main star.
-	pub fn properties_main<'a>( &'a self ) -> &'a [StarProperty] {
+	pub fn properties_main<'a>( &'a self ) -> &'a [Property] {
 		let star_main = self.stars().nth( 0 )
 			.expect( "Each system should have at least one star." );
 
