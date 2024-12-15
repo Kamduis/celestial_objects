@@ -13,7 +13,7 @@ Uninhabited = Uninhabited
 
 Union-Fleet = Union Fleet
 
-restricted-area = restricted area
+restricted = restricted
 
 Flare-Star = Flare Star
 White-Dwarf = White Dwarf

@@ -1151,6 +1151,13 @@ impl CelestialSystem {
 		Ok( res )
 	}
 
+	/// Returns `true` if the system is considered a restricted area.
+	pub fn is_restricted( &self ) -> bool {
+		self.policies.iter()
+			.find( |x| matches!( x, Policy::Restricted ) )
+			.is_some()
+	}
+
 	/// Returns the object at `index`.
 	///
 	/// # Arguments
