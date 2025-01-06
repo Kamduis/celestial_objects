@@ -13,6 +13,8 @@ Uninhabited = Unbewohnt
 
 Union-Fleet = Raumflotte
 
+restricted = Sperrgebiet
+
 Flare-Star = Flackerstern
 White-Dwarf = Weißer Zwerg
 Subgiant = Unterriese
