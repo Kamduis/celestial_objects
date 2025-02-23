@@ -6,6 +6,9 @@ trabant = trabant
 ring = ring
 station = station
 
+planet = planet
+moon = moon
+
 Union = Union
 Border-World = Border World
 Free-Territories = Free Territories
