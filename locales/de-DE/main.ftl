@@ -6,6 +6,9 @@ trabant = Trabant
 ring = Ring
 station = Raumstation
 
+planet = Planet
+moon = Mond
+
 Union = Union
 Border-World = Grenzwelt
 Free-Territories = Freie Territorien

@@ -1,6 +1,6 @@
 [package]
 name = "celestial_objects"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2021"
 authors = ["Victor von Rhein"]
 description = "Handling systems of stars, planets and moons that are orbiting each other."
