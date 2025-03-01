@@ -148,6 +148,21 @@ pub trait AstronomicalObject {
 // Helper functions
 
 
+/// Returns the string representation of `num` as roman number.
+pub fn roman_number( num: u16 ) -> String {
+	let ones = [ "", "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix" ];
+	let tens = [ "", "x", "xx", "xxx", "xl", "l", "lx", "lxx", "lxxx", "xc" ];
+	let hundreds = [ "", "c", "cc", "ccc", "cd", "d", "dc", "dcc", "dccc", "cm" ];
+
+	format!( "{}{}{}{}",
+		"m".repeat( ( num / 1000 ) as usize ),
+		hundreds[( ( num % 1000 ) / 100 ) as usize],
+		tens[( ( num % 100 ) / 10 ) as usize],
+		ones[( num % 10 ) as usize],
+	)
+}
+
+
 /// Get the `index`th orbit around `center`.
 ///
 /// **Note:** `index` is *not* 0-based but 1-based. `index = 1` provides the first body orbiting `center`. `index = 0` provides `center`.
@@ -1281,6 +1296,29 @@ mod tests {
 	use super::*;
 
 	use crate::tests::systems_examples;
+
+	#[test]
+	fn test_roman_numbers() {
+		assert_eq!( roman_number( 1 ), "i" );
+		assert_eq!( roman_number( 3 ), "iii" );
+		assert_eq!( roman_number( 4 ), "iv" );
+		assert_eq!( roman_number( 5 ), "v" );
+		assert_eq!( roman_number( 9 ), "ix" );
+		assert_eq!( roman_number( 10 ), "x" );
+		assert_eq!( roman_number( 11 ), "xi" );
+		assert_eq!( roman_number( 14 ), "xiv" );
+		assert_eq!( roman_number( 16 ), "xvi" );
+		assert_eq!( roman_number( 19 ), "xix" );
+		assert_eq!( roman_number( 40 ), "xl" );
+		assert_eq!( roman_number( 90 ), "xc" );
+		assert_eq!( roman_number( 100 ), "c" );
+		assert_eq!( roman_number( 450 ), "cdl" );
+		assert_eq!( roman_number( 500 ), "d" );
+		assert_eq!( roman_number( 1875 ), "mdccclxxv" );
+		assert_eq!( roman_number( 1993 ), "mcmxciii" );
+		assert_eq!( roman_number( 2475 ), "mmcdlxxv" );
+		assert_eq!( roman_number( 4000 ), "mmmm" );
+	}
 
 	#[test]
 	fn iterator_of_stars() {
