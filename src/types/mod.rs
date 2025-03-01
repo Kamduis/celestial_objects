@@ -149,6 +149,9 @@ pub trait AstronomicalObject {
 
 	/// Returns the properties of the celestial object.
 	fn properties( &self ) -> &[Property];
+
+	/// Returns the description of the celestial object.
+	fn description( &self ) -> Option<&str>;
 }
 
 
@@ -441,6 +444,16 @@ impl AstronomicalObject for CelestialBody {
 			Self::Station( x ) => x.properties(),
 		}
 	}
+
+	fn description( &self ) -> Option<&str> {
+		match self {
+			Self::GravitationalCenter( x ) => x.description(),
+			Self::Star( x ) => x.description(),
+			Self::Trabant( x ) => x.description(),
+			Self::Ring( x ) => x.description(),
+			Self::Station( x ) => x.description(),
+		}
+	}
 }
 
 
@@ -684,9 +697,21 @@ impl CelestialSystem {
 		&self.affiliation
 	}
 
-	/// Returns the description of the system.
-	pub fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	/// Returns the description of the system or one of its bodies.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// # Returns
+	/// This method returns the description of the body with `index` or of the system itself if `index` is `&[]`.
+	pub fn description<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a str>, CelestialSystemError> {
+		if index.is_empty() {
+			return Ok( self.description.as_deref() );
+		}
+
+		let body_got = &satellite_getter( &self.body, index )?;
+
+		Ok( body_got.description() )
 	}
 
 	/// Returns the body type of the indexed object.

@@ -47,6 +47,12 @@ pub struct GravitationalCenter {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) properties: Vec<Property>,
 
+	/// An optional description of this ring.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(crate) description: Option<String>,
+
 	/// The objects orbiting this gravitational center.
 	pub(crate) satellites: Vec<Orbit>,
 }
@@ -99,6 +105,10 @@ impl AstronomicalObject for GravitationalCenter {
 	fn properties( &self ) -> &[Property] {
 		&self.properties
 	}
+
+	fn description( &self ) -> Option<&str> {
+		self.description.as_deref()
+	}
 }
 
 
@@ -135,6 +145,12 @@ pub struct Star {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	properties: Vec<Property>,
 
+	/// An optional description of this ring.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(crate) description: Option<String>,
+
 	/// The objects oribitng this star.
 	pub(crate) satellites: Vec<Orbit>,
 }
@@ -150,6 +166,7 @@ impl Star {
 			spectral_class: spectral_class.parse::<SpectralClass>()?,
 			rotation_period: None,
 			properties: Vec::new(),
+			description: None,
 			satellites: Vec::new(),
 		};
 
@@ -231,6 +248,10 @@ impl AstronomicalObject for Star {
 	fn properties( &self ) -> &[Property] {
 		&self.properties
 	}
+
+	fn description( &self ) -> Option<&str> {
+		self.description.as_deref()
+	}
 }
 
 
@@ -291,6 +312,12 @@ pub struct Trabant {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) institutions: Vec<Institution>,
+
+	/// An optional description of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(crate) description: Option<String>,
 
 	/// The objects orbiting this trabant.
 	pub(crate) satellites: Vec<Orbit>,
@@ -365,6 +392,10 @@ impl AstronomicalObject for Trabant {
 	fn properties( &self ) -> &[Property] {
 		&self.properties
 	}
+
+	fn description( &self ) -> Option<&str> {
+		self.description.as_deref()
+	}
 }
 
 
@@ -378,6 +409,12 @@ pub struct Ring {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) properties: Vec<Property>,
+
+	/// An optional description of this ring.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(crate) description: Option<String>,
 }
 
 impl Ring {
@@ -389,6 +426,11 @@ impl Ring {
 	/// The properties of this ring.
 	pub fn properties( &self ) -> &[Property] {
 		&self.properties
+	}
+
+	/// The description of this ring.
+	pub fn description( &self ) -> Option<&str> {
+		self.description.as_deref()
 	}
 }
 
@@ -445,6 +487,12 @@ pub struct Station {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) institutions: Vec<Institution>,
+
+	/// An optional description of this ring.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Option::is_none" )]
+	#[serde( with = "crate::serde_helpers::option_wrapper" )]
+	pub(crate) description: Option<String>,
 
 	/// The objects orbiting this station.
 	pub(crate) satellites: Vec<Orbit>,
@@ -511,5 +559,9 @@ impl AstronomicalObject for Station {
 
 	fn properties( &self ) -> &[Property] {
 		&self.properties
+	}
+
+	fn description( &self ) -> Option<&str> {
+		self.description.as_deref()
 	}
 }
