@@ -260,7 +260,7 @@ fn satellite_getter_hierarchical<'a>( center: &'a CelestialBody, index: &'a [usi
 		( _, CelestialBody::GravitationalCenter( _ ) ) => LETTERS[index[0]].to_uppercase(),
 		( _, CelestialBody::Star( _ ) ) => LETTERS[index[0] - 1].to_uppercase(),
 		( CelestialBody::Trabant( _ ), CelestialBody::Trabant( _ ) ) => LETTERS_GREEK[index[0] - 1].to_string(),
-		( _, CelestialBody::Trabant( _ ) ) => LETTERS[index[0] - 1].to_string(),
+		( _, CelestialBody::Trabant( _ ) ) => roman_number( index[0].try_into().unwrap() ).expect( "No system should have less than 1 or more than 3999 trabants." ).to_uppercase(),
 		( _, CelestialBody::Ring( _ ) ) => NUMBERS_RINGED[index[0]].to_string(),
 		( _, CelestialBody::Station( _ ) ) => index[0].to_string(),
 	};
