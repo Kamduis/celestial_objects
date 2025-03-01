@@ -81,6 +81,16 @@ pub enum CelestialSystemError {
 }
 
 
+#[derive( Error, PartialEq, Debug )]
+pub enum RomanNumberError {
+	#[error( "Zero cannot be represented as a roman number." )]
+	ZeroError,
+
+	#[error( "Numbers above MMMCMXCIX (3999) cannot be expressed in roman numerals." )]
+	TooBigError,
+}
+
+
 
 
 //=============================================================================
@@ -149,17 +159,27 @@ pub trait AstronomicalObject {
 
 
 /// Returns the string representation of `num` as roman number.
-pub fn roman_number( num: u16 ) -> String {
-	let ones = [ "", "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix" ];
-	let tens = [ "", "x", "xx", "xxx", "xl", "l", "lx", "lxx", "lxxx", "xc" ];
-	let hundreds = [ "", "c", "cc", "ccc", "cd", "d", "dc", "dcc", "dccc", "cm" ];
+///
+/// In classical roman number form the biggest letter is M (1000) and only three same letters may be used together in a row. The lowest number one can write in roman numerals is I (1) and the largest numeral is MMMCMXCIX (3999).
+pub fn roman_number( num: u16 ) -> Result<String, RomanNumberError> {
+	if num < 1 {
+		return Err( RomanNumberError::ZeroError );
+	} else if num > 3999 {
+		return Err( RomanNumberError::TooBigError );
+	}
 
-	format!( "{}{}{}{}",
+	const ONES: [&str; 10] = [ "", "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix" ];
+	const TENS: [&str; 10] = [ "", "x", "xx", "xxx", "xl", "l", "lx", "lxx", "lxxx", "xc" ];
+	const HUNDREDS: [&str; 10] = [ "", "c", "cc", "ccc", "cd", "d", "dc", "dcc", "dccc", "cm" ];
+
+	let res = format!( "{}{}{}{}",
 		"m".repeat( ( num / 1000 ) as usize ),
-		hundreds[( ( num % 1000 ) / 100 ) as usize],
-		tens[( ( num % 100 ) / 10 ) as usize],
-		ones[( num % 10 ) as usize],
-	)
+		HUNDREDS[( ( num % 1000 ) / 100 ) as usize],
+		TENS[( ( num % 100 ) / 10 ) as usize],
+		ONES[( num % 10 ) as usize],
+	);
+
+	Ok( res )
 }
 
 
@@ -1299,25 +1319,27 @@ mod tests {
 
 	#[test]
 	fn test_roman_numbers() {
-		assert_eq!( roman_number( 1 ), "i" );
-		assert_eq!( roman_number( 3 ), "iii" );
-		assert_eq!( roman_number( 4 ), "iv" );
-		assert_eq!( roman_number( 5 ), "v" );
-		assert_eq!( roman_number( 9 ), "ix" );
-		assert_eq!( roman_number( 10 ), "x" );
-		assert_eq!( roman_number( 11 ), "xi" );
-		assert_eq!( roman_number( 14 ), "xiv" );
-		assert_eq!( roman_number( 16 ), "xvi" );
-		assert_eq!( roman_number( 19 ), "xix" );
-		assert_eq!( roman_number( 40 ), "xl" );
-		assert_eq!( roman_number( 90 ), "xc" );
-		assert_eq!( roman_number( 100 ), "c" );
-		assert_eq!( roman_number( 450 ), "cdl" );
-		assert_eq!( roman_number( 500 ), "d" );
-		assert_eq!( roman_number( 1875 ), "mdccclxxv" );
-		assert_eq!( roman_number( 1993 ), "mcmxciii" );
-		assert_eq!( roman_number( 2475 ), "mmcdlxxv" );
-		assert_eq!( roman_number( 4000 ), "mmmm" );
+		assert!( roman_number( 0 ).is_err() );
+		assert_eq!( roman_number( 1 ).unwrap(), "i" );
+		assert_eq!( roman_number( 3 ).unwrap(), "iii" );
+		assert_eq!( roman_number( 4 ).unwrap(), "iv" );
+		assert_eq!( roman_number( 5 ).unwrap(), "v" );
+		assert_eq!( roman_number( 9 ).unwrap(), "ix" );
+		assert_eq!( roman_number( 10 ).unwrap(), "x" );
+		assert_eq!( roman_number( 11 ).unwrap(), "xi" );
+		assert_eq!( roman_number( 14 ).unwrap(), "xiv" );
+		assert_eq!( roman_number( 16 ).unwrap(), "xvi" );
+		assert_eq!( roman_number( 19 ).unwrap(), "xix" );
+		assert_eq!( roman_number( 40 ).unwrap(), "xl" );
+		assert_eq!( roman_number( 90 ).unwrap(), "xc" );
+		assert_eq!( roman_number( 100 ).unwrap(), "c" );
+		assert_eq!( roman_number( 450 ).unwrap(), "cdl" );
+		assert_eq!( roman_number( 500 ).unwrap(), "d" );
+		assert_eq!( roman_number( 1875 ).unwrap(), "mdccclxxv" );
+		assert_eq!( roman_number( 1993 ).unwrap(), "mcmxciii" );
+		assert_eq!( roman_number( 2475 ).unwrap(), "mmcdlxxv" );
+		assert_eq!( roman_number( 3999 ).unwrap(), "mmmcmxcix" );
+		assert!( roman_number( 4000 ).is_err() );
 	}
 
 	#[test]
