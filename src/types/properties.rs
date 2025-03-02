@@ -149,6 +149,9 @@ pub enum Affiliation {
 	/// Is uninhabited.
 	#[ default ]
 	Uninhabited,
+
+	/// Is occupied by the Sket.
+	Sket,
 }
 
 impl fmt::Display for Affiliation {
@@ -158,6 +161,7 @@ impl fmt::Display for Affiliation {
 			Self::BorderWorld => "Border World",
 			Self::Free => "Free Territories",
 			Self::Uninhabited => "Uninhabited",
+			Self::Sket => "Sket",
 		};
 
 		write!( f, "{}", res )
@@ -172,6 +176,7 @@ impl Locale for Affiliation {
 			Self::BorderWorld => LOCALES.lookup( locale, "Border-World" ),
 			Self::Free => LOCALES.lookup( locale, "Free-Territories" ),
 			Self::Uninhabited => LOCALES.lookup( locale, "Uninhabited" ),
+			Self::Sket => "Sket".to_string(),
 		}
 	}
 }
