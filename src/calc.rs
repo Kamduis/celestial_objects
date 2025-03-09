@@ -87,7 +87,7 @@ pub fn habitable_zone( luminosity: f64 ) -> [f64; 2] {
 /// * `mass_satellite`: Mass of the orbiting satellite in kg.
 pub fn orbital_period( axis: Length, mass_central: Mass, mass_satellite: Mass ) -> f64 {
 	let temp = axis.powi( 3 ).meter() / ( G * ( mass_central + mass_satellite ) ).kg();
-	2.0 * std::f64::consts::PI * f64::from( temp.sqrt() )
+	2.0 * std::f64::consts::PI * temp.sqrt()
 }
 
 
