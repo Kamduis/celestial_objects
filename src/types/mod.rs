@@ -977,7 +977,7 @@ impl CelestialSystem {
 			satellite_getter( &self.body, index )?
 		};
 
-		let CelestialBody::Star( ref star ) = body else {
+		let CelestialBody::Star( star ) = body else {
 			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
 		};
 
