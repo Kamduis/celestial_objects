@@ -81,6 +81,16 @@ pub enum CelestialSystemError {
 }
 
 
+#[derive( Error, PartialEq, Debug )]
+pub enum RomanNumberError {
+	#[error( "Zero cannot be represented as a roman number." )]
+	ZeroError,
+
+	#[error( "Numbers above MMMCMXCIX (3999) cannot be expressed in roman numerals." )]
+	TooBigError,
+}
+
+
 
 
 //=============================================================================
@@ -139,6 +149,9 @@ pub trait AstronomicalObject {
 
 	/// Returns the properties of the celestial object.
 	fn properties( &self ) -> &[Property];
+
+	/// Returns the description of the celestial object.
+	fn description( &self ) -> Option<&str>;
 }
 
 
@@ -146,6 +159,31 @@ pub trait AstronomicalObject {
 
 //=============================================================================
 // Helper functions
+
+
+/// Returns the string representation of `num` as roman number.
+///
+/// In classical roman number form the biggest letter is M (1000) and only three same letters may be used together in a row. The lowest number one can write in roman numerals is I (1) and the largest numeral is MMMCMXCIX (3999).
+pub fn roman_number( num: u16 ) -> Result<String, RomanNumberError> {
+	if num < 1 {
+		return Err( RomanNumberError::ZeroError );
+	} else if num > 3999 {
+		return Err( RomanNumberError::TooBigError );
+	}
+
+	const ONES: [&str; 10] = [ "", "i", "ii", "iii", "iv", "v", "vi", "vii", "viii", "ix" ];
+	const TENS: [&str; 10] = [ "", "x", "xx", "xxx", "xl", "l", "lx", "lxx", "lxxx", "xc" ];
+	const HUNDREDS: [&str; 10] = [ "", "c", "cc", "ccc", "cd", "d", "dc", "dcc", "dccc", "cm" ];
+
+	let res = format!( "{}{}{}{}",
+		"m".repeat( ( num / 1000 ) as usize ),
+		HUNDREDS[( ( num % 1000 ) / 100 ) as usize],
+		TENS[( ( num % 100 ) / 10 ) as usize],
+		ONES[( num % 10 ) as usize],
+	);
+
+	Ok( res )
+}
 
 
 /// Get the `index`th orbit around `center`.
@@ -225,7 +263,7 @@ fn satellite_getter_hierarchical<'a>( center: &'a CelestialBody, index: &'a [usi
 		( _, CelestialBody::GravitationalCenter( _ ) ) => LETTERS[index[0]].to_uppercase(),
 		( _, CelestialBody::Star( _ ) ) => LETTERS[index[0] - 1].to_uppercase(),
 		( CelestialBody::Trabant( _ ), CelestialBody::Trabant( _ ) ) => LETTERS_GREEK[index[0] - 1].to_string(),
-		( _, CelestialBody::Trabant( _ ) ) => LETTERS[index[0] - 1].to_string(),
+		( _, CelestialBody::Trabant( _ ) ) => roman_number( index[0].try_into().unwrap() ).expect( "No system should have less than 1 or more than 3999 trabants." ).to_uppercase(),
 		( _, CelestialBody::Ring( _ ) ) => NUMBERS_RINGED[index[0]].to_string(),
 		( _, CelestialBody::Station( _ ) ) => index[0].to_string(),
 	};
@@ -404,6 +442,16 @@ impl AstronomicalObject for CelestialBody {
 			Self::Trabant( x ) => x.properties(),
 			Self::Ring( x ) => x.properties(),
 			Self::Station( x ) => x.properties(),
+		}
+	}
+
+	fn description( &self ) -> Option<&str> {
+		match self {
+			Self::GravitationalCenter( x ) => x.description(),
+			Self::Star( x ) => x.description(),
+			Self::Trabant( x ) => x.description(),
+			Self::Ring( x ) => x.description(),
+			Self::Station( x ) => x.description(),
 		}
 	}
 }
@@ -649,9 +697,21 @@ impl CelestialSystem {
 		&self.affiliation
 	}
 
-	/// Returns the description of the system.
-	pub fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	/// Returns the description of the system or one of its bodies.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	///
+	/// # Returns
+	/// This method returns the description of the body with `index` or of the system itself if `index` is `&[]`.
+	pub fn description<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a str>, CelestialSystemError> {
+		if index.is_empty() {
+			return Ok( self.description.as_deref() );
+		}
+
+		let body_got = &satellite_getter( &self.body, index )?;
+
+		Ok( body_got.description() )
 	}
 
 	/// Returns the body type of the indexed object.
@@ -917,7 +977,7 @@ impl CelestialSystem {
 			satellite_getter( &self.body, index )?
 		};
 
-		let CelestialBody::Star( ref star ) = body else {
+		let CelestialBody::Star( star ) = body else {
 			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
 		};
 
@@ -1102,7 +1162,7 @@ impl CelestialSystem {
 			for idx in self.indices().iter()
 				.skip( 1 )  // Skipping `&[]`
 			{
-				if self.has_gates( &idx )? {
+				if self.has_gates( idx )? {
 					return Ok( true );
 				}
 			}
@@ -1128,7 +1188,7 @@ impl CelestialSystem {
 			for idx in self.indices().iter()
 				.skip( 1 )  // Skipping `&[]`
 			{
-				if self.has_fleet( &idx )? {
+				if self.has_fleet( idx )? {
 					return Ok( true );
 				}
 			}
@@ -1154,8 +1214,7 @@ impl CelestialSystem {
 	/// Returns `true` if the system is considered a restricted area.
 	pub fn is_restricted( &self ) -> bool {
 		self.policies.iter()
-			.find( |x| matches!( x, Policy::Restricted ) )
-			.is_some()
+			.any( |x| matches!( x, Policy::Restricted ) )
 	}
 
 	/// Returns the object at `index`.
@@ -1210,7 +1269,7 @@ impl CelestialSystem {
 	}
 
 	/// Returns an iterator of all properties of the main star.
-	pub fn properties_main<'a>( &'a self ) -> &'a [Property] {
+	pub fn properties_main( &self ) -> &[Property] {
 		let star_main = self.stars().nth( 0 )
 			.expect( "Each system should have at least one star." );
 
@@ -1281,6 +1340,31 @@ mod tests {
 	use super::*;
 
 	use crate::tests::systems_examples;
+
+	#[test]
+	fn test_roman_numbers() {
+		assert!( roman_number( 0 ).is_err() );
+		assert_eq!( roman_number( 1 ).unwrap(), "i" );
+		assert_eq!( roman_number( 3 ).unwrap(), "iii" );
+		assert_eq!( roman_number( 4 ).unwrap(), "iv" );
+		assert_eq!( roman_number( 5 ).unwrap(), "v" );
+		assert_eq!( roman_number( 9 ).unwrap(), "ix" );
+		assert_eq!( roman_number( 10 ).unwrap(), "x" );
+		assert_eq!( roman_number( 11 ).unwrap(), "xi" );
+		assert_eq!( roman_number( 14 ).unwrap(), "xiv" );
+		assert_eq!( roman_number( 16 ).unwrap(), "xvi" );
+		assert_eq!( roman_number( 19 ).unwrap(), "xix" );
+		assert_eq!( roman_number( 40 ).unwrap(), "xl" );
+		assert_eq!( roman_number( 90 ).unwrap(), "xc" );
+		assert_eq!( roman_number( 100 ).unwrap(), "c" );
+		assert_eq!( roman_number( 450 ).unwrap(), "cdl" );
+		assert_eq!( roman_number( 500 ).unwrap(), "d" );
+		assert_eq!( roman_number( 1875 ).unwrap(), "mdccclxxv" );
+		assert_eq!( roman_number( 1993 ).unwrap(), "mcmxciii" );
+		assert_eq!( roman_number( 2475 ).unwrap(), "mmcdlxxv" );
+		assert_eq!( roman_number( 3999 ).unwrap(), "mmmcmxcix" );
+		assert!( roman_number( 4000 ).is_err() );
+	}
 
 	#[test]
 	fn iterator_of_stars() {
