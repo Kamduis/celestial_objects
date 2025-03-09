@@ -977,7 +977,7 @@ impl CelestialSystem {
 			satellite_getter( &self.body, index )?
 		};
 
-		let CelestialBody::Star( ref star ) = body else {
+		let CelestialBody::Star( star ) = body else {
 			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
 		};
 
@@ -1162,7 +1162,7 @@ impl CelestialSystem {
 			for idx in self.indices().iter()
 				.skip( 1 )  // Skipping `&[]`
 			{
-				if self.has_gates( &idx )? {
+				if self.has_gates( idx )? {
 					return Ok( true );
 				}
 			}
@@ -1188,7 +1188,7 @@ impl CelestialSystem {
 			for idx in self.indices().iter()
 				.skip( 1 )  // Skipping `&[]`
 			{
-				if self.has_fleet( &idx )? {
+				if self.has_fleet( idx )? {
 					return Ok( true );
 				}
 			}
@@ -1214,8 +1214,7 @@ impl CelestialSystem {
 	/// Returns `true` if the system is considered a restricted area.
 	pub fn is_restricted( &self ) -> bool {
 		self.policies.iter()
-			.find( |x| matches!( x, Policy::Restricted ) )
-			.is_some()
+			.any( |x| matches!( x, Policy::Restricted ) )
 	}
 
 	/// Returns the object at `index`.
@@ -1270,7 +1269,7 @@ impl CelestialSystem {
 	}
 
 	/// Returns an iterator of all properties of the main star.
-	pub fn properties_main<'a>( &'a self ) -> &'a [Property] {
+	pub fn properties_main( &self ) -> &[Property] {
 		let star_main = self.stars().nth( 0 )
 			.expect( "Each system should have at least one star." );
 
