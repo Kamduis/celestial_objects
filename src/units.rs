@@ -169,6 +169,11 @@ impl Mass {
 		Self( val * calc::MASS_SOL )
 	}
 
+	/// Creates a new `Mass` from a factor of the mass of Jupiter.
+	pub fn from_mass_jupiter( val: f64 ) -> Self {
+		Self( val * calc::MASS_JUPITER )
+	}
+
 	/// Creates a new `Mass` from a factor of the mass of Terra.
 	pub fn from_mass_terra( val: f64 ) -> Self {
 		Self( val * calc::MASS_TERRA )
@@ -182,6 +187,11 @@ impl Mass {
 	/// Returns the mass in relation to the mass of Sol.
 	pub fn sol( &self ) -> f64 {
 		self.0 / calc::MASS_SOL
+	}
+
+	/// Returns the mass in relation to the mass of Jupiter.
+	pub fn jupiter( &self ) -> f64 {
+		self.0 / calc::MASS_JUPITER
 	}
 
 	/// Returns the mass in relation to the mass of Terra.
