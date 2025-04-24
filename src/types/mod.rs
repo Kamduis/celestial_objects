@@ -1120,6 +1120,24 @@ impl CelestialSystem {
 		Ok( res )
 	}
 
+	/// Returns the minimum tech level of all objects within this system.
+	///
+	/// This method returns `None` if no civilization exists within this system and therefore no tech level exists at all.
+	pub fn techlevel_min( &self ) -> Option<u32> {
+		self.indices().iter()
+			.filter_map( |x| self.techlevel( &x ).unwrap_or_default() )
+			.min()
+	}
+
+	/// Returns the maximum tech level of all objects within this system.
+	///
+	/// This method returns `None` if no civilization exists within this system and therefore no tech level exists at all.
+	pub fn techlevel_max( &self ) -> Option<u32> {
+		self.indices().iter()
+			.filter_map( |x| self.techlevel( &x ).unwrap_or_default() )
+			.max()
+	}
+
 	/// Returns the number of hyperspace gates of this world.
 	///
 	/// If the index is `&[]` the method returns the number of all gates within this system.
