@@ -58,6 +58,51 @@ static REGEX_SPECTRAL_CLASS: LazyLock<Regex> = LazyLock::new( || {
 // Types
 
 
+/// Possible colors of stars.
+#[derive( Clone, Copy, Debug )]
+pub enum StarColor {
+	Blue,
+	BluishWhite,
+	White,
+	YellowishWhite,
+	Yellow,
+	LightOrange,
+	OrangishRed,
+	Brown,
+}
+
+impl fmt::Display for StarColor {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		match self {
+			Self::Blue => write!( f, "blue" ),
+			Self::BluishWhite => write!( f, "bluish white" ),
+			Self::White => write!( f, "white" ),
+			Self::YellowishWhite => write!( f, "yellowish white" ),
+			Self::Yellow => write!( f, "yellow" ),
+			Self::LightOrange => write!( f, "orange" ),
+			Self::OrangishRed => write!( f, "red" ),
+			Self::Brown => write!( f, "brown" ),
+		}
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for StarColor {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		match self {
+			Self::Blue => LOCALES.lookup( locale, "blue" ),
+			Self::BluishWhite => LOCALES.lookup( locale, "bluish white" ),
+			Self::White => LOCALES.lookup( locale, "white" ),
+			Self::YellowishWhite => LOCALES.lookup( locale, "yellowish white" ),
+			Self::Yellow => LOCALES.lookup( locale, "yellow" ),
+			Self::LightOrange => LOCALES.lookup( locale, "orange" ),
+			Self::OrangishRed => LOCALES.lookup( locale, "red" ),
+			Self::Brown => LOCALES.lookup( locale, "brown" ),
+		}
+	}
+}
+
+
 /// Classification of celestial bodies without further information.
 #[derive( Clone, Copy, PartialEq, Debug )]
 pub enum BodyType {
@@ -297,6 +342,23 @@ impl StarType {
 		Self::DZ,
 	];
 
+	fn color( &self ) -> StarColor {
+		match self {
+			Self::O => StarColor::Blue,
+			Self::B => StarColor::BluishWhite,
+			Self::A => StarColor::White,
+			Self::F => StarColor::YellowishWhite,
+			Self::G => StarColor::Yellow,
+			Self::K => StarColor::LightOrange,
+			Self::M => StarColor::OrangishRed,
+			Self::T => StarColor::Brown,
+			Self::DA
+				| Self::DC
+				| Self::DQ
+				| Self::DZ => StarColor::White,
+		}
+	}
+
 	/// Returns `true` if the star type refers to a white dwarf star.
 	pub fn is_white_dwarf( &self ) -> bool {
 		matches!( self, Self::DA | Self::DC | Self::DQ | Self::DZ )
@@ -373,6 +435,11 @@ impl SpectralClass {
 	/// Returns the type of star.
 	pub fn type_star( &self ) -> &StarType {
 		&self.star_type
+	}
+
+	/// Return the color type of the star.
+	pub fn color( &self ) -> StarColor {
+		self.star_type.color()
 	}
 }
 
