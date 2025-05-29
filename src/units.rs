@@ -16,6 +16,30 @@ use crate::calc;
 
 
 //=============================================================================
+// Exponents
+
+
+/// Returns Unicode superscript number as string.
+fn superscript( val: i32 ) -> String {
+	let digits_superscript = [ '⁰', '¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹' ];
+
+	let mut res = if val.is_positive() {
+		String::new()
+	} else {
+		"⁻".to_string()
+	};
+	for chr in val.abs().to_string().chars() {
+		let idx = chr.to_digit( 10 ).unwrap() as usize;
+		let digit = digits_superscript[idx];
+		res.push( digit );
+	}
+	res
+}
+
+
+
+
+//=============================================================================
 // Units
 
 
@@ -169,6 +193,11 @@ impl Mass {
 		Self( val * calc::MASS_SOL )
 	}
 
+	/// Creates a new `Mass` from a factor of the mass of Jupiter.
+	pub fn from_mass_jupiter( val: f64 ) -> Self {
+		Self( val * calc::MASS_JUPITER )
+	}
+
 	/// Creates a new `Mass` from a factor of the mass of Terra.
 	pub fn from_mass_terra( val: f64 ) -> Self {
 		Self( val * calc::MASS_TERRA )
@@ -179,9 +208,42 @@ impl Mass {
 		self.0
 	}
 
+	/// Returns a String with the mass in kg in engineering notation.
+	///
+	/// TODO: This is a very naive implementation.
+	pub fn format_kg_eng( &self ) -> String {
+		let mut num = self.0.abs();
+		let mut exp = 0;
+		while num > 1000.0 {
+			num /= 1000.0;
+			exp += 3;
+		}
+		while num < 0.001 {
+			num *= 1000.0;
+			exp -= 3;
+		}
+
+		if exp == 0 {
+			return self.0.to_string();
+		}
+
+		let sign = if self.0.is_sign_positive() {
+			""
+		} else {
+			"-"
+		};
+
+		format!( "{}{:.2}×10{}", sign, num, superscript( exp ) )
+	}
+
 	/// Returns the mass in relation to the mass of Sol.
 	pub fn sol( &self ) -> f64 {
 		self.0 / calc::MASS_SOL
+	}
+
+	/// Returns the mass in relation to the mass of Jupiter.
+	pub fn jupiter( &self ) -> f64 {
+		self.0 / calc::MASS_JUPITER
 	}
 
 	/// Returns the mass in relation to the mass of Terra.
@@ -279,5 +341,25 @@ impl Sum<Self> for Mass {
 		I: Iterator<Item = Self>,
 	{
 		iter.fold( Self( 0.0 ), |x, y| Self( x.0 + y.0 ) )
+	}
+}
+
+
+
+
+//=============================================================================
+// Testing
+
+
+#[cfg( test )]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_superscript() {
+		assert_eq!( superscript( 1 ), "¹" );
+		assert_eq!( superscript( 11 ), "¹¹" );
+		assert_eq!( superscript( 30 ), "³⁰" );
+		assert_eq!( superscript( -30 ), "⁻³⁰" );
 	}
 }

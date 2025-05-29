@@ -28,6 +28,10 @@ pub const G: f64 = 66.7430e-12;
 pub const MASS_SOL: f64 = 1.98855e30;
 
 
+/// The mass of Jupiter in kg.
+pub const MASS_JUPITER: f64 = 1.89813e27;
+
+
 /// The mass of Terra in kg.
 pub const MASS_TERRA: f64 = 5.97219e24;
 

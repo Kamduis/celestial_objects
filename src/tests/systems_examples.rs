@@ -39,6 +39,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 						eccentricity: 0.205630,
 						body: CelestialBody::Trabant( Trabant {
 							name: Some( "Mercury".to_string() ),
+							description: None,
 							radius: 0.3829,
 							gravity: 0.38,
 							mass: None,
@@ -57,6 +58,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 						eccentricity: 0.006772,
 						body: CelestialBody::Trabant( Trabant {
 							name: Some( "Venus".to_string() ),
+							description: None,
 							radius: 0.9499,
 							gravity: 0.904,
 							mass: None,
@@ -86,6 +88,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 						eccentricity: 0.01671123,
 						body: CelestialBody::Trabant( Trabant {
 							name: Some( "Terra".to_string() ),
+							description: None,
 							radius: 1.0,
 							gravity: 1.0,
 							mass: None,
@@ -112,6 +115,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 									eccentricity: 0.0549,
 									body: CelestialBody::Trabant( Trabant {
 										name: Some( "Luna".to_string() ),
+										description: None,
 										radius: 0.2731,
 										gravity: 0.1654,
 										mass: None,
@@ -132,6 +136,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 									eccentricity: 0.001,
 									body: CelestialBody::Station( Station {
 										name: Some( "Argus".to_string() ),
+										description: None,
 										mass: 4180e3,
 										size: Vec3::new( 200.0, 200.0, 6e3 ),
 										gravity: 1.0,
@@ -163,6 +168,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 						eccentricity: 0.0934,
 						body: CelestialBody::Trabant( Trabant {
 							name: Some( "Mars".to_string() ),
+							description: None,
 							radius: 0.533,
 							gravity: 0.3794,
 							mass: None,
@@ -191,6 +197,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 									eccentricity: 0.0151,
 									body: CelestialBody::Trabant( Trabant {
 										name: Some( "Phobos".to_string() ),
+										description: None,
 										radius: 1.737e-3,
 										gravity: 581.4e-6,
 										mass: None,
@@ -209,6 +216,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 									eccentricity: 0.00033,
 									body: CelestialBody::Trabant( Trabant {
 										name: Some( "Deimos".to_string() ),
+										description: None,
 										radius: 98.304e-3,
 										gravity: 306e-6,
 										mass: None,
@@ -230,6 +238,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 						eccentricity: 0.0565,
 						body: CelestialBody::Trabant( Trabant {
 							name: Some( "Saturn".to_string() ),
+							description: None,
 							radius: 9.449,
 							gravity: 1.065,
 							mass: None,
@@ -254,6 +263,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 									axis_semi_major: 425.574205e-6,
 									eccentricity: 0.0,
 									body: CelestialBody::Ring( Ring {
+										description: None,
 										width: 762.51079e-6,
 										properties: Vec::new(),
 									} ),
@@ -266,6 +276,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 						eccentricity: 0.0113,
 						body: CelestialBody::Trabant( Trabant {
 							name: Some( "Neptun".to_string() ),
+							description: None,
 							radius: 3.829,
 							gravity: 1.137,
 							mass: None,
@@ -289,6 +300,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 									axis_semi_major: 0.00237,
 									eccentricity: 0.000016,
 									body: CelestialBody::Trabant( Trabant {
+										description: None,
 										name: Some( "Triton".to_string() ),
 										radius: 0.2122,
 										gravity: 0.0794,
@@ -316,6 +328,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 			"Alpha Centauri",
 			&EquatorialCoords::try_from_hms_dms_ly( "14h 39m 36.49400s", "-60° 50m 2.3737s", 4.344 ).unwrap(),
 			CelestialBody::GravitationalCenter( GravitationalCenter {
+				description: None,
 				properties: Vec::new(),
 				satellites: vec![
 					Orbit {
@@ -330,6 +343,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 									eccentricity: 0.019345,
 									body: CelestialBody::Trabant( Trabant {
 										name: Some( "Minos".to_string() ),
+										description: None,
 										radius: 1.1,
 										gravity: 1.05,
 										mass: None,
@@ -366,6 +380,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 									eccentricity: 0.00824,
 									body: CelestialBody::Trabant( Trabant {
 										name: Some( "Taurus".to_string() ),
+										description: None,
 										radius: 0.9,
 										gravity: 1.1,
 										mass: None,
