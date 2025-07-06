@@ -91,9 +91,9 @@ impl Locale for StarColor {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::Blue => LOCALES.lookup( locale, "blue" ),
-			Self::BluishWhite => LOCALES.lookup( locale, "bluish white" ),
+			Self::BluishWhite => LOCALES.lookup( locale, "bluish-white" ),
 			Self::White => LOCALES.lookup( locale, "white" ),
-			Self::YellowishWhite => LOCALES.lookup( locale, "yellowish white" ),
+			Self::YellowishWhite => LOCALES.lookup( locale, "yellowish-white" ),
 			Self::Yellow => LOCALES.lookup( locale, "yellow" ),
 			Self::LightOrange => LOCALES.lookup( locale, "orange" ),
 			Self::OrangishRed => LOCALES.lookup( locale, "red" ),
