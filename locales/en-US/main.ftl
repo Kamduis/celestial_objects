@@ -17,6 +17,7 @@ Uninhabited = Uninhabited
 Union-Fleet = Union Fleet
 
 restricted = restricted
+secret = secret
 
 Flare-Star = Flare Star
 White-Dwarf = White Dwarf

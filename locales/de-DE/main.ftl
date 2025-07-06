@@ -17,6 +17,7 @@ Uninhabited = Unbewohnt
 Union-Fleet = Raumflotte
 
 restricted = Sperrgebiet
+secret = Geheim
 
 Flare-Star = Flackerstern
 White-Dwarf = Weißer Zwerg

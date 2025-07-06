@@ -507,12 +507,16 @@ impl<'de> Deserialize<'de> for SpectralClass {
 pub enum Policy {
 	/// Visiting this system is forbidden without a special permit.
 	Restricted,
+
+	/// Information about this system is considered a secret.
+	Secret,
 }
 
 impl fmt::Display for Policy {
 	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
 		match self {
 			Self::Restricted => write!( f, "restricted" ),
+			Self::Secret => write!( f, "secret" ),
 		}
 	}
 }
@@ -522,6 +526,7 @@ impl Locale for Policy {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::Restricted => LOCALES.lookup( locale, "restricted" ),
+			Self::Secret => LOCALES.lookup( locale, "secret" ),
 		}
 	}
 }

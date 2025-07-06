@@ -1235,6 +1235,12 @@ impl CelestialSystem {
 			.any( |x| matches!( x, Policy::Restricted ) )
 	}
 
+	/// Returns `true` if the system is considered a secret.
+	pub fn is_secret( &self ) -> bool {
+		self.policies.iter()
+			.any( |x| matches!( x, Policy::Secret ) )
+	}
+
 	/// Returns the object at `index`.
 	///
 	/// # Arguments
