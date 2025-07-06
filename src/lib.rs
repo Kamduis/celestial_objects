@@ -39,10 +39,10 @@ pub use crate::units::{Length, Mass};
 #[cfg( feature = "i18n" )]
 fluent_templates::static_loader! {
 	static LOCALES = {
-		// The directory of localisations and fluent resources.
+		// The directory of localizations and fluent resources.
 		locales: "./locales",
 
-		// The language to falback on if something is not present.
+		// The language to fallback on if something is not present.
 		fallback_language: "en-US",
 	};
 }

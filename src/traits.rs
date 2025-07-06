@@ -51,7 +51,7 @@ pub trait LatexSym: Latex {
 /// Providing localized LaTeX code output.
 ///
 /// **Note:** This trait is only available, if the **`i18n`** and **`tex`** features have been enabled.
-#[cfg( feature = "i18n" )]
+#[cfg( all( feature = "i18n", feature = "tex" ) )]
 pub trait LocaleLatex: Locale + Latex {
 	/// Returns the LaTeX code representation of `self` using the language according to the provided `locale`.
 	fn to_latex_locale( &self, locale: &LanguageIdentifier ) -> String;
