@@ -91,9 +91,9 @@ impl Locale for StarColor {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::Blue => LOCALES.lookup( locale, "blue" ),
-			Self::BluishWhite => LOCALES.lookup( locale, "bluish white" ),
+			Self::BluishWhite => LOCALES.lookup( locale, "bluish-white" ),
 			Self::White => LOCALES.lookup( locale, "white" ),
-			Self::YellowishWhite => LOCALES.lookup( locale, "yellowish white" ),
+			Self::YellowishWhite => LOCALES.lookup( locale, "yellowish-white" ),
 			Self::Yellow => LOCALES.lookup( locale, "yellow" ),
 			Self::LightOrange => LOCALES.lookup( locale, "orange" ),
 			Self::OrangishRed => LOCALES.lookup( locale, "red" ),
@@ -209,7 +209,7 @@ impl fmt::Display for Affiliation {
 			Self::Sket => "Sket",
 		};
 
-		write!( f, "{}", res )
+		write!( f, "{res}" )
 	}
 }
 
@@ -240,7 +240,7 @@ impl fmt::Display for Institution {
 			Self::UnionFleet => "Union Space Fleet",
 		};
 
-		write!( f, "{}", res )
+		write!( f, "{res}" )
 	}
 }
 
@@ -406,7 +406,7 @@ impl fmt::Display for StarType {
 			Self::DZ => "DZ",
 		};
 
-		write!( f, "{}", res )
+		write!( f, "{res}" )
 	}
 }
 
@@ -507,12 +507,16 @@ impl<'de> Deserialize<'de> for SpectralClass {
 pub enum Policy {
 	/// Visiting this system is forbidden without a special permit.
 	Restricted,
+
+	/// Information about this system is considered a secret.
+	Secret,
 }
 
 impl fmt::Display for Policy {
 	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
 		match self {
 			Self::Restricted => write!( f, "restricted" ),
+			Self::Secret => write!( f, "secret" ),
 		}
 	}
 }
@@ -522,6 +526,7 @@ impl Locale for Policy {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::Restricted => LOCALES.lookup( locale, "restricted" ),
+			Self::Secret => LOCALES.lookup( locale, "secret" ),
 		}
 	}
 }
@@ -659,7 +664,7 @@ impl fmt::Display for GasComposition {
 			.collect::<Vec<String>>()
 			.join( ", " );
 
-		write!( f, "{}", tmp )
+		write!( f, "{tmp}" )
 	}
 }
 
