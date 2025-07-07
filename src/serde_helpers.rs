@@ -140,7 +140,7 @@ pub mod timedelta_option {
 
 		let secs = seconds_seg as f64 + td_abs.subsec_nanos() as f64 / 1e9;
 
-		elements.push( format!( "{}h {}m {}s", hours_seg, minutes_seg, secs ) );
+		elements.push( format!( "{hours_seg}h {minutes_seg}m {secs}s" ) );
 
 		let mut stringified = elements.join( " " );
 

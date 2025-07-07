@@ -209,7 +209,7 @@ impl fmt::Display for Affiliation {
 			Self::Sket => "Sket",
 		};
 
-		write!( f, "{}", res )
+		write!( f, "{res}" )
 	}
 }
 
@@ -240,7 +240,7 @@ impl fmt::Display for Institution {
 			Self::UnionFleet => "Union Space Fleet",
 		};
 
-		write!( f, "{}", res )
+		write!( f, "{res}" )
 	}
 }
 
@@ -406,7 +406,7 @@ impl fmt::Display for StarType {
 			Self::DZ => "DZ",
 		};
 
-		write!( f, "{}", res )
+		write!( f, "{res}" )
 	}
 }
 
@@ -664,7 +664,7 @@ impl fmt::Display for GasComposition {
 			.collect::<Vec<String>>()
 			.join( ", " );
 
-		write!( f, "{}", tmp )
+		write!( f, "{tmp}" )
 	}
 }
 

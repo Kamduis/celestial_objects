@@ -197,10 +197,10 @@ fn orbit_getter<'a>(
 	index: &'a [usize]
 ) -> Result<&'a Orbit, CelestialSystemError> {
 	if index.is_empty() || index[0] == 0 {
-		return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 	}
 	let orbit = &center.satellites().get( index[0] - 1 )
-		.ok_or( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) )?;
+		.ok_or( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) )?;
 
 	// An index ending in 0 (`&[3,0]`) is identical to the same index without the 0 (`&[3]`).
 	if index.len() == 1 || ( index.len() == 2 && index[1] == 0 ) {
@@ -222,7 +222,7 @@ fn satellite_getter<'a>(
 	index: &'a [usize]
 ) -> Result<&'a CelestialBody, CelestialSystemError> {
 	if index.is_empty() {
-		return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 	}
 
 	if index[0] == 0 {
@@ -230,7 +230,7 @@ fn satellite_getter<'a>(
 	}
 
 	let orbit = &center.satellites().get( index[0] - 1 )
-		.ok_or( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) )?;
+		.ok_or( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) )?;
 
 	if index.len() == 1 {
 		return Ok( &orbit.body );
@@ -249,7 +249,7 @@ fn satellite_getter<'a>(
 /// * Second item of tuple: The letter hierarchy to be used as name, if no dedicated name exists.
 fn satellite_getter_hierarchical<'a>( center: &'a CelestialBody, index: &'a [usize], hierarchy: &str ) -> Result<( &'a CelestialBody, String ), CelestialSystemError> {
 	if index.is_empty() {
-		return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+		return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 	}
 
 	if index[0] == 0 {
@@ -257,7 +257,7 @@ fn satellite_getter_hierarchical<'a>( center: &'a CelestialBody, index: &'a [usi
 	}
 
 	let orbit = &center.satellites().get( index[0] - 1 )
-		.ok_or( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) )?;
+		.ok_or( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) )?;
 
 	let hierarchy_letter = match ( center, &orbit.body ) {
 		( _, CelestialBody::GravitationalCenter( _ ) ) => LETTERS[index[0]].to_uppercase(),
@@ -268,7 +268,7 @@ fn satellite_getter_hierarchical<'a>( center: &'a CelestialBody, index: &'a [usi
 		( _, CelestialBody::Station( _ ) ) => index[0].to_string(),
 	};
 
-	let hierarchy_new = format!( "{}{}", hierarchy, hierarchy_letter );
+	let hierarchy_new = format!( "{hierarchy}{hierarchy_letter}" );
 
 	if index.len() == 1 {
 		return Ok( ( &orbit.body, hierarchy_new ) );
@@ -624,7 +624,7 @@ impl CelestialSystem {
 	/// Since the system itself and the center object of the system are not orbiting anything, the indices `&[]` and `&[0]` are illegal and cause an error to be returned.
 	pub fn index_of_center_of( &self, index: &[usize] ) -> Result<Vec<usize>, CelestialSystemError> {
 		if index.is_empty() || index[0] == 0 {
-			return Err( CelestialSystemError::NoCenterObject( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::NoCenterObject( format!( "{index:?}" ) ) );
 		}
 
 		let mut idx = index.to_vec();
@@ -723,7 +723,7 @@ impl CelestialSystem {
 	/// This method returns an error if `index` is `&[]`, since the system itself is not a body.
 	pub fn body_type( &self, index: &[usize] ) -> Result<BodyType, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		if index[0] == 0 {
@@ -775,7 +775,7 @@ impl CelestialSystem {
 	/// * `index` See [`self.name()`].
 	pub fn mass( &self, index: &[usize] ) -> Result<Mass, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		let body = if index[0] == 0 {
@@ -823,7 +823,7 @@ impl CelestialSystem {
 	/// If the system index is used (`&[]`), this method returns an error.
 	pub fn density( &self, index: &[usize] ) -> Result<Option<f64>, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		let body = if index[0] == 0 {
@@ -841,7 +841,7 @@ impl CelestialSystem {
 	/// * `index` See [`self.name()`].
 	pub fn gravitation( &self, index: &[usize] ) -> Result<Option<f64>, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		let body = if index[0] == 0 {
@@ -859,7 +859,7 @@ impl CelestialSystem {
 	/// * `index` See [`self.name()`].
 	pub fn luminosity( &self, index: &[usize] ) -> Result<f64, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		// if index[0] == 0 {
@@ -873,7 +873,7 @@ impl CelestialSystem {
 			return Ok( x.luminosity() );
 		}
 
-		Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) )
+		Err( CelestialSystemError::NotAStar( format!( "{index:?}" ) ) )
 	}
 
 	/// Returns the spectral class of the indexed object.
@@ -882,7 +882,7 @@ impl CelestialSystem {
 	/// * `index` See [`self.name()`].
 	pub fn spectral_class<'a>( &'a self, index: &'a [usize] ) -> Result<&'a SpectralClass, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		let body = if index[0] == 0 {
@@ -892,7 +892,7 @@ impl CelestialSystem {
 		};
 
 		let CelestialBody::Star( star ) = body else {
-			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::NotAStar( format!( "{index:?}" ) ) );
 		};
 
 		Ok( &star.spectral_class )
@@ -906,7 +906,7 @@ impl CelestialSystem {
 	/// Since the system itself and the center object of the system are not orbiting anything, the indices `&[]` and `&[0]` are illegal and cause an error to be returned.
 	pub fn axis_semi_major( &self, index: &[usize] ) -> Result<Length, CelestialSystemError> {
 		if index.is_empty() || index[0] == 0 {
-			return Err( CelestialSystemError::NoCenterObject( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::NoCenterObject( format!( "{index:?}" ) ) );
 		}
 
 		let orbit_got = orbit_getter( &self.body, index )?;
@@ -922,7 +922,7 @@ impl CelestialSystem {
 	/// Since the system itself and the center object of the system are not orbiting anything, the indices `&[]` and `&[0]` are illegal and cause an error to be returned.
 	pub fn orbit<'a>( &'a self, index: &'a [usize] ) -> Result<&'a Orbit, CelestialSystemError> {
 		if index.is_empty() || index[0] == 0 {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		orbit_getter( &self.body, index )
@@ -968,7 +968,7 @@ impl CelestialSystem {
 	/// * `index` See [`self.name()`].
 	pub fn habitable_zone( &self, index: &[usize] ) -> Result<[Length; 2], CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		let body = if index[0] == 0 {
@@ -978,7 +978,7 @@ impl CelestialSystem {
 		};
 
 		let CelestialBody::Star( star ) = body else {
-			return Err( CelestialSystemError::NotAStar( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::NotAStar( format!( "{index:?}" ) ) );
 		};
 
 		Ok( star.habitable_zone() )
@@ -1003,7 +1003,7 @@ impl CelestialSystem {
 	/// If the object at `index` does not have an orbit center, this method returns an error.
 	pub fn rotation_period( &self, index: &[usize] ) -> Result<TimeDelta, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		let body_got = satellite_getter( &self.body, index )?;
@@ -1065,7 +1065,7 @@ impl CelestialSystem {
 	/// * `index` See [`self.name()`].
 	pub fn temperature<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a [f64; 3]>, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		if index[0] == 0 {
@@ -1082,7 +1082,7 @@ impl CelestialSystem {
 	/// * `index` See [`self.name()`].
 	pub fn atmosphere<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a Atmosphere>, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		let body = if index[0] == 0 {
@@ -1102,7 +1102,7 @@ impl CelestialSystem {
 	/// This method returns `None` for worlds without civilization and therefore no tech level.
 	pub fn techlevel( &self, index: &[usize] ) -> Result<Option<u32>, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		let body = if index[0] == 0 {
@@ -1114,7 +1114,7 @@ impl CelestialSystem {
 		let res = match body {
 			CelestialBody::Trabant( x ) => x.techlevel(),
 			CelestialBody::Station( x ) => x.techlevel(),
-			_ => return Err( CelestialSystemError::NotColonizable( format!( "{:?}", index ) ) ),
+			_ => return Err( CelestialSystemError::NotColonizable( format!( "{index:?}" ) ) ),
 		};
 
 		Ok( res )
@@ -1247,7 +1247,7 @@ impl CelestialSystem {
 	/// * `index` See [`self.name()`].
 	pub fn object<'a>( &'a self, index: &'a [usize] ) -> Result<&'a CelestialBody, CelestialSystemError> {
 		if index.is_empty() {
-			return Err( CelestialSystemError::IllegalIndex( format!( "{:?}", index ) ) );
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
 		}
 
 		let body = if index[0] == 0 {
