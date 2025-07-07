@@ -17,6 +17,7 @@ Uninhabited = Unbewohnt
 Union-Fleet = Raumflotte
 
 restricted = Sperrgebiet
+secret = Geheim
 
 Flare-Star = Flackerstern
 White-Dwarf = Weißer Zwerg
@@ -25,9 +26,9 @@ Red-Giant = Roter Riese
 Blue-Giant = Bluer Riese
 
 blue = blau
-bluish white = weißblau
+bluish-white = weißblau
 white = weiß
-yellowish white = weißgelb
+yellowish-white = weißgelb
 yellow = gelb
 orange = orange
 red = rot

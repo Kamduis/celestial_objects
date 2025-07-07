@@ -139,7 +139,7 @@ fn sexagesimal_hms_to_radians( hours: f32, minutes: f32, seconds: f32 ) -> f32 {
 fn sexagesimal_dms_to_radians( degrees: f32, minutes: f32, seconds: f32 ) -> f32 {
 	// The minus sign of `degrees` means that the whole sexagesimal is negative.
 	let ( mins, secs ) = if degrees < 0.0 {
-		( minutes * -1.0, seconds * -1.0 )
+		( -minutes, -seconds )
 	} else {
 		( minutes, seconds )
 	};
@@ -157,7 +157,7 @@ fn radians_to_sexagesimal_hms( val: f32 ) -> String {
 	let minutes = minutes_frac.div_euclid( 1.0 );
 	let seconds_frac = minutes_frac.rem_euclid( 1.0 ) * 60.0;
 
-	format!( "{}{:0>2}h{:0>2}m{:0>2}s", sign, hours, minutes, seconds_frac )
+	format!( "{sign}{hours:0>2}h{minutes:0>2}m{seconds_frac:0>2}s" )
 }
 
 
@@ -170,7 +170,7 @@ fn radians_to_sexagesimal_dms( val: f32 ) -> String {
 	let minutes = minutes_frac.div_euclid( 1.0 );
 	let seconds_frac = minutes_frac.rem_euclid( 1.0 ) * 60.0;
 
-	format!( "{}{:0>2}d{:0>2}m{:0>2}s", sign, degrees, minutes, seconds_frac )
+	format!( "{sign}{degrees:0>2}d{minutes:0>2}m{seconds_frac:0>2}s" )
 }
 
 

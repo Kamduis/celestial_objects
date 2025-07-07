@@ -17,6 +17,7 @@ Uninhabited = Uninhabited
 Union-Fleet = Union Fleet
 
 restricted = restricted
+secret = secret
 
 Flare-Star = Flare Star
 White-Dwarf = White Dwarf
@@ -25,9 +26,9 @@ Red-Giant = Red Giant
 Blue-Giant = Blue Giant
 
 blue = blue
-bluish white = bluish white
+bluish-white = bluish white
 white = white
-yellowish white = yellowish white
+yellowish-white = yellowish white
 yellow = yellow
 orange = orange
 red = red
