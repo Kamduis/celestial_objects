@@ -34,9 +34,12 @@ use super::CelestialBody;
 
 
 #[derive( Error, Debug )]
-pub enum SpectralClassError {
-	#[error( "Cannot derive type from string: {0}" )]
-	FromStrError( String ),
+pub enum PropertiesError {
+	#[error( "Cannot derive spectral class from string: {0}" )]
+	SpectralClassFromStrError( String ),
+
+	#[error( "Cannot derive localized text from string: {0}" )]
+	LocalizedTextFromStrError( String ),
 }
 
 
@@ -366,7 +369,7 @@ impl StarType {
 }
 
 impl FromStr for StarType {
-	type Err = SpectralClassError;
+	type Err = PropertiesError;
 
 	fn from_str( s: &str ) -> Result<Self, Self::Err> {
 		let res = match s.to_uppercase().as_str() {
@@ -382,7 +385,7 @@ impl FromStr for StarType {
 			"DC" => Self::DC,
 			"DQ" => Self::DQ,
 			"DZ" => Self::DZ,
-			_ => return Err( SpectralClassError::FromStrError( s.to_string() ) ),
+			_ => return Err( PropertiesError::SpectralClassFromStrError( s.to_string() ) ),
 		};
 
 		Ok( res )
@@ -444,14 +447,14 @@ impl SpectralClass {
 }
 
 impl FromStr for SpectralClass {
-	type Err = SpectralClassError;
+	type Err = PropertiesError;
 
 	fn from_str( s: &str ) -> Result<Self, Self::Err> {
 		let caps = REGEX_SPECTRAL_CLASS.captures( s )
-			.ok_or( SpectralClassError::FromStrError( s.to_string() ) )?;
+			.ok_or( PropertiesError::SpectralClassFromStrError( s.to_string() ) )?;
 
 		let star_type = caps.name( "st" )
-			.ok_or_else( || SpectralClassError::FromStrError( s.to_string() ) )?
+			.ok_or_else( || PropertiesError::SpectralClassFromStrError( s.to_string() ) )?
 			.as_str()
 			.parse::<StarType>()?;
 
@@ -459,7 +462,7 @@ impl FromStr for SpectralClass {
 			Some( x ) => {
 				let sdiv = x.as_str()
 					.parse::<f32>()
-					.map_err( |_| SpectralClassError::FromStrError( s.to_string() ) )?;
+					.map_err( |_| PropertiesError::SpectralClassFromStrError( s.to_string() ) )?;
 					Some( sdiv )
 			},
 			None => None,
@@ -879,6 +882,21 @@ impl LocalizedText {
 	pub fn add_language( mut self, lang: LanguageIdentifier, text: &str ) -> Self {
 		self.locales.insert( lang, text.to_string() );
 		self
+	}
+}
+
+impl FromStr for LocalizedText {
+	type Err = PropertiesError;
+
+	fn from_str( s: &str ) -> Result<Self, Self::Err> {
+		let res = Self {
+			fallback: s.to_string(),
+
+			#[cfg( feature = "i18n" )]
+			locales: Default::default(),
+		};
+
+		Ok( res )
 	}
 }
 

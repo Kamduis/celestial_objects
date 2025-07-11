@@ -16,7 +16,7 @@ use crate::calc;
 use crate::units::{Mass, Length};
 
 use super::AstronomicalObject;
-use super::properties::SpectralClassError;
+use super::properties::PropertiesError;
 use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution, LocalizedText};
 
 
@@ -29,7 +29,7 @@ use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, In
 #[derive( Error, Debug )]
 pub enum StarError {
 	#[error( "Illegal spectral class: {0}" )]
-	IllegalSpectralClass( #[from] SpectralClassError ),
+	IllegalSpectralClass( #[from] PropertiesError ),
 }
 
 
