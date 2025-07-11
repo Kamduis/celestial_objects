@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition};
+pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition, LocalizedText};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -151,7 +151,7 @@ pub trait AstronomicalObject {
 	fn properties( &self ) -> &[Property];
 
 	/// Returns the description of the celestial object.
-	fn description( &self ) -> Option<&str>;
+	fn description( &self ) -> Option<&LocalizedText>;
 }
 
 
@@ -445,7 +445,7 @@ impl AstronomicalObject for CelestialBody {
 		}
 	}
 
-	fn description( &self ) -> Option<&str> {
+	fn description( &self ) -> Option<&LocalizedText> {
 		match self {
 			Self::GravitationalCenter( x ) => x.description(),
 			Self::Star( x ) => x.description(),
@@ -490,7 +490,7 @@ pub struct CelestialSystem {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	description: Option<String>,
+	description: Option<LocalizedText>,
 
 	/// The main body of this system. This `CelestialBody` may have one or more bodies orbiting it. Systems with a single sun as it's center have a `CelestialBody` representing this sun as `body`. Multi-star-systems will have either the main star as `body` (if it is much more massive than the other stars or a `GravitationalCenter` as the theoretical body, that is then orbited by multiple stars.
 	body: CelestialBody,
@@ -529,8 +529,8 @@ impl CelestialSystem {
 	}
 
 	/// Return a new object from `self` with `affiliation`.
-	pub fn with_description( mut self, desc: &str ) -> Self {
-		self.description = Some( desc.to_string() );
+	pub fn with_description( mut self, desc: LocalizedText ) -> Self {
+		self.description = Some( desc );
 		self
 	}
 
@@ -704,9 +704,9 @@ impl CelestialSystem {
 	///
 	/// # Returns
 	/// This method returns the description of the body with `index` or of the system itself if `index` is `&[]`.
-	pub fn description<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a str>, CelestialSystemError> {
+	pub fn description<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a LocalizedText>, CelestialSystemError> {
 		if index.is_empty() {
-			return Ok( self.description.as_deref() );
+			return Ok( self.description.as_ref() );
 		}
 
 		let body_got = &satellite_getter( &self.body, index )?;

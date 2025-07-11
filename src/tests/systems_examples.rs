@@ -14,7 +14,7 @@ use crate::CelestialSystem;
 use crate::coords::EquatorialCoords;
 use crate::types::AstronomicalObject;
 use crate::types::CelestialBody;
-use crate::types::properties::{Affiliation, Institution, Orbit, Atmosphere, AtmosphereQuality, GasComposition, Molecule};
+use crate::types::properties::{Affiliation, Institution, Orbit, Atmosphere, AtmosphereQuality, GasComposition, Molecule, LocalizedText};
 use crate::types::objects::{GravitationalCenter, Star, Trabant, Ring, Station};
 
 
@@ -323,7 +323,8 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 				] ),
 		)
 			.with_affiliation( Affiliation::Union )
-			.with_description( "Original home system of humans and AIs." ),
+			.with_description( LocalizedText::new( "Original home system of humans and AIs." ) ),
+
 		CelestialSystem::new(
 			"Alpha Centauri",
 			&EquatorialCoords::try_from_hms_dms_ly( "14h 39m 36.49400s", "-60° 50m 2.3737s", 4.344 ).unwrap(),
@@ -418,6 +419,111 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 		)
 			.with_name( "Centauri" )
 			.with_affiliation( Affiliation::Union )
-			.with_description( "Capital of the Union." ),
+			.with_description( LocalizedText::new( "Capital of the Union." ) ),
+	]
+}
+
+
+#[cfg( feature = "i18n" )]
+pub(crate) fn systems_example_l10n() -> Vec<CelestialSystem> {
+	vec![
+		CelestialSystem::new(
+			"Alpha Centauri int.",
+			&EquatorialCoords::try_from_hms_dms_ly( "14h 39m 36.49400s", "-60° 50m 2.3737s", 4.344 ).unwrap(),
+			CelestialBody::GravitationalCenter( GravitationalCenter {
+				description: None,
+				properties: Vec::new(),
+				satellites: vec![
+					Orbit {
+						axis_semi_major: 17.493,
+						eccentricity: 0.51947,
+						body: CelestialBody::Star( Star::new( 1.0788, 1.2175, 1.5059, "G2" ).unwrap()
+							.with_rotation_period( TimeDelta::days( 22 ) )
+						)
+							.with_satellites( vec![
+								Orbit {
+									axis_semi_major: 1.1,
+									eccentricity: 0.019345,
+									body: CelestialBody::Trabant( Trabant {
+										name: Some( "Minos".to_string() ),
+										description: None,
+										radius: 1.1,
+										gravity: 1.05,
+										mass: None,
+										rotation_period: Some( TimeDelta::hours( 18 ) + TimeDelta::minutes( 7 ) ),
+										temperature: [ -7.0, 12.0, 89.0 ],
+										atmosphere: Some( Atmosphere {
+											pressure: 1.2,
+											quality: AtmosphereQuality::Breathable,
+											composition: GasComposition::from( [
+												( Molecule::CarbonDioxide, 0.00054 ),
+												( Molecule::Nitrogen, 0.77 ),
+												( Molecule::Oxygen, 0.214 ),
+												( Molecule::Argon, 0.002 ),
+											] ),
+										} ),
+										techlevel: Some( 11 ),
+										gates: 122,
+										properties: Vec::new(),
+										institutions: Vec::new(),
+										satellites: Vec::new(),
+									} ),
+								},
+							] ),
+					},
+					Orbit {
+						axis_semi_major: 17.493,
+						eccentricity: 0.51947,
+						body: CelestialBody::Star( Star::new( 0.9092, 0.8591, 0.4981, "K4" ).unwrap()
+							.with_rotation_period( TimeDelta::days( 41 ) )
+						)
+							.with_satellites( vec![
+								Orbit {
+									axis_semi_major: 0.8,
+									eccentricity: 0.00824,
+									body: CelestialBody::Trabant( Trabant {
+										name: Some( "Taurus".to_string() ),
+										description: None,
+										radius: 0.9,
+										gravity: 1.1,
+										mass: None,
+										rotation_period: Some( TimeDelta::hours( 30 ) + TimeDelta::minutes( 42 ) ),
+										temperature: [ -120.0, 5.0, 127.0 ],
+										atmosphere: Some( Atmosphere {
+											pressure: 0.36,
+											quality: AtmosphereQuality::Breathable,
+											composition: GasComposition::from( [
+												( Molecule::CarbonDioxide, 0.00092 ),
+												( Molecule::Nitrogen, 0.792 ),
+												( Molecule::Oxygen, 0.179 ),
+												( Molecule::Argon, 0.015 ),
+											] ),
+										} ),
+										techlevel: Some( 11 ),
+										gates: 58,
+										properties: Vec::new(),
+										institutions: Vec::new(),
+										satellites: Vec::new(),
+									} ),
+								},
+							] ),
+					},
+					Orbit {
+						axis_semi_major: 8700.0,
+						eccentricity: 0.50,
+						body: CelestialBody::Star( Star::new( 0.1221, 0.1542, 0.001567, "M5.5" ).unwrap()
+							.with_rotation_period( TimeDelta::days( 90 ) )
+							.with_name( "Proxima" ),
+						),
+					},
+				],
+			} )
+		)
+			.with_name( "Centauri" )
+			.with_affiliation( Affiliation::Union )
+			.with_description(
+				LocalizedText::new( "Capital of the Union." )
+					.add_language( "de-DE", "Hauptsystem der Union." )
+			),
 	]
 }

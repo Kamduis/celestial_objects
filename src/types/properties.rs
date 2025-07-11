@@ -851,6 +851,53 @@ impl LocaleLatex for Molecule {
 }
 
 
+/// Representing Text that is possibly available in multiple languages.
+///
+/// There is always a fallback text, that is always available.
+#[derive( Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Debug )]
+pub struct LocalizedText {
+	fallback: String,
+
+	#[cfg( feature = "i18n" )]
+	#[serde( default )]
+	locales: BTreeMap<String, String>,
+}
+
+impl LocalizedText {
+	/// Create a new instance of `LocalizedText` with `text` as fallback text.
+	pub fn new( text: &str ) -> Self {
+		Self {
+			fallback: text.to_string(),
+
+			#[cfg( feature = "i18n" )]
+			locales: BTreeMap::new(),
+		}
+	}
+
+	/// Create a new instance of `LocalizedText` from `self` with `lang` as language identifier following language IDs and `text` as language specific text.
+	#[cfg( feature = "i18n" )]
+	pub fn add_language( mut self, lang: &str, text: &str ) -> Self {
+		self.locales.insert( lang.to_string(), text.to_string() );
+		self
+	}
+}
+
+impl fmt::Display for LocalizedText {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		write!( f, "{}", self.fallback )
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for LocalizedText {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		self.locales.get( locale.to_string().as_str() )
+			.unwrap_or_else( || &self.fallback )
+			.clone()
+	}
+}
+
+
 
 
 //=============================================================================
@@ -871,5 +918,15 @@ mod tests {
 	fn test_spectral_class_deserialize() {
 		assert_eq!( ron::from_str::<SpectralClass>( r#""O3""# ).unwrap(), SpectralClass::new( StarType::O, 3.0 ) );
 		assert_eq!( ron::from_str::<SpectralClass>( r#""G3.5""# ).unwrap(), SpectralClass::new( StarType::G, 3.5 ) );
+	}
+
+	#[test]
+	#[cfg( feature = "i18n" )]
+	fn test_localized_text() {
+		assert_eq!( LocalizedText::new( "Test" ).to_string(), "Test".to_string() );
+
+		let text = LocalizedText::new( "Fallback Text" )
+			.add_language( "de-DE", "Ausweichtext" );
+		assert_eq!( text.to_string_locale( &unic_langid::langid!( "de-DE" ) ), "Ausweichtext".to_string() );
 	}
 }

@@ -3,7 +3,9 @@
 		identifier: "Sol",
 		coordinates: ( ra: "0h 0m 0s", dec: "0° 0m 0s", dist: 0.0 ),
 		affiliation: Union,
-		description: "Original home system of humans and AIs.",
+		description: (
+			fallback: "Original home system of humans and AIs.",
+		),
 		body: Star((
 			mass: 1.0,
 			radius: 1.0,
@@ -246,7 +248,9 @@
 		name: "Centauri",
 		coordinates: ( ra: "14h 39m 36.49400s", dec: "-60° 50m 2.3737s", dist: 4.344 ),
 		affiliation: Union,
-		description: "Capital of the Union.",
+		description: (
+			fallback: "Capital of the Union.",
+		),
 		body: GravitationalCenter((
 			satellites: [
 				(
