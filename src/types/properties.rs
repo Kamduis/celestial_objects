@@ -860,7 +860,7 @@ pub struct LocalizedText {
 
 	#[cfg( feature = "i18n" )]
 	#[serde( default )]
-	locales: BTreeMap<String, String>,
+	locales: BTreeMap<LanguageIdentifier, String>,
 }
 
 impl LocalizedText {
@@ -876,8 +876,8 @@ impl LocalizedText {
 
 	/// Create a new instance of `LocalizedText` from `self` with `lang` as language identifier following language IDs and `text` as language specific text.
 	#[cfg( feature = "i18n" )]
-	pub fn add_language( mut self, lang: &str, text: &str ) -> Self {
-		self.locales.insert( lang.to_string(), text.to_string() );
+	pub fn add_language( mut self, lang: LanguageIdentifier, text: &str ) -> Self {
+		self.locales.insert( lang, text.to_string() );
 		self
 	}
 }
@@ -891,7 +891,7 @@ impl fmt::Display for LocalizedText {
 #[cfg( feature = "i18n" )]
 impl Locale for LocalizedText {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
-		self.locales.get( locale.to_string().as_str() )
+		self.locales.get( locale )
 			.unwrap_or_else( || &self.fallback )
 			.clone()
 	}
@@ -906,6 +906,8 @@ impl Locale for LocalizedText {
 
 #[cfg( test )]
 mod tests {
+	#[cfg( feature = "i18n" )] use unic_langid::langid;
+
 	use super::*;
 
 	#[test]
@@ -926,7 +928,7 @@ mod tests {
 		assert_eq!( LocalizedText::new( "Test" ).to_string(), "Test".to_string() );
 
 		let text = LocalizedText::new( "Fallback Text" )
-			.add_language( "de-DE", "Ausweichtext" );
-		assert_eq!( text.to_string_locale( &unic_langid::langid!( "de-DE" ) ), "Ausweichtext".to_string() );
+			.add_language( langid!( "de-DE" ), "Ausweichtext" );
+		assert_eq!( text.to_string_locale( &langid!( "de-DE" ) ), "Ausweichtext".to_string() );
 	}
 }

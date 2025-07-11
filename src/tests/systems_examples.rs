@@ -9,6 +9,7 @@
 
 use chrono::TimeDelta;
 use glam::Vec3;
+#[cfg( feature = "i18n" )] use unic_langid::langid;
 
 use crate::CelestialSystem;
 use crate::coords::EquatorialCoords;
@@ -523,7 +524,7 @@ pub(crate) fn systems_example_l10n() -> Vec<CelestialSystem> {
 			.with_affiliation( Affiliation::Union )
 			.with_description(
 				LocalizedText::new( "Capital of the Union." )
-					.add_language( "de-DE", "Hauptsystem der Union." )
+					.add_language( langid!( "de-DE" ), "Hauptsystem der Union." )
 			),
 	]
 }
