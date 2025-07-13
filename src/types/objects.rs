@@ -18,7 +18,7 @@ use crate::types::Policy;
 
 use super::AstronomicalObject;
 use super::properties::PropertiesError;
-use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution, LocalizedText};
+use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution, FleetPresence, LocalizedText};
 
 
 
@@ -338,6 +338,11 @@ pub struct Trabant {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) institutions: Vec<Institution>,
 
+	/// The properties of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "FleetPresence::is_no" )]
+	pub(crate) fleet: FleetPresence,
+
 	/// An optional description of this trabant.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
@@ -359,9 +364,9 @@ impl Trabant {
 		self.gates
 	}
 
-	/// Returns `true` if there is a delegation of the Union space fleet stationed at this body. Otherwise returns `false`.
-	pub fn has_fleet( &self ) -> bool {
-		self.institutions.iter().any( |x| matches!( x, Institution::UnionFleet ) )
+	/// Returns the kind of presence the space fleet is stationed at this body.
+	pub fn fleet_presence( &self ) -> FleetPresence {
+		self.fleet
 	}
 }
 
@@ -532,6 +537,11 @@ pub struct Station {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) policies: Vec<Policy>,
 
+	/// The properties of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "FleetPresence::is_no" )]
+	pub(crate) fleet: FleetPresence,
+
 	/// An optional description of this station.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
@@ -553,9 +563,9 @@ impl Station {
 		self.gates
 	}
 
-	/// Returns `true` if there is a delegation of the Union space fleet stationed at this body. Otherwise returns `false`.
-	pub fn has_fleet( &self ) -> bool {
-		self.institutions.iter().any( |x| matches!( x, Institution::UnionFleet ) )
+	/// Returns the kind of presence the space fleet is stationed at this body.
+	pub fn fleet_presence( &self ) -> FleetPresence {
+		self.fleet
 	}
 }
 
