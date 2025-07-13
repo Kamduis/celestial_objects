@@ -364,6 +364,11 @@ impl Trabant {
 		self.gates
 	}
 
+	/// Returns the number of *visible* hyperspace gates of this trabant. Meaning, if this trabant is secret, this method returns 0.
+	pub fn gates_count_visible( &self ) -> u32 {
+		if self.is_secret() { 0 } else { self.gates_count() }
+	}
+
 	/// Returns the kind of presence the space fleet is stationed at this body.
 	pub fn fleet_presence( &self ) -> FleetPresence {
 		self.fleet
@@ -561,6 +566,11 @@ impl Station {
 	/// Returns the number of hyperspace gates of this station.
 	pub fn gates_count( &self ) -> u32 {
 		self.gates
+	}
+
+	/// Returns the number of *visible* hyperspace gates of this station. Meaning, if this station is secret, this method returns 0.
+	pub fn gates_count_visible( &self ) -> u32 {
+		if self.is_secret() { 0 } else { self.gates_count() }
 	}
 
 	/// Returns the kind of presence the space fleet is stationed at this body.

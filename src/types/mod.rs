@@ -1233,6 +1233,37 @@ impl CelestialSystem {
 		Ok( res )
 	}
 
+	/// Returns the number of *visible* hyperspace gates of this world. Gates on secret stations ort other objects are not counted.
+	///
+	/// If the index is `&[]` the method returns the number of all gates within this system.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn gates_count_visible( &self, index: &[usize] ) -> Result<u32, CelestialSystemError> {
+		if index.is_empty() {
+			let res = self.indices().iter()
+				.skip( 1 )  // Skipping `&[]`
+				.map( |x| self.gates_count_visible( x ).unwrap_or( 0 ) )
+				.sum();
+
+			return Ok( res );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		let res = match body {
+			CelestialBody::Trabant( x ) => x.gates_count_visible(),
+			CelestialBody::Station( x ) => x.gates_count_visible(),
+			_ => 0,
+		};
+
+		Ok( res )
+	}
+
 	/// Returns `true` if there is at least one jump gate available.
 	///
 	/// If the index is `&[]` the method returns `true` if any of the worlds within this system has a jump gate.
