@@ -696,6 +696,7 @@ impl CelestialSystem {
 
 			let ident = match &body_got {
 				CelestialBody::GravitationalCenter( _ ) => "Gravitational Center",
+				CelestialBody::Station( _ ) => "Station",
 				_ => &self.identifier,
 			};
 
