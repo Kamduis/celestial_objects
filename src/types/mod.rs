@@ -700,7 +700,7 @@ impl CelestialSystem {
 				_ => &self.identifier,
 			};
 
-			format!( "{} {}", ident, hierarchy )
+			format!( "{ident} {hierarchy}" )
 		};
 
 		Ok( res )
