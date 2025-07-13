@@ -910,7 +910,7 @@ impl fmt::Display for LocalizedText {
 impl Locale for LocalizedText {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		self.locales.get( locale )
-			.unwrap_or_else( || &self.fallback )
+			.unwrap_or( &self.fallback )
 			.clone()
 	}
 }
