@@ -155,6 +155,18 @@ pub trait AstronomicalObject {
 
 	/// Returns the description of the celestial object.
 	fn description( &self ) -> Option<&LocalizedText>;
+
+	/// Returns `true` if the celestial object is considered a restricted area.
+	fn is_restricted( &self ) -> bool {
+		self.policies().iter()
+			.any( |x| matches!( x, Policy::Restricted ) )
+	}
+
+	/// Returns `true` if the celestial object is considered a secret.
+	fn is_secret( &self ) -> bool {
+		self.policies().iter()
+			.any( |x| matches!( x, Policy::Secret ) )
+	}
 }
 
 
@@ -1280,16 +1292,54 @@ impl CelestialSystem {
 		Ok( res )
 	}
 
-	/// Returns `true` if the system is considered a restricted area.
-	pub fn is_restricted( &self ) -> bool {
-		self.policies.iter()
-			.any( |x| matches!( x, Policy::Restricted ) )
+	/// Returns `true` if the object of the system is considered a restricted area.
+	///
+	/// `&[]` represents the system itself.
+	/// `&[0]` represents the root object of the system. For a singular star system, this is the star. For a binary star system, this is the gravitational center of the two stars.
+	/// `&[1]` represents the first object orbiting `&[0]`.
+	/// `&[2]` represents the second object orbiting `&[0]`.
+	/// `&[1,0]` represents the first object orbiting `&[0]` (identical to `&[1]`).
+	/// `&[1,1]` represents the first object orbiting `&[1]` (the first object orbiting `&[0]`)
+	pub fn is_restricted( &self, index: &[usize] ) -> Result<bool, CelestialSystemError> {
+		if index.is_empty() {
+			let res = self.policies.iter()
+				.any( |x| matches!( x, Policy::Restricted ) );
+
+			return Ok( res );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		Ok( body.is_restricted() )
 	}
 
-	/// Returns `true` if the system is considered a secret.
-	pub fn is_secret( &self ) -> bool {
-		self.policies.iter()
-			.any( |x| matches!( x, Policy::Secret ) )
+	/// Returns `true` if the object is considered a secret.
+	///
+	/// `&[]` represents the system itself.
+	/// `&[0]` represents the root object of the system. For a singular star system, this is the star. For a binary star system, this is the gravitational center of the two stars.
+	/// `&[1]` represents the first object orbiting `&[0]`.
+	/// `&[2]` represents the second object orbiting `&[0]`.
+	/// `&[1,0]` represents the first object orbiting `&[0]` (identical to `&[1]`).
+	/// `&[1,1]` represents the first object orbiting `&[1]` (the first object orbiting `&[0]`)
+	pub fn is_secret( &self, index: &[usize] ) -> Result<bool, CelestialSystemError> {
+		if index.is_empty() {
+			let res = self.policies.iter()
+				.any( |x| matches!( x, Policy::Secret ) );
+
+			return Ok( res );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		Ok( body.is_secret() )
 	}
 
 	/// Returns the object at `index`.
