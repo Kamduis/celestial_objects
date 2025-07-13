@@ -650,9 +650,47 @@ impl CelestialSystem {
 		Ok( idx )
 	}
 
-	/// Returns the identifier of the `CelestialSystem`.
-	pub fn identifier( &self ) -> &str {
+	/// Returns the identifier of this `CelestialSystem`.
+	pub fn identifier_sys( &self ) -> &str {
 		&self.identifier
+	}
+
+	/// Returns the identifier of the objects within this `CelestialSystem`. Indexing is done by array slice.
+	///
+	/// `&[]` represents the system itself.
+	/// `&[0]` represents the root object of the system. For a singular star system, this is the star. For a binary star system, this is the gravitational center of the two stars.
+	/// `&[1]` represents the first object orbiting `&[0]`.
+	/// `&[2]` represents the second object orbiting `&[0]`.
+	/// `&[1,0]` represents the first object orbiting `&[0]` (identical to `&[1]`).
+	/// `&[1,1]` represents the first object orbiting `&[1]` (the first object orbiting `&[0]`)
+	pub fn identifier( &self, index: &[usize] ) -> Result<String, CelestialSystemError> {
+		if index.is_empty() {
+			return Ok( self.identifier.clone() )
+		}
+
+		let res = if index[0] == 0 {
+			match &self.body {
+				CelestialBody::GravitationalCenter( _ ) => {
+					format!( "{} AB", self.identifier )
+				},
+				CelestialBody::Star( _ ) => {
+					// The identifier of the central star is equal to the name of the system.
+					self.identifier.clone()
+				},
+				_ => unimplemented!( "Center bodies should never by planets, moons or stations." ),
+			}
+		} else {
+			let ( body_got, hierarchy ) = &satellite_getter_hierarchical( &self.body, index, "" )?;
+
+			let ident = match &body_got {
+				CelestialBody::GravitationalCenter( _ ) => "Gravitational Center",
+				_ => &self.identifier,
+			};
+
+			format!( "{} {}", ident, hierarchy )
+		};
+
+		Ok( res )
 	}
 
 	/// Returns the name of the objects within this celestial system. Indexing is done by array slice.
@@ -1422,11 +1460,13 @@ mod tests {
 
 		let sol = &systems[0];
 
-		assert_eq!( sol.identifier(), "Sol" );
+		assert_eq!( sol.identifier_sys(), "Sol" );
+		assert_eq!( sol.identifier( &[] ).unwrap(), "Sol".to_string() );
 
 		let centauri = &systems[1];
 
-		assert_eq!( centauri.identifier(), "Alpha Centauri" );
+		assert_eq!( centauri.identifier_sys(), "Alpha Centauri" );
+		assert_eq!( centauri.identifier( &[] ).unwrap(), "Alpha Centauri".to_string() );
 	}
 
 	#[test]

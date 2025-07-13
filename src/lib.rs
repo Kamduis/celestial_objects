@@ -80,7 +80,7 @@ pub(crate) mod tests {
 		let received = database_examples::db_worlds().lock().unwrap();
 
 		for ( recei, expect ) in received.iter().zip( expected ) {
-			assert_eq!( recei.identifier(), expect.identifier() );
+			assert_eq!( recei.identifier_sys(), expect.identifier_sys() );
 			assert_eq!( recei, &expect );
 		}
 	}
@@ -99,7 +99,7 @@ pub(crate) mod tests {
 		let received = database_examples::db_worlds().lock().unwrap();
 
 		for ( recei, expect ) in received.iter().zip( expected ) {
-			assert_eq!( recei.identifier(), expect.identifier() );
+			assert_eq!( recei.identifier_sys(), expect.identifier_sys() );
 			assert_eq!( recei, &expect );
 		}
 	}
@@ -193,6 +193,7 @@ pub(crate) mod tests {
 		let sys_sol = database_examples::system( "Sol" );
 
 		assert!( sys_sol.is_some() );
-		assert_eq!( sys_sol.unwrap().identifier(), "Sol" );
+		assert_eq!( sys_sol.as_ref().unwrap().identifier_sys(), "Sol" );
+		assert_eq!( sys_sol.as_ref().unwrap().identifier( &[] ).unwrap(), "Sol".to_string() );
 	}
 }
