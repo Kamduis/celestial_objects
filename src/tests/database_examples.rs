@@ -14,13 +14,9 @@ use std::sync::{OnceLock, Mutex};
 
 use ron::ser::PrettyConfig;
 
-use crate::types::{CelestialSystem};
+use crate::types::CelestialSystem;
 
 
-
-
-//=============================================================================
-// Testing
 
 
 //=============================================================================

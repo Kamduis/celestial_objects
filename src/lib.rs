@@ -28,6 +28,7 @@ mod serde_helpers;
 #[cfg( all( feature = "i18n", feature = "tex" ) )] pub use traits::{LocaleLatex};
 pub use crate::coords::{EquatorialCoords, GalacticCoords};
 pub use crate::types::{StarColor, CelestialSystem, CelestialBody, BodyType, SpectralClass, StarType, Affiliation, Policy, Property, Atmosphere, AtmosphereQuality, GasComposition};
+pub use crate::types::properties::LocalizedText;
 pub use crate::types::CelestialSystemError;
 pub use crate::units::{Length, Mass};
 
@@ -58,7 +59,6 @@ fluent_templates::static_loader! {
 
 #[cfg( test )]
 pub(crate) mod tests {
-	use std::fs;
 	use std::path::PathBuf;
 
 	use serial_test::serial;
@@ -87,6 +87,25 @@ pub(crate) mod tests {
 
 	#[test]
 	#[serial]
+	#[cfg( feature = "i18n" )]
+	fn import_worlds_l10n() {
+		database_examples::clear_worlds();
+
+		let path = PathBuf::from( "./tests/systems-example-l10n.ron" );
+
+		database_examples::import( &path ).unwrap();
+
+		let expected = systems_examples::systems_example_l10n();
+		let received = database_examples::db_worlds().lock().unwrap();
+
+		for ( recei, expect ) in received.iter().zip( expected ) {
+			assert_eq!( recei.identifier(), expect.identifier() );
+			assert_eq!( recei, &expect );
+		}
+	}
+
+	#[test]
+	#[serial]
 	fn export_import_worlds() {
 		database_examples::clear_worlds();
 
@@ -105,9 +124,48 @@ pub(crate) mod tests {
 
 		database_examples::export( &path_ron ).unwrap();
 
-		// Pretty-print the contents of the exported file.
-		let contents = fs::read_to_string( &path_ron ).unwrap();
-		println!( "{}", contents );
+		// // Pretty-print the contents of the exported file.
+		// let contents = std::fs::read_to_string( &path_ron ).unwrap();
+		// println!( "{}", contents );
+
+		// Clear database before reading again.
+		database_examples::clear_worlds();
+
+		// Re-import the files again.
+		database_examples::import( &path_ron ).unwrap();
+
+		let db = database_examples::db_worlds().lock().unwrap();
+
+		// Verify that the imported worlds are identical to the original ones.
+		for ( i, expected ) in db_expected.iter().enumerate() {
+			assert_eq!( &db[i], expected );
+		}
+	}
+
+	#[test]
+	#[serial]
+	#[cfg( feature = "i18n" )]
+	fn export_import_worlds_localization() {
+		database_examples::clear_worlds();
+
+		let path = PathBuf::from( "./tests/systems-example-l10n.ron" );
+
+		database_examples::import( &path ).unwrap();
+
+		// Save original worlds for later comparison.
+		let db_expected = database_examples::db_worlds().lock().unwrap().clone();
+
+		// Create a directory inside of `std::env::temp_dir()`.
+		let dir = tempdir().unwrap();
+
+		// Create path for RON-files to be exported into.
+		let path_ron: PathBuf = dir.path().join( path.file_name().unwrap() );
+
+		database_examples::export( &path_ron ).unwrap();
+
+		// // Pretty-print the contents of the exported file.
+		// let contents = std::fs::read_to_string( &path_ron ).unwrap();
+		// println!( "{}", contents );
 
 		// Clear database before reading again.
 		database_examples::clear_worlds();

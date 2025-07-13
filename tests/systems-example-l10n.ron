@@ -1,0 +1,105 @@
+[
+	(
+		identifier: "Alpha Centauri int.",
+		name: "Centauri",
+		coordinates: ( ra: "14h 39m 36.49400s", dec: "-60° 50m 2.3737s", dist: 4.344 ),
+		affiliation: Union,
+		description: (
+			fallback: "Capital of the Union.",
+			locales: {
+				"de-DE": "Hauptsystem der Union.",
+			},
+		),
+		body: GravitationalCenter((
+			satellites: [
+				(
+					axis_semi_major: 17.493,
+					eccentricity: 0.51947,
+					body: Star((
+						mass: 1.0788,
+						radius: 1.2175,
+						luminosity: 1.5059,
+						spectral_class: "G2",
+						rotation_period: "22d",
+						satellites: [
+							(
+								axis_semi_major: 1.1,
+								eccentricity: 0.019345,
+								body: Trabant((
+									name: "Minos",
+									radius: 1.1,
+									gravity: 1.05,
+									rotation_period: "18h 7m",
+									temperature: (-7.0, 12.0, 89.0),
+									atmosphere: (
+										pressure: 1.2,
+										quality: Breathable,
+										composition: GasComposition({
+											CarbonDioxide: 0.00054,
+											Nitrogen: 0.77,
+											Oxygen: 0.214,
+											Argon: 0.002,
+										}),
+									),
+									techlevel: 11,
+									gates: 122,
+									satellites: [],
+								)),
+							),
+						],
+					)),
+				),
+				(
+					axis_semi_major: 17.493,
+					eccentricity: 0.51947,
+					body: Star((
+						mass: 0.9092,
+						radius: 0.8591,
+						luminosity: 0.4981,
+						spectral_class: "K4",
+						rotation_period: "41d",
+						satellites: [
+							(
+								axis_semi_major: 0.8,
+								eccentricity: 0.00824,
+								body: Trabant((
+									name: "Taurus",
+									radius: 0.9,
+									gravity: 1.1,
+									rotation_period: "30h 42m",
+									temperature: (-120.0, 5.0, 127.0),
+									atmosphere: (
+										pressure: 0.36,
+										quality: Breathable,
+										composition: GasComposition({
+											CarbonDioxide: 0.00092,
+											Nitrogen: 0.792,
+											Oxygen: 0.179,
+											Argon: 0.015,
+										}),
+									),
+									techlevel: 11,
+									gates: 58,
+									satellites: [],
+								)),
+							),
+						],
+					)),
+				),
+				(
+					axis_semi_major: 8700.0,
+					eccentricity: 0.50,
+					body: Star((
+						name: "Proxima",
+						mass: 0.1221,
+						radius: 0.1542,
+						luminosity: 0.001567,
+						spectral_class: "M5.5",
+						rotation_period: "90d",
+						satellites: [],
+					)),
+				),
+			],
+		)),
+	),
+]

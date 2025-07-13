@@ -16,8 +16,8 @@ use crate::calc;
 use crate::units::{Mass, Length};
 
 use super::AstronomicalObject;
-use super::properties::SpectralClassError;
-use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution};
+use super::properties::PropertiesError;
+use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution, LocalizedText};
 
 
 
@@ -29,7 +29,7 @@ use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, In
 #[derive( Error, Debug )]
 pub enum StarError {
 	#[error( "Illegal spectral class: {0}" )]
-	IllegalSpectralClass( #[from] SpectralClassError ),
+	IllegalSpectralClass( #[from] PropertiesError ),
 }
 
 
@@ -51,7 +51,7 @@ pub struct GravitationalCenter {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	pub(crate) description: Option<String>,
+	pub(crate) description: Option<LocalizedText>,
 
 	/// The objects orbiting this gravitational center.
 	pub(crate) satellites: Vec<Orbit>,
@@ -106,8 +106,8 @@ impl AstronomicalObject for GravitationalCenter {
 		&self.properties
 	}
 
-	fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	fn description( &self ) -> Option<&LocalizedText> {
+		self.description.as_ref()
 	}
 }
 
@@ -149,7 +149,7 @@ pub struct Star {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	pub(crate) description: Option<String>,
+	pub(crate) description: Option<LocalizedText>,
 
 	/// The objects oribitng this star.
 	pub(crate) satellites: Vec<Orbit>,
@@ -249,8 +249,8 @@ impl AstronomicalObject for Star {
 		&self.properties
 	}
 
-	fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	fn description( &self ) -> Option<&LocalizedText> {
+		self.description.as_ref()
 	}
 }
 
@@ -317,7 +317,7 @@ pub struct Trabant {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	pub(crate) description: Option<String>,
+	pub(crate) description: Option<LocalizedText>,
 
 	/// The objects orbiting this trabant.
 	pub(crate) satellites: Vec<Orbit>,
@@ -393,8 +393,8 @@ impl AstronomicalObject for Trabant {
 		&self.properties
 	}
 
-	fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	fn description( &self ) -> Option<&LocalizedText> {
+		self.description.as_ref()
 	}
 }
 
@@ -414,7 +414,7 @@ pub struct Ring {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	pub(crate) description: Option<String>,
+	pub(crate) description: Option<LocalizedText>,
 }
 
 impl Ring {
@@ -429,8 +429,8 @@ impl Ring {
 	}
 
 	/// The description of this ring.
-	pub fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	pub fn description( &self ) -> Option<&LocalizedText> {
+		self.description.as_ref()
 	}
 }
 
@@ -492,7 +492,7 @@ pub struct Station {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	pub(crate) description: Option<String>,
+	pub(crate) description: Option<LocalizedText>,
 
 	/// The objects orbiting this station.
 	pub(crate) satellites: Vec<Orbit>,
@@ -561,7 +561,7 @@ impl AstronomicalObject for Station {
 		&self.properties
 	}
 
-	fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	fn description( &self ) -> Option<&LocalizedText> {
+		self.description.as_ref()
 	}
 }
