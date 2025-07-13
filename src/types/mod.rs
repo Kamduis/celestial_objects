@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition};
+pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition, FleetPresence, LocalizedText};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -150,8 +150,23 @@ pub trait AstronomicalObject {
 	/// Returns the properties of the celestial object.
 	fn properties( &self ) -> &[Property];
 
+	/// Returns the policies of the celestial object.
+	fn policies( &self ) -> &[Policy];
+
 	/// Returns the description of the celestial object.
-	fn description( &self ) -> Option<&str>;
+	fn description( &self ) -> Option<&LocalizedText>;
+
+	/// Returns `true` if the celestial object is considered a restricted area.
+	fn is_restricted( &self ) -> bool {
+		self.policies().iter()
+			.any( |x| matches!( x, Policy::Restricted ) )
+	}
+
+	/// Returns `true` if the celestial object is considered a secret.
+	fn is_secret( &self ) -> bool {
+		self.policies().iter()
+			.any( |x| matches!( x, Policy::Secret ) )
+	}
 }
 
 
@@ -445,7 +460,17 @@ impl AstronomicalObject for CelestialBody {
 		}
 	}
 
-	fn description( &self ) -> Option<&str> {
+	fn policies( &self ) -> &[Policy] {
+		match self {
+			Self::GravitationalCenter( x ) => x.policies(),
+			Self::Star( x ) => x.policies(),
+			Self::Trabant( x ) => x.policies(),
+			Self::Ring( x ) => x.policies(),
+			Self::Station( x ) => x.policies(),
+		}
+	}
+
+	fn description( &self ) -> Option<&LocalizedText> {
 		match self {
 			Self::GravitationalCenter( x ) => x.description(),
 			Self::Star( x ) => x.description(),
@@ -490,7 +515,7 @@ pub struct CelestialSystem {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	description: Option<String>,
+	description: Option<LocalizedText>,
 
 	/// The main body of this system. This `CelestialBody` may have one or more bodies orbiting it. Systems with a single sun as it's center have a `CelestialBody` representing this sun as `body`. Multi-star-systems will have either the main star as `body` (if it is much more massive than the other stars or a `GravitationalCenter` as the theoretical body, that is then orbited by multiple stars.
 	body: CelestialBody,
@@ -529,8 +554,8 @@ impl CelestialSystem {
 	}
 
 	/// Return a new object from `self` with `affiliation`.
-	pub fn with_description( mut self, desc: &str ) -> Self {
-		self.description = Some( desc.to_string() );
+	pub fn with_description( mut self, desc: LocalizedText ) -> Self {
+		self.description = Some( desc );
 		self
 	}
 
@@ -637,9 +662,48 @@ impl CelestialSystem {
 		Ok( idx )
 	}
 
-	/// Returns the identifier of the `CelestialSystem`.
-	pub fn identifier( &self ) -> &str {
+	/// Returns the identifier of this `CelestialSystem`.
+	pub fn identifier_sys( &self ) -> &str {
 		&self.identifier
+	}
+
+	/// Returns the identifier of the objects within this `CelestialSystem`. Indexing is done by array slice.
+	///
+	/// `&[]` represents the system itself.
+	/// `&[0]` represents the root object of the system. For a singular star system, this is the star. For a binary star system, this is the gravitational center of the two stars.
+	/// `&[1]` represents the first object orbiting `&[0]`.
+	/// `&[2]` represents the second object orbiting `&[0]`.
+	/// `&[1,0]` represents the first object orbiting `&[0]` (identical to `&[1]`).
+	/// `&[1,1]` represents the first object orbiting `&[1]` (the first object orbiting `&[0]`)
+	pub fn identifier( &self, index: &[usize] ) -> Result<String, CelestialSystemError> {
+		if index.is_empty() {
+			return Ok( self.identifier.clone() )
+		}
+
+		let res = if index[0] == 0 {
+			match &self.body {
+				CelestialBody::GravitationalCenter( _ ) => {
+					format!( "{} AB", self.identifier )
+				},
+				CelestialBody::Star( _ ) => {
+					// The identifier of the central star is equal to the name of the system.
+					self.identifier.clone()
+				},
+				_ => unimplemented!( "Center bodies should never by planets, moons or stations." ),
+			}
+		} else {
+			let ( body_got, hierarchy ) = &satellite_getter_hierarchical( &self.body, index, "" )?;
+
+			let ident = match &body_got {
+				CelestialBody::GravitationalCenter( _ ) => "Gravitational Center",
+				CelestialBody::Station( _ ) => "Station",
+				_ => &self.identifier,
+			};
+
+			format!( "{ident} {hierarchy}" )
+		};
+
+		Ok( res )
 	}
 
 	/// Returns the name of the objects within this celestial system. Indexing is done by array slice.
@@ -704,9 +768,9 @@ impl CelestialSystem {
 	///
 	/// # Returns
 	/// This method returns the description of the body with `index` or of the system itself if `index` is `&[]`.
-	pub fn description<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a str>, CelestialSystemError> {
+	pub fn description<'a>( &'a self, index: &'a [usize] ) -> Result<Option<&'a LocalizedText>, CelestialSystemError> {
 		if index.is_empty() {
-			return Ok( self.description.as_deref() );
+			return Ok( self.description.as_ref() );
 		}
 
 		let body_got = &satellite_getter( &self.body, index )?;
@@ -1169,6 +1233,37 @@ impl CelestialSystem {
 		Ok( res )
 	}
 
+	/// Returns the number of *visible* hyperspace gates of this world. Gates on secret stations ort other objects are not counted.
+	///
+	/// If the index is `&[]` the method returns the number of all gates within this system.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn gates_count_visible( &self, index: &[usize] ) -> Result<u32, CelestialSystemError> {
+		if index.is_empty() {
+			let res = self.indices().iter()
+				.skip( 1 )  // Skipping `&[]`
+				.map( |x| self.gates_count_visible( x ).unwrap_or( 0 ) )
+				.sum();
+
+			return Ok( res );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		let res = match body {
+			CelestialBody::Trabant( x ) => x.gates_count_visible(),
+			CelestialBody::Station( x ) => x.gates_count_visible(),
+			_ => 0,
+		};
+
+		Ok( res )
+	}
+
 	/// Returns `true` if there is at least one jump gate available.
 	///
 	/// If the index is `&[]` the method returns `true` if any of the worlds within this system has a jump gate.
@@ -1195,23 +1290,25 @@ impl CelestialSystem {
 		Ok( false )
 	}
 
-	/// Returns `true` if there is at one delegation of the Union space fleet.
+	/// Returns the kind of `FleetPresence` that is present in this system.
 	///
-	/// If the index is `&[]` the method returns `true` if any of the worlds within this system has a delegation of the Union space fleet.
+	/// If the index is `&[]` the method returns the most visible fleet presence of any of the worlds within this system.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn has_fleet( &self, index: &[usize] ) -> Result<bool, CelestialSystemError> {
+	pub fn fleet_presence( &self, index: &[usize] ) -> Result<FleetPresence, CelestialSystemError> {
 		if index.is_empty() {
-			for idx in self.indices().iter()
+			let res = self.indices().iter()
 				.skip( 1 )  // Skipping `&[]`
-			{
-				if self.has_fleet( idx )? {
-					return Ok( true );
-				}
-			}
+				.fold( FleetPresence::No, |mut acc, idx| {
+					let pres = self.fleet_presence( idx ).expect( "Only existing indices should be available here!" );
+					if acc < pres {
+						acc = pres;
+					}
+					acc
+				} );
 
-			return Ok( false );
+			return Ok( res );
 		}
 
 		let body = if index[0] == 0 {
@@ -1221,24 +1318,62 @@ impl CelestialSystem {
 		};
 
 		let res = match body {
-			CelestialBody::Trabant( x ) => x.has_fleet(),
-			CelestialBody::Station( x ) => x.has_fleet(),
-			_ => false,
+			CelestialBody::Trabant( x ) => x.fleet_presence(),
+			CelestialBody::Station( x ) => x.fleet_presence(),
+			_ => FleetPresence::No,
 		};
 
 		Ok( res )
 	}
 
-	/// Returns `true` if the system is considered a restricted area.
-	pub fn is_restricted( &self ) -> bool {
-		self.policies.iter()
-			.any( |x| matches!( x, Policy::Restricted ) )
+	/// Returns `true` if the object of the system is considered a restricted area.
+	///
+	/// `&[]` represents the system itself.
+	/// `&[0]` represents the root object of the system. For a singular star system, this is the star. For a binary star system, this is the gravitational center of the two stars.
+	/// `&[1]` represents the first object orbiting `&[0]`.
+	/// `&[2]` represents the second object orbiting `&[0]`.
+	/// `&[1,0]` represents the first object orbiting `&[0]` (identical to `&[1]`).
+	/// `&[1,1]` represents the first object orbiting `&[1]` (the first object orbiting `&[0]`)
+	pub fn is_restricted( &self, index: &[usize] ) -> Result<bool, CelestialSystemError> {
+		if index.is_empty() {
+			let res = self.policies.iter()
+				.any( |x| matches!( x, Policy::Restricted ) );
+
+			return Ok( res );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		Ok( body.is_restricted() )
 	}
 
-	/// Returns `true` if the system is considered a secret.
-	pub fn is_secret( &self ) -> bool {
-		self.policies.iter()
-			.any( |x| matches!( x, Policy::Secret ) )
+	/// Returns `true` if the object is considered a secret.
+	///
+	/// `&[]` represents the system itself.
+	/// `&[0]` represents the root object of the system. For a singular star system, this is the star. For a binary star system, this is the gravitational center of the two stars.
+	/// `&[1]` represents the first object orbiting `&[0]`.
+	/// `&[2]` represents the second object orbiting `&[0]`.
+	/// `&[1,0]` represents the first object orbiting `&[0]` (identical to `&[1]`).
+	/// `&[1,1]` represents the first object orbiting `&[1]` (the first object orbiting `&[0]`)
+	pub fn is_secret( &self, index: &[usize] ) -> Result<bool, CelestialSystemError> {
+		if index.is_empty() {
+			let res = self.policies.iter()
+				.any( |x| matches!( x, Policy::Secret ) );
+
+			return Ok( res );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		Ok( body.is_secret() )
 	}
 
 	/// Returns the object at `index`.
@@ -1409,11 +1544,13 @@ mod tests {
 
 		let sol = &systems[0];
 
-		assert_eq!( sol.identifier(), "Sol" );
+		assert_eq!( sol.identifier_sys(), "Sol" );
+		assert_eq!( sol.identifier( &[] ).unwrap(), "Sol".to_string() );
 
 		let centauri = &systems[1];
 
-		assert_eq!( centauri.identifier(), "Alpha Centauri" );
+		assert_eq!( centauri.identifier_sys(), "Alpha Centauri" );
+		assert_eq!( centauri.identifier( &[] ).unwrap(), "Alpha Centauri".to_string() );
 	}
 
 	#[test]
@@ -1493,19 +1630,57 @@ mod tests {
 	}
 
 	#[test]
-	fn test_has_fleet() {
+	fn test_fleet_presence() {
 		let systems = systems_examples::systems_example();
 
 		let sol = &systems[0];
 
-		assert!( !sol.has_fleet( &[0] ).unwrap() );
-		assert!( !sol.has_fleet( &[1] ).unwrap() );
-		assert!( sol.has_fleet( &[2] ).unwrap() );
-		assert!( !sol.has_fleet( &[3] ).unwrap() );
-		assert!( sol.has_fleet( &[3,1] ).unwrap() );
-		assert!( sol.has_fleet( &[3,2] ).unwrap() );
-		assert!( sol.has_fleet( &[4] ).unwrap() );
-		assert!( sol.has_fleet( &[] ).unwrap() );
+		assert_eq!( sol.fleet_presence( &[0] ).unwrap(), FleetPresence::No );
+		assert_eq!( sol.fleet_presence( &[1] ).unwrap(), FleetPresence::No );
+		assert_eq!( sol.fleet_presence( &[2] ).unwrap(), FleetPresence::Patrol );
+		assert_eq!( sol.fleet_presence( &[3] ).unwrap(), FleetPresence::No );
+		assert_eq!( sol.fleet_presence( &[3,1] ).unwrap(), FleetPresence::Secret );
+		assert_eq!( sol.fleet_presence( &[3,2] ).unwrap(), FleetPresence::Base );
+		assert_eq!( sol.fleet_presence( &[4] ).unwrap(), FleetPresence::Base );
+		assert_eq!( sol.fleet_presence( &[4,1] ).unwrap(), FleetPresence::No );
+		assert_eq!( sol.fleet_presence( &[4,2] ).unwrap(), FleetPresence::Fob );
+		assert_eq!( sol.fleet_presence( &[] ).unwrap(), FleetPresence::Base );
+	}
+
+	#[test]
+	fn test_has_fleet_presence() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert!( !sol.fleet_presence( &[0] ).unwrap().is_present() );
+		assert!( !sol.fleet_presence( &[1] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[2] ).unwrap().is_present() );
+		assert!( !sol.fleet_presence( &[3] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[3,1] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[3,2] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[4] ).unwrap().is_present() );
+		assert!( !sol.fleet_presence( &[4,1] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[4,2] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[] ).unwrap().is_present() );
+	}
+
+	#[test]
+	fn test_has_fleet_secret() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert!( !sol.fleet_presence( &[0] ).unwrap().is_present_visible() );
+		assert!( !sol.fleet_presence( &[1] ).unwrap().is_present_visible() );
+		assert!( sol.fleet_presence( &[2] ).unwrap().is_present_visible() );
+		assert!( !sol.fleet_presence( &[3] ).unwrap().is_present_visible() );
+		assert!( !sol.fleet_presence( &[3,1] ).unwrap().is_present_visible() );
+		assert!( sol.fleet_presence( &[3,2] ).unwrap().is_present_visible() );
+		assert!( sol.fleet_presence( &[4] ).unwrap().is_present_visible() );
+		assert!( !sol.fleet_presence( &[4,1] ).unwrap().is_present_visible() );
+		assert!( sol.fleet_presence( &[4,2] ).unwrap().is_present_visible() );
+		assert!( sol.fleet_presence( &[] ).unwrap().is_present_visible() );
 	}
 
 	#[test]

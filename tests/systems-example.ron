@@ -3,7 +3,9 @@
 		identifier: "Sol",
 		coordinates: ( ra: "0h 0m 0s", dec: "0° 0m 0s", dist: 0.0 ),
 		affiliation: Union,
-		description: "Original home system of humans and AIs.",
+		description: (
+			fallback: "Original home system of humans and AIs.",
+		),
 		body: Star((
 			mass: 1.0,
 			radius: 1.0,
@@ -44,9 +46,7 @@
 						),
 						techlevel: 10,
 						gates: 14,
-						institutions: [
-							UnionFleet,
-						],
+						fleet: Patrol,
 						satellites: [],
 					)),
 				),
@@ -82,9 +82,7 @@
 									temperature: (-173.0, -23.0, 116.0 ),
 									techlevel: 11,
 									gates: 1,
-									institutions: [
-										UnionFleet,
-									],
+									fleet: Secret,
 									satellites: [],
 								)),
 							),
@@ -109,9 +107,7 @@
 									),
 									techlevel: 11,
 									gates: 0,
-									institutions: [
-										UnionFleet,
-									],
+									fleet: Base,
 									satellites: [],
 								)),
 							),
@@ -140,9 +136,7 @@
 						),
 						techlevel: 11,
 						gates: 64,
-						institutions: [
-							UnionFleet,
-						],
+						fleet: Base,
 						satellites: [
 							(
 								axis_semi_major: 62.6746804e-6,
@@ -163,6 +157,7 @@
 									radius: 98.304e-3,
 									gravity: 306e-6,
 									temperature: (-40.0, -40.0, -40.0),
+									fleet: Fob,
 									satellites: [],
 								)),
 							),
@@ -229,9 +224,7 @@
 									temperature: (-235.0, -235.0, -235.0),
 									techlevel: 12,
 									gates: 0,
-									institutions: [
-										UnionFleet,
-									],
+									fleet: Base,
 									satellites: [],
 								)),
 							),
@@ -246,7 +239,9 @@
 		name: "Centauri",
 		coordinates: ( ra: "14h 39m 36.49400s", dec: "-60° 50m 2.3737s", dist: 4.344 ),
 		affiliation: Union,
-		description: "Capital of the Union.",
+		description: (
+			fallback: "Capital of the Union.",
+		),
 		body: GravitationalCenter((
 			satellites: [
 				(
@@ -280,6 +275,7 @@
 									),
 									techlevel: 11,
 									gates: 122,
+									fleet: Base,
 									satellites: [],
 								)),
 							),
@@ -317,6 +313,7 @@
 									),
 									techlevel: 11,
 									gates: 58,
+									fleet: Base,
 									satellites: [],
 								)),
 							),

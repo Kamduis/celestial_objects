@@ -14,13 +14,9 @@ use std::sync::{OnceLock, Mutex};
 
 use ron::ser::PrettyConfig;
 
-use crate::types::{CelestialSystem};
+use crate::types::CelestialSystem;
 
 
-
-
-//=============================================================================
-// Testing
 
 
 //=============================================================================
@@ -52,7 +48,7 @@ pub(super) fn system( identifier: &str ) -> Option<CelestialSystem> {
 	let db = db_worlds().lock().unwrap();
 
 	db.iter()
-		.find( |x| x.identifier() == identifier ).cloned()
+		.find( |x| x.identifier_sys() == identifier ).cloned()
 }
 
 

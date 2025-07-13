@@ -34,9 +34,12 @@ use super::CelestialBody;
 
 
 #[derive( Error, Debug )]
-pub enum SpectralClassError {
-	#[error( "Cannot derive type from string: {0}" )]
-	FromStrError( String ),
+pub enum PropertiesError {
+	#[error( "Cannot derive spectral class from string: {0}" )]
+	SpectralClassFromStrError( String ),
+
+	#[error( "Cannot derive localized text from string: {0}" )]
+	LocalizedTextFromStrError( String ),
 }
 
 
@@ -227,30 +230,46 @@ impl Locale for Affiliation {
 }
 
 
+/// Represents the kind of fleet presence at a celestial object or a planetary system.
+#[derive( Serialize, Deserialize, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Debug )]
+pub enum FleetPresence {
+	/// No fleet presence at all.
+	#[default]
+	No,
+
+	/// The fleet has only a secret presence, not highlighting its presence at all.
+	Secret,
+
+	/// The fleet only patrols this area. No permanent presence.
+	Patrol,
+
+	/// A small forward operation base.
+	Fob,
+
+	// A fully established fleet base.
+	Base,
+}
+
+impl FleetPresence {
+	/// Returns true, if no fleet presence is given.
+	pub(crate) fn is_no( &self ) -> bool {
+		!self.is_present()
+	}
+
+	/// Returns `true`, if there is any kind of fleet presence.
+	pub fn is_present( &self ) -> bool {
+		!matches!( self, Self::No )
+	}
+
+	/// Returns `true`, if there is any kind of *visible* fleet presence. Secret fleet deployments return `false`.
+	pub fn is_present_visible( &self ) -> bool {
+		!matches!( self, Self::No | Self::Secret )
+	}
+}
+
 /// Representing an institution based or provided.
 #[derive( Serialize, Deserialize, PartialEq, Hash, Clone, Debug )]
 pub enum Institution {
-	/// A delegation of the Union space fleet is based.
-	UnionFleet,
-}
-
-impl fmt::Display for Institution {
-	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
-		let res = match self {
-			Self::UnionFleet => "Union Space Fleet",
-		};
-
-		write!( f, "{res}" )
-	}
-}
-
-#[cfg( feature = "i18n" )]
-impl Locale for Institution {
-	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
-		match self {
-			Self::UnionFleet => LOCALES.lookup( locale, "Union-Fleet" ),
-		}
-	}
 }
 
 
@@ -366,7 +385,7 @@ impl StarType {
 }
 
 impl FromStr for StarType {
-	type Err = SpectralClassError;
+	type Err = PropertiesError;
 
 	fn from_str( s: &str ) -> Result<Self, Self::Err> {
 		let res = match s.to_uppercase().as_str() {
@@ -382,7 +401,7 @@ impl FromStr for StarType {
 			"DC" => Self::DC,
 			"DQ" => Self::DQ,
 			"DZ" => Self::DZ,
-			_ => return Err( SpectralClassError::FromStrError( s.to_string() ) ),
+			_ => return Err( PropertiesError::SpectralClassFromStrError( s.to_string() ) ),
 		};
 
 		Ok( res )
@@ -444,14 +463,14 @@ impl SpectralClass {
 }
 
 impl FromStr for SpectralClass {
-	type Err = SpectralClassError;
+	type Err = PropertiesError;
 
 	fn from_str( s: &str ) -> Result<Self, Self::Err> {
 		let caps = REGEX_SPECTRAL_CLASS.captures( s )
-			.ok_or( SpectralClassError::FromStrError( s.to_string() ) )?;
+			.ok_or( PropertiesError::SpectralClassFromStrError( s.to_string() ) )?;
 
 		let star_type = caps.name( "st" )
-			.ok_or_else( || SpectralClassError::FromStrError( s.to_string() ) )?
+			.ok_or_else( || PropertiesError::SpectralClassFromStrError( s.to_string() ) )?
 			.as_str()
 			.parse::<StarType>()?;
 
@@ -459,7 +478,7 @@ impl FromStr for SpectralClass {
 			Some( x ) => {
 				let sdiv = x.as_str()
 					.parse::<f32>()
-					.map_err( |_| SpectralClassError::FromStrError( s.to_string() ) )?;
+					.map_err( |_| PropertiesError::SpectralClassFromStrError( s.to_string() ) )?;
 					Some( sdiv )
 			},
 			None => None,
@@ -851,6 +870,68 @@ impl LocaleLatex for Molecule {
 }
 
 
+/// Representing Text that is possibly available in multiple languages.
+///
+/// There is always a fallback text, that is always available.
+#[derive( Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord, Debug )]
+pub struct LocalizedText {
+	fallback: String,
+
+	#[cfg( feature = "i18n" )]
+	#[serde( default )]
+	locales: BTreeMap<LanguageIdentifier, String>,
+}
+
+impl LocalizedText {
+	/// Create a new instance of `LocalizedText` with `text` as fallback text.
+	pub fn new( text: &str ) -> Self {
+		Self {
+			fallback: text.to_string(),
+
+			#[cfg( feature = "i18n" )]
+			locales: BTreeMap::new(),
+		}
+	}
+
+	/// Create a new instance of `LocalizedText` from `self` with `lang` as language identifier following language IDs and `text` as language specific text.
+	#[cfg( feature = "i18n" )]
+	pub fn add_language( mut self, lang: LanguageIdentifier, text: &str ) -> Self {
+		self.locales.insert( lang, text.to_string() );
+		self
+	}
+}
+
+impl FromStr for LocalizedText {
+	type Err = PropertiesError;
+
+	fn from_str( s: &str ) -> Result<Self, Self::Err> {
+		let res = Self {
+			fallback: s.to_string(),
+
+			#[cfg( feature = "i18n" )]
+			locales: Default::default(),
+		};
+
+		Ok( res )
+	}
+}
+
+impl fmt::Display for LocalizedText {
+	fn fmt( &self, f: &mut fmt::Formatter ) -> fmt::Result {
+		write!( f, "{}", self.fallback )
+	}
+}
+
+#[cfg( feature = "i18n" )]
+impl Locale for LocalizedText {
+	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
+		self.locales.get( locale )
+			.unwrap_or( &self.fallback )
+			.clone()
+	}
+}
+
+
 
 
 //=============================================================================
@@ -859,6 +940,8 @@ impl LocaleLatex for Molecule {
 
 #[cfg( test )]
 mod tests {
+	#[cfg( feature = "i18n" )] use unic_langid::langid;
+
 	use super::*;
 
 	#[test]
@@ -871,5 +954,15 @@ mod tests {
 	fn test_spectral_class_deserialize() {
 		assert_eq!( ron::from_str::<SpectralClass>( r#""O3""# ).unwrap(), SpectralClass::new( StarType::O, 3.0 ) );
 		assert_eq!( ron::from_str::<SpectralClass>( r#""G3.5""# ).unwrap(), SpectralClass::new( StarType::G, 3.5 ) );
+	}
+
+	#[test]
+	#[cfg( feature = "i18n" )]
+	fn test_localized_text() {
+		assert_eq!( LocalizedText::new( "Test" ).to_string(), "Test".to_string() );
+
+		let text = LocalizedText::new( "Fallback Text" )
+			.add_language( langid!( "de-DE" ), "Ausweichtext" );
+		assert_eq!( text.to_string_locale( &langid!( "de-DE" ) ), "Ausweichtext".to_string() );
 	}
 }

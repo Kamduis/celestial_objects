@@ -14,10 +14,11 @@ use thiserror::Error;
 
 use crate::calc;
 use crate::units::{Mass, Length};
+use crate::types::Policy;
 
 use super::AstronomicalObject;
-use super::properties::SpectralClassError;
-use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution};
+use super::properties::PropertiesError;
+use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution, FleetPresence, LocalizedText};
 
 
 
@@ -29,7 +30,7 @@ use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, In
 #[derive( Error, Debug )]
 pub enum StarError {
 	#[error( "Illegal spectral class: {0}" )]
-	IllegalSpectralClass( #[from] SpectralClassError ),
+	IllegalSpectralClass( #[from] PropertiesError ),
 }
 
 
@@ -47,11 +48,16 @@ pub struct GravitationalCenter {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) properties: Vec<Property>,
 
+	/// The policies of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) policies: Vec<Policy>,
+
 	/// An optional description of this ring.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	pub(crate) description: Option<String>,
+	pub(crate) description: Option<LocalizedText>,
 
 	/// The objects orbiting this gravitational center.
 	pub(crate) satellites: Vec<Orbit>,
@@ -106,8 +112,12 @@ impl AstronomicalObject for GravitationalCenter {
 		&self.properties
 	}
 
-	fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	fn policies( &self ) -> &[Policy] {
+		&self.policies
+	}
+
+	fn description( &self ) -> Option<&LocalizedText> {
+		self.description.as_ref()
 	}
 }
 
@@ -145,11 +155,16 @@ pub struct Star {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	properties: Vec<Property>,
 
+	/// The policies of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) policies: Vec<Policy>,
+
 	/// An optional description of this ring.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	pub(crate) description: Option<String>,
+	pub(crate) description: Option<LocalizedText>,
 
 	/// The objects oribitng this star.
 	pub(crate) satellites: Vec<Orbit>,
@@ -166,6 +181,7 @@ impl Star {
 			spectral_class: spectral_class.parse::<SpectralClass>()?,
 			rotation_period: None,
 			properties: Vec::new(),
+			policies: Vec::new(),
 			description: None,
 			satellites: Vec::new(),
 		};
@@ -249,8 +265,12 @@ impl AstronomicalObject for Star {
 		&self.properties
 	}
 
-	fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	fn policies( &self ) -> &[Policy] {
+		&self.policies
+	}
+
+	fn description( &self ) -> Option<&LocalizedText> {
+		self.description.as_ref()
 	}
 }
 
@@ -308,16 +328,26 @@ pub struct Trabant {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) properties: Vec<Property>,
 
+	/// The policies of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) policies: Vec<Policy>,
+
 	/// The properties of this trabant.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) institutions: Vec<Institution>,
 
+	/// The properties of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "FleetPresence::is_no" )]
+	pub(crate) fleet: FleetPresence,
+
 	/// An optional description of this trabant.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	pub(crate) description: Option<String>,
+	pub(crate) description: Option<LocalizedText>,
 
 	/// The objects orbiting this trabant.
 	pub(crate) satellites: Vec<Orbit>,
@@ -334,9 +364,14 @@ impl Trabant {
 		self.gates
 	}
 
-	/// Returns `true` if there is a delegation of the Union space fleet stationed at this body. Otherwise returns `false`.
-	pub fn has_fleet( &self ) -> bool {
-		self.institutions.iter().any( |x| matches!( x, Institution::UnionFleet ) )
+	/// Returns the number of *visible* hyperspace gates of this trabant. Meaning, if this trabant is secret, this method returns 0.
+	pub fn gates_count_visible( &self ) -> u32 {
+		if self.is_secret() { 0 } else { self.gates_count() }
+	}
+
+	/// Returns the kind of presence the space fleet is stationed at this body.
+	pub fn fleet_presence( &self ) -> FleetPresence {
+		self.fleet
 	}
 }
 
@@ -393,8 +428,12 @@ impl AstronomicalObject for Trabant {
 		&self.properties
 	}
 
-	fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	fn policies( &self ) -> &[Policy] {
+		&self.policies
+	}
+
+	fn description( &self ) -> Option<&LocalizedText> {
+		self.description.as_ref()
 	}
 }
 
@@ -410,11 +449,16 @@ pub struct Ring {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) properties: Vec<Property>,
 
+	/// The policies of this ring.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) policies: Vec<Policy>,
+
 	/// An optional description of this ring.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	pub(crate) description: Option<String>,
+	pub(crate) description: Option<LocalizedText>,
 }
 
 impl Ring {
@@ -428,9 +472,14 @@ impl Ring {
 		&self.properties
 	}
 
+	/// The policies of this ring.
+	pub fn policies( &self ) -> &[Policy] {
+		&self.policies
+	}
+
 	/// The description of this ring.
-	pub fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	pub fn description( &self ) -> Option<&LocalizedText> {
+		self.description.as_ref()
 	}
 }
 
@@ -474,7 +523,7 @@ pub struct Station {
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
 	pub(crate) techlevel: Option<u32>,
 
-	/// The number of jump gates on this world.
+	/// The number of jump gates on this station.
 	#[serde( default )]
 	pub(crate) gates: u32,
 
@@ -488,11 +537,21 @@ pub struct Station {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) institutions: Vec<Institution>,
 
-	/// An optional description of this ring.
+	/// The policies of this station.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) policies: Vec<Policy>,
+
+	/// The properties of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "FleetPresence::is_no" )]
+	pub(crate) fleet: FleetPresence,
+
+	/// An optional description of this station.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
-	pub(crate) description: Option<String>,
+	pub(crate) description: Option<LocalizedText>,
 
 	/// The objects orbiting this station.
 	pub(crate) satellites: Vec<Orbit>,
@@ -509,9 +568,14 @@ impl Station {
 		self.gates
 	}
 
-	/// Returns `true` if there is a delegation of the Union space fleet stationed at this body. Otherwise returns `false`.
-	pub fn has_fleet( &self ) -> bool {
-		self.institutions.iter().any( |x| matches!( x, Institution::UnionFleet ) )
+	/// Returns the number of *visible* hyperspace gates of this station. Meaning, if this station is secret, this method returns 0.
+	pub fn gates_count_visible( &self ) -> u32 {
+		if self.is_secret() { 0 } else { self.gates_count() }
+	}
+
+	/// Returns the kind of presence the space fleet is stationed at this body.
+	pub fn fleet_presence( &self ) -> FleetPresence {
+		self.fleet
 	}
 }
 
@@ -561,7 +625,11 @@ impl AstronomicalObject for Station {
 		&self.properties
 	}
 
-	fn description( &self ) -> Option<&str> {
-		self.description.as_deref()
+	fn policies( &self ) -> &[Policy] {
+		&self.policies
+	}
+
+	fn description( &self ) -> Option<&LocalizedText> {
+		self.description.as_ref()
 	}
 }
