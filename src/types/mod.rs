@@ -150,6 +150,9 @@ pub trait AstronomicalObject {
 	/// Returns the properties of the celestial object.
 	fn properties( &self ) -> &[Property];
 
+	/// Returns the policies of the celestial object.
+	fn policies( &self ) -> &[Policy];
+
 	/// Returns the description of the celestial object.
 	fn description( &self ) -> Option<&LocalizedText>;
 }
@@ -442,6 +445,16 @@ impl AstronomicalObject for CelestialBody {
 			Self::Trabant( x ) => x.properties(),
 			Self::Ring( x ) => x.properties(),
 			Self::Station( x ) => x.properties(),
+		}
+	}
+
+	fn policies( &self ) -> &[Policy] {
+		match self {
+			Self::GravitationalCenter( x ) => x.policies(),
+			Self::Star( x ) => x.policies(),
+			Self::Trabant( x ) => x.policies(),
+			Self::Ring( x ) => x.policies(),
+			Self::Station( x ) => x.policies(),
 		}
 	}
 

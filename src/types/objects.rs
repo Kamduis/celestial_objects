@@ -14,6 +14,7 @@ use thiserror::Error;
 
 use crate::calc;
 use crate::units::{Mass, Length};
+use crate::types::Policy;
 
 use super::AstronomicalObject;
 use super::properties::PropertiesError;
@@ -46,6 +47,11 @@ pub struct GravitationalCenter {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) properties: Vec<Property>,
+
+	/// The policies of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) policies: Vec<Policy>,
 
 	/// An optional description of this ring.
 	#[serde( default )]
@@ -106,6 +112,10 @@ impl AstronomicalObject for GravitationalCenter {
 		&self.properties
 	}
 
+	fn policies( &self ) -> &[Policy] {
+		&self.policies
+	}
+
 	fn description( &self ) -> Option<&LocalizedText> {
 		self.description.as_ref()
 	}
@@ -145,6 +155,11 @@ pub struct Star {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	properties: Vec<Property>,
 
+	/// The policies of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) policies: Vec<Policy>,
+
 	/// An optional description of this ring.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
@@ -166,6 +181,7 @@ impl Star {
 			spectral_class: spectral_class.parse::<SpectralClass>()?,
 			rotation_period: None,
 			properties: Vec::new(),
+			policies: Vec::new(),
 			description: None,
 			satellites: Vec::new(),
 		};
@@ -249,6 +265,10 @@ impl AstronomicalObject for Star {
 		&self.properties
 	}
 
+	fn policies( &self ) -> &[Policy] {
+		&self.policies
+	}
+
 	fn description( &self ) -> Option<&LocalizedText> {
 		self.description.as_ref()
 	}
@@ -307,6 +327,11 @@ pub struct Trabant {
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) properties: Vec<Property>,
+
+	/// The policies of this trabant.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) policies: Vec<Policy>,
 
 	/// The properties of this trabant.
 	#[serde( default )]
@@ -393,6 +418,10 @@ impl AstronomicalObject for Trabant {
 		&self.properties
 	}
 
+	fn policies( &self ) -> &[Policy] {
+		&self.policies
+	}
+
 	fn description( &self ) -> Option<&LocalizedText> {
 		self.description.as_ref()
 	}
@@ -410,6 +439,11 @@ pub struct Ring {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) properties: Vec<Property>,
 
+	/// The policies of this ring.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) policies: Vec<Policy>,
+
 	/// An optional description of this ring.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
@@ -426,6 +460,11 @@ impl Ring {
 	/// The properties of this ring.
 	pub fn properties( &self ) -> &[Property] {
 		&self.properties
+	}
+
+	/// The policies of this ring.
+	pub fn policies( &self ) -> &[Policy] {
+		&self.policies
 	}
 
 	/// The description of this ring.
@@ -474,7 +513,7 @@ pub struct Station {
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
 	pub(crate) techlevel: Option<u32>,
 
-	/// The number of jump gates on this world.
+	/// The number of jump gates on this station.
 	#[serde( default )]
 	pub(crate) gates: u32,
 
@@ -488,7 +527,12 @@ pub struct Station {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) institutions: Vec<Institution>,
 
-	/// An optional description of this ring.
+	/// The policies of this station.
+	#[serde( default )]
+	#[serde( skip_serializing_if = "Vec::is_empty" )]
+	pub(crate) policies: Vec<Policy>,
+
+	/// An optional description of this station.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Option::is_none" )]
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
@@ -559,6 +603,10 @@ impl AstronomicalObject for Station {
 
 	fn properties( &self ) -> &[Property] {
 		&self.properties
+	}
+
+	fn policies( &self ) -> &[Policy] {
+		&self.policies
 	}
 
 	fn description( &self ) -> Option<&LocalizedText> {
