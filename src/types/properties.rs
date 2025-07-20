@@ -230,30 +230,46 @@ impl Locale for Affiliation {
 }
 
 
+/// Represents the kind of fleet presence at a celestial object or a planetary system.
+#[derive( Serialize, Deserialize, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Debug )]
+pub enum FleetPresence {
+	/// No fleet presence at all.
+	#[default]
+	No,
+
+	/// The fleet has only a secret presence, not highlighting its presence at all.
+	Secret,
+
+	/// The fleet only patrols this area. No permanent presence.
+	Patrol,
+
+	/// A small forward operation base.
+	Fob,
+
+	// A fully established fleet base.
+	Base,
+}
+
+impl FleetPresence {
+	/// Returns true, if no fleet presence is given.
+	pub(crate) fn is_no( &self ) -> bool {
+		!self.is_present()
+	}
+
+	/// Returns `true`, if there is any kind of fleet presence.
+	pub fn is_present( &self ) -> bool {
+		!matches!( self, Self::No )
+	}
+
+	/// Returns `true`, if there is any kind of *visible* fleet presence. Secret fleet deployments return `false`.
+	pub fn is_present_visible( &self ) -> bool {
+		!matches!( self, Self::No | Self::Secret )
+	}
+}
+
 /// Representing an institution based or provided.
 #[derive( Serialize, Deserialize, PartialEq, Hash, Clone, Debug )]
 pub enum Institution {
-	/// A delegation of the Union space fleet is based.
-	UnionFleet,
-}
-
-impl fmt::Display for Institution {
-	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
-		let res = match self {
-			Self::UnionFleet => "Union Space Fleet",
-		};
-
-		write!( f, "{res}" )
-	}
-}
-
-#[cfg( feature = "i18n" )]
-impl Locale for Institution {
-	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
-		match self {
-			Self::UnionFleet => LOCALES.lookup( locale, "Union-Fleet" ),
-		}
-	}
 }
 
 

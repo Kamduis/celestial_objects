@@ -46,9 +46,7 @@
 						),
 						techlevel: 10,
 						gates: 14,
-						institutions: [
-							UnionFleet,
-						],
+						fleet: Patrol,
 						satellites: [],
 					)),
 				),
@@ -84,9 +82,7 @@
 									temperature: (-173.0, -23.0, 116.0 ),
 									techlevel: 11,
 									gates: 1,
-									institutions: [
-										UnionFleet,
-									],
+									fleet: Secret,
 									satellites: [],
 								)),
 							),
@@ -111,9 +107,7 @@
 									),
 									techlevel: 11,
 									gates: 0,
-									institutions: [
-										UnionFleet,
-									],
+									fleet: Base,
 									satellites: [],
 								)),
 							),
@@ -142,9 +136,7 @@
 						),
 						techlevel: 11,
 						gates: 64,
-						institutions: [
-							UnionFleet,
-						],
+						fleet: Base,
 						satellites: [
 							(
 								axis_semi_major: 62.6746804e-6,
@@ -165,6 +157,7 @@
 									radius: 98.304e-3,
 									gravity: 306e-6,
 									temperature: (-40.0, -40.0, -40.0),
+									fleet: Fob,
 									satellites: [],
 								)),
 							),
@@ -231,9 +224,7 @@
 									temperature: (-235.0, -235.0, -235.0),
 									techlevel: 12,
 									gates: 0,
-									institutions: [
-										UnionFleet,
-									],
+									fleet: Base,
 									satellites: [],
 								)),
 							),
@@ -284,6 +275,7 @@
 									),
 									techlevel: 11,
 									gates: 122,
+									fleet: Base,
 									satellites: [],
 								)),
 							),
@@ -321,6 +313,7 @@
 									),
 									techlevel: 11,
 									gates: 58,
+									fleet: Base,
 									satellites: [],
 								)),
 							),

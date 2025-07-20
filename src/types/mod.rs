@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition, LocalizedText};
+pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition, FleetPresence, LocalizedText};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -696,10 +696,11 @@ impl CelestialSystem {
 
 			let ident = match &body_got {
 				CelestialBody::GravitationalCenter( _ ) => "Gravitational Center",
+				CelestialBody::Station( _ ) => "Station",
 				_ => &self.identifier,
 			};
 
-			format!( "{} {}", ident, hierarchy )
+			format!( "{ident} {hierarchy}" )
 		};
 
 		Ok( res )
@@ -1232,6 +1233,37 @@ impl CelestialSystem {
 		Ok( res )
 	}
 
+	/// Returns the number of *visible* hyperspace gates of this world. Gates on secret stations ort other objects are not counted.
+	///
+	/// If the index is `&[]` the method returns the number of all gates within this system.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn gates_count_visible( &self, index: &[usize] ) -> Result<u32, CelestialSystemError> {
+		if index.is_empty() {
+			let res = self.indices().iter()
+				.skip( 1 )  // Skipping `&[]`
+				.map( |x| self.gates_count_visible( x ).unwrap_or( 0 ) )
+				.sum();
+
+			return Ok( res );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		let res = match body {
+			CelestialBody::Trabant( x ) => x.gates_count_visible(),
+			CelestialBody::Station( x ) => x.gates_count_visible(),
+			_ => 0,
+		};
+
+		Ok( res )
+	}
+
 	/// Returns `true` if there is at least one jump gate available.
 	///
 	/// If the index is `&[]` the method returns `true` if any of the worlds within this system has a jump gate.
@@ -1258,23 +1290,25 @@ impl CelestialSystem {
 		Ok( false )
 	}
 
-	/// Returns `true` if there is at one delegation of the Union space fleet.
+	/// Returns the kind of `FleetPresence` that is present in this system.
 	///
-	/// If the index is `&[]` the method returns `true` if any of the worlds within this system has a delegation of the Union space fleet.
+	/// If the index is `&[]` the method returns the most visible fleet presence of any of the worlds within this system.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn has_fleet( &self, index: &[usize] ) -> Result<bool, CelestialSystemError> {
+	pub fn fleet_presence( &self, index: &[usize] ) -> Result<FleetPresence, CelestialSystemError> {
 		if index.is_empty() {
-			for idx in self.indices().iter()
+			let res = self.indices().iter()
 				.skip( 1 )  // Skipping `&[]`
-			{
-				if self.has_fleet( idx )? {
-					return Ok( true );
-				}
-			}
+				.fold( FleetPresence::No, |mut acc, idx| {
+					let pres = self.fleet_presence( idx ).expect( "Only existing indices should be available here!" );
+					if acc < pres {
+						acc = pres;
+					}
+					acc
+				} );
 
-			return Ok( false );
+			return Ok( res );
 		}
 
 		let body = if index[0] == 0 {
@@ -1284,9 +1318,9 @@ impl CelestialSystem {
 		};
 
 		let res = match body {
-			CelestialBody::Trabant( x ) => x.has_fleet(),
-			CelestialBody::Station( x ) => x.has_fleet(),
-			_ => false,
+			CelestialBody::Trabant( x ) => x.fleet_presence(),
+			CelestialBody::Station( x ) => x.fleet_presence(),
+			_ => FleetPresence::No,
 		};
 
 		Ok( res )
@@ -1596,19 +1630,57 @@ mod tests {
 	}
 
 	#[test]
-	fn test_has_fleet() {
+	fn test_fleet_presence() {
 		let systems = systems_examples::systems_example();
 
 		let sol = &systems[0];
 
-		assert!( !sol.has_fleet( &[0] ).unwrap() );
-		assert!( !sol.has_fleet( &[1] ).unwrap() );
-		assert!( sol.has_fleet( &[2] ).unwrap() );
-		assert!( !sol.has_fleet( &[3] ).unwrap() );
-		assert!( sol.has_fleet( &[3,1] ).unwrap() );
-		assert!( sol.has_fleet( &[3,2] ).unwrap() );
-		assert!( sol.has_fleet( &[4] ).unwrap() );
-		assert!( sol.has_fleet( &[] ).unwrap() );
+		assert_eq!( sol.fleet_presence( &[0] ).unwrap(), FleetPresence::No );
+		assert_eq!( sol.fleet_presence( &[1] ).unwrap(), FleetPresence::No );
+		assert_eq!( sol.fleet_presence( &[2] ).unwrap(), FleetPresence::Patrol );
+		assert_eq!( sol.fleet_presence( &[3] ).unwrap(), FleetPresence::No );
+		assert_eq!( sol.fleet_presence( &[3,1] ).unwrap(), FleetPresence::Secret );
+		assert_eq!( sol.fleet_presence( &[3,2] ).unwrap(), FleetPresence::Base );
+		assert_eq!( sol.fleet_presence( &[4] ).unwrap(), FleetPresence::Base );
+		assert_eq!( sol.fleet_presence( &[4,1] ).unwrap(), FleetPresence::No );
+		assert_eq!( sol.fleet_presence( &[4,2] ).unwrap(), FleetPresence::Fob );
+		assert_eq!( sol.fleet_presence( &[] ).unwrap(), FleetPresence::Base );
+	}
+
+	#[test]
+	fn test_has_fleet_presence() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert!( !sol.fleet_presence( &[0] ).unwrap().is_present() );
+		assert!( !sol.fleet_presence( &[1] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[2] ).unwrap().is_present() );
+		assert!( !sol.fleet_presence( &[3] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[3,1] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[3,2] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[4] ).unwrap().is_present() );
+		assert!( !sol.fleet_presence( &[4,1] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[4,2] ).unwrap().is_present() );
+		assert!( sol.fleet_presence( &[] ).unwrap().is_present() );
+	}
+
+	#[test]
+	fn test_has_fleet_secret() {
+		let systems = systems_examples::systems_example();
+
+		let sol = &systems[0];
+
+		assert!( !sol.fleet_presence( &[0] ).unwrap().is_present_visible() );
+		assert!( !sol.fleet_presence( &[1] ).unwrap().is_present_visible() );
+		assert!( sol.fleet_presence( &[2] ).unwrap().is_present_visible() );
+		assert!( !sol.fleet_presence( &[3] ).unwrap().is_present_visible() );
+		assert!( !sol.fleet_presence( &[3,1] ).unwrap().is_present_visible() );
+		assert!( sol.fleet_presence( &[3,2] ).unwrap().is_present_visible() );
+		assert!( sol.fleet_presence( &[4] ).unwrap().is_present_visible() );
+		assert!( !sol.fleet_presence( &[4,1] ).unwrap().is_present_visible() );
+		assert!( sol.fleet_presence( &[4,2] ).unwrap().is_present_visible() );
+		assert!( sol.fleet_presence( &[] ).unwrap().is_present_visible() );
 	}
 
 	#[test]
