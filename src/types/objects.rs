@@ -18,7 +18,7 @@ use crate::types::Policy;
 
 use super::AstronomicalObject;
 use super::properties::PropertiesError;
-use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution, FleetPresence, LocalizedText};
+use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution, MilitaryPresence, LocalizedText};
 
 
 
@@ -340,8 +340,8 @@ pub struct Trabant {
 
 	/// The properties of this trabant.
 	#[serde( default )]
-	#[serde( skip_serializing_if = "FleetPresence::is_no" )]
-	pub(crate) fleet: FleetPresence,
+	#[serde( skip_serializing_if = "MilitaryPresence::is_empty" )]
+	pub(crate) military: MilitaryPresence,
 
 	/// An optional description of this trabant.
 	#[serde( default )]
@@ -369,9 +369,9 @@ impl Trabant {
 		if self.is_secret() { 0 } else { self.gates_count() }
 	}
 
-	/// Returns the kind of presence the space fleet is stationed at this body.
-	pub fn fleet_presence( &self ) -> FleetPresence {
-		self.fleet
+	/// Returns the kind of presence the provided `military` has at this body.
+	pub fn military( &self ) -> MilitaryPresence {
+		self.military
 	}
 }
 
@@ -542,10 +542,10 @@ pub struct Station {
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
 	pub(crate) policies: Vec<Policy>,
 
-	/// The properties of this trabant.
+	/// The presence of different militaries at this station.
 	#[serde( default )]
-	#[serde( skip_serializing_if = "FleetPresence::is_no" )]
-	pub(crate) fleet: FleetPresence,
+	#[serde( skip_serializing_if = "MilitaryPresence::is_empty" )]
+	pub(crate) military: MilitaryPresence,
 
 	/// An optional description of this station.
 	#[serde( default )]
@@ -574,8 +574,8 @@ impl Station {
 	}
 
 	/// Returns the kind of presence the space fleet is stationed at this body.
-	pub fn fleet_presence( &self ) -> FleetPresence {
-		self.fleet
+	pub fn military( &self ) -> MilitaryPresence {
+		self.military
 	}
 }
 

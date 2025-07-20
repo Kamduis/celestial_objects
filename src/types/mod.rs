@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition, FleetPresence, LocalizedText};
+pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition, MilitaryPresence, LocalizedText};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -1290,21 +1290,21 @@ impl CelestialSystem {
 		Ok( false )
 	}
 
-	/// Returns the kind of `FleetPresence` that is present in this system.
+	/// Returns the kind of `MilitaryPresence` in this system.
+	///
+	/// The strongest and most obvious presence of all militaries in this system are provided.
 	///
 	/// If the index is `&[]` the method returns the most visible fleet presence of any of the worlds within this system.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn fleet_presence( &self, index: &[usize] ) -> Result<FleetPresence, CelestialSystemError> {
+	pub fn military_presence( &self, index: &[usize] ) -> Result<MilitaryPresence, CelestialSystemError> {
 		if index.is_empty() {
 			let res = self.indices().iter()
 				.skip( 1 )  // Skipping `&[]`
-				.fold( FleetPresence::No, |mut acc, idx| {
-					let pres = self.fleet_presence( idx ).expect( "Only existing indices should be available here!" );
-					if acc < pres {
-						acc = pres;
-					}
+				.fold( MilitaryPresence::new(), |mut acc, idx| {
+					let pres = self.military_presence( idx ).expect( "Only existing indices should be available here!" );
+					acc.combine( pres );
 					acc
 				} );
 
@@ -1318,9 +1318,9 @@ impl CelestialSystem {
 		};
 
 		let res = match body {
-			CelestialBody::Trabant( x ) => x.fleet_presence(),
-			CelestialBody::Station( x ) => x.fleet_presence(),
-			_ => FleetPresence::No,
+			CelestialBody::Trabant( x ) => x.military(),
+			CelestialBody::Station( x ) => x.military(),
+			_ => MilitaryPresence::new(),
 		};
 
 		Ok( res )
@@ -1635,16 +1635,16 @@ mod tests {
 
 		let sol = &systems[0];
 
-		assert_eq!( sol.fleet_presence( &[0] ).unwrap(), FleetPresence::No );
-		assert_eq!( sol.fleet_presence( &[1] ).unwrap(), FleetPresence::No );
-		assert_eq!( sol.fleet_presence( &[2] ).unwrap(), FleetPresence::Patrol );
-		assert_eq!( sol.fleet_presence( &[3] ).unwrap(), FleetPresence::No );
-		assert_eq!( sol.fleet_presence( &[3,1] ).unwrap(), FleetPresence::Secret );
-		assert_eq!( sol.fleet_presence( &[3,2] ).unwrap(), FleetPresence::Base );
-		assert_eq!( sol.fleet_presence( &[4] ).unwrap(), FleetPresence::Base );
-		assert_eq!( sol.fleet_presence( &[4,1] ).unwrap(), FleetPresence::No );
-		assert_eq!( sol.fleet_presence( &[4,2] ).unwrap(), FleetPresence::Fob );
-		assert_eq!( sol.fleet_presence( &[] ).unwrap(), FleetPresence::Base );
+		assert_eq!( sol.military_presence( &[0] ).unwrap(), MilitaryPresence::new() );
+		assert_eq!( sol.military_presence( &[1] ).unwrap(), MilitaryPresence::new() );
+		assert_eq!( sol.military_presence( &[2] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Patrol ) );
+		assert_eq!( sol.military_presence( &[3] ).unwrap(), MilitaryPresence::new() );
+		assert_eq!( sol.military_presence( &[3,1] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Secret ) );
+		assert_eq!( sol.military_presence( &[3,2] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Base ) );
+		assert_eq!( sol.military_presence( &[4] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Base ) );
+		assert_eq!( sol.military_presence( &[4,1] ).unwrap(), MilitaryPresence::new() );
+		assert_eq!( sol.military_presence( &[4,2] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Fob) );
+		assert_eq!( sol.military_presence( &[] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Base ) );
 	}
 
 	#[test]
@@ -1653,16 +1653,16 @@ mod tests {
 
 		let sol = &systems[0];
 
-		assert!( !sol.fleet_presence( &[0] ).unwrap().is_present() );
-		assert!( !sol.fleet_presence( &[1] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[2] ).unwrap().is_present() );
-		assert!( !sol.fleet_presence( &[3] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[3,1] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[3,2] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[4] ).unwrap().is_present() );
-		assert!( !sol.fleet_presence( &[4,1] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[4,2] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[] ).unwrap().is_present() );
+		assert!( !sol.military_presence( &[0] ).unwrap().is_present() );
+		assert!( !sol.military_presence( &[1] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[2] ).unwrap().is_present() );
+		assert!( !sol.military_presence( &[3] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[3,1] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[3,2] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[4] ).unwrap().is_present() );
+		assert!( !sol.military_presence( &[4,1] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[4,2] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[] ).unwrap().is_present() );
 	}
 
 	#[test]
@@ -1671,16 +1671,16 @@ mod tests {
 
 		let sol = &systems[0];
 
-		assert!( !sol.fleet_presence( &[0] ).unwrap().is_present_visible() );
-		assert!( !sol.fleet_presence( &[1] ).unwrap().is_present_visible() );
-		assert!( sol.fleet_presence( &[2] ).unwrap().is_present_visible() );
-		assert!( !sol.fleet_presence( &[3] ).unwrap().is_present_visible() );
-		assert!( !sol.fleet_presence( &[3,1] ).unwrap().is_present_visible() );
-		assert!( sol.fleet_presence( &[3,2] ).unwrap().is_present_visible() );
-		assert!( sol.fleet_presence( &[4] ).unwrap().is_present_visible() );
-		assert!( !sol.fleet_presence( &[4,1] ).unwrap().is_present_visible() );
-		assert!( sol.fleet_presence( &[4,2] ).unwrap().is_present_visible() );
-		assert!( sol.fleet_presence( &[] ).unwrap().is_present_visible() );
+		assert!( !sol.military_presence( &[0] ).unwrap().is_present_visible() );
+		assert!( !sol.military_presence( &[1] ).unwrap().is_present_visible() );
+		assert!( sol.military_presence( &[2] ).unwrap().is_present_visible() );
+		assert!( !sol.military_presence( &[3] ).unwrap().is_present_visible() );
+		assert!( !sol.military_presence( &[3,1] ).unwrap().is_present_visible() );
+		assert!( sol.military_presence( &[3,2] ).unwrap().is_present_visible() );
+		assert!( sol.military_presence( &[4] ).unwrap().is_present_visible() );
+		assert!( !sol.military_presence( &[4,1] ).unwrap().is_present_visible() );
+		assert!( sol.military_presence( &[4,2] ).unwrap().is_present_visible() );
+		assert!( sol.military_presence( &[] ).unwrap().is_present_visible() );
 	}
 
 	#[test]

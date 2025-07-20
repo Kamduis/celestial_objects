@@ -188,6 +188,9 @@ pub enum Affiliation {
 	/// Part of the Union.
 	Union,
 
+	/// Part of the Directorate.
+	Directorate,
+
 	/// Is considered a border world.
 	BorderWorld,
 
@@ -206,6 +209,7 @@ impl fmt::Display for Affiliation {
 	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
 		let res = match self {
 			Self::Union => "Union",
+			Self::Directorate => "Directorate",
 			Self::BorderWorld => "Border World",
 			Self::Free => "Free Territories",
 			Self::Uninhabited => "Uninhabited",
@@ -221,6 +225,7 @@ impl Locale for Affiliation {
 	fn to_string_locale( &self, locale: &LanguageIdentifier ) -> String {
 		match self {
 			Self::Union => LOCALES.lookup( locale, "Union" ),
+			Self::Directorate => LOCALES.lookup( locale, "Directorate" ),
 			Self::BorderWorld => LOCALES.lookup( locale, "Border-World" ),
 			Self::Free => LOCALES.lookup( locale, "Free-Territories" ),
 			Self::Uninhabited => LOCALES.lookup( locale, "Uninhabited" ),
@@ -230,42 +235,143 @@ impl Locale for Affiliation {
 }
 
 
-/// Represents the kind of fleet presence at a celestial object or a planetary system.
+/// Represents the military presence at a celestial object or a planetary system of possible multiple different military bodies.
+#[derive( Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Default, Debug )]
+pub struct MilitaryPresence{
+	/// Union Fleet
+	#[serde( default )]
+	fleet: Presence,
+
+	/// The directorate military.
+	#[serde( default )]
+	directorate: Presence,
+
+	/// Local militia
+	#[serde( default )]
+	militia: Presence,
+}
+
+impl MilitaryPresence {
+	/// Returns a new `MilitaryPresence` with no military presence given.
+	pub fn new() -> Self {
+		Self::default()
+	}
+
+	/// Returns a new `MilitaryPresence` with `presence` of the Union Fleet.
+	pub fn new_fleet( presence: Presence ) -> Self {
+		Self {
+			fleet: presence,
+			..Default::default()
+		}
+	}
+
+	/// Returns a new `MilitaryPresence` with `presence` of the Directorate.
+	pub fn new_directorate( presence: Presence ) -> Self {
+		Self {
+			directorate: presence,
+			..Default::default()
+		}
+	}
+
+	/// Returns a new `MilitaryPresence` with `presence` of the local militia.
+	pub fn new_militia( presence: Presence ) -> Self {
+		Self {
+			militia: presence,
+			..Default::default()
+		}
+	}
+
+	/// Returns `true`, if no military presence is given at all.
+	pub(crate) fn is_empty( &self ) -> bool {
+		!self.is_present()
+	}
+
+	/// Returns `true`, if there is any kind of military presence.
+	pub fn is_present( &self ) -> bool {
+		self.fleet.is_present()
+			|| self.directorate.is_present()
+			|| self.militia.is_present()
+	}
+
+	/// Returns `true`, if there is any kind of *visible* military presence. Only secret military deployments return `false`.
+	pub fn is_present_visible( &self ) -> bool {
+		self.fleet.is_present_visible()
+			|| self.directorate.is_present_visible()
+			|| self.militia.is_present_visible()
+	}
+
+	/// Returns the `Presence` of the Union Fleet.
+	pub fn fleet( &self ) -> Presence {
+		self.fleet
+	}
+
+	/// Returns the `Presence` of the Directorate military.
+	pub fn directorate( &self ) -> Presence {
+		self.directorate
+	}
+
+	/// Returns the `Presence` of any local militia.
+	pub fn militia( &self ) -> Presence {
+		self.militia
+	}
+
+	/// Combines the military presence of `self` and `other` meaning the maximum `Presence` for each military body is provided.
+	pub(crate) fn combine( &mut self, other: Self ) {
+		*self = Self {
+			fleet: self.fleet.max( other.fleet ),
+			directorate: self.directorate.max( other.directorate ),
+			militia: self.militia.max( other.militia ),
+		};
+	}
+
+	// /// Returns the combined military presence of `self` and `other` meaning the maximum `Presence` for each military body is provided in the returned `MilitaryPresence`.
+	// pub(crate) fn combined( self, other: Self ) -> Self {
+	// 	Self {
+	// 		fleet: self.fleet.max( other.fleet ),
+	// 		directorate: self.directorate.max( other.directorate ),
+	// 		militia: self.militia.max( other.militia ),
+	// 	}
+	// }
+}
+
+
+/// Represents the kind of military presence at a celestial object or a planetary system.
 #[derive( Serialize, Deserialize, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Default, Debug )]
-pub enum FleetPresence {
-	/// No fleet presence at all.
+pub enum Presence {
+	/// No military presence at all.
 	#[default]
 	No,
 
-	/// The fleet has only a secret presence, not highlighting its presence at all.
+	/// The military has only a secret presence, not highlighting its presence at all.
 	Secret,
 
-	/// The fleet only patrols this area. No permanent presence.
+	/// The military only patrols this area. No permanent presence.
 	Patrol,
 
 	/// A small forward operation base.
 	Fob,
 
-	// A fully established fleet base.
+	// A fully established military base.
 	Base,
 }
 
-impl FleetPresence {
-	/// Returns true, if no fleet presence is given.
+impl Presence {
+	/// Returns true, if no military presence is given.
 	pub(crate) fn is_no( &self ) -> bool {
 		!self.is_present()
 	}
 
-	/// Returns `true`, if there is any kind of fleet presence.
+	/// Returns `true`, if there is any kind of military presence.
 	pub fn is_present( &self ) -> bool {
 		!matches!( self, Self::No )
 	}
 
-	/// Returns `true`, if there is any kind of *visible* fleet presence. Secret fleet deployments return `false`.
+	/// Returns `true`, if there is any kind of *visible* military presence. Secret military deployments return `false`.
 	pub fn is_present_visible( &self ) -> bool {
 		!matches!( self, Self::No | Self::Secret )
 	}
 }
+
 
 /// Representing an institution based or provided.
 #[derive( Serialize, Deserialize, PartialEq, Hash, Clone, Debug )]
