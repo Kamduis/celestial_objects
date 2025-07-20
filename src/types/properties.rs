@@ -356,11 +356,6 @@ pub enum Presence {
 }
 
 impl Presence {
-	/// Returns true, if no military presence is given.
-	pub(crate) fn is_no( &self ) -> bool {
-		!self.is_present()
-	}
-
 	/// Returns `true`, if there is any kind of military presence.
 	pub fn is_present( &self ) -> bool {
 		!matches!( self, Self::No )

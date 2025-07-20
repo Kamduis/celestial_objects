@@ -28,7 +28,7 @@ mod serde_helpers;
 #[cfg( all( feature = "i18n", feature = "tex" ) )] pub use traits::{LocaleLatex};
 pub use crate::coords::{EquatorialCoords, GalacticCoords};
 pub use crate::types::{StarColor, CelestialSystem, CelestialBody, BodyType, SpectralClass, StarType, Affiliation, Policy, Property, Atmosphere, AtmosphereQuality, GasComposition};
-pub use crate::types::properties::{MilitaryPresence, LocalizedText};
+pub use crate::types::properties::{MilitaryPresence, Presence, LocalizedText};
 pub use crate::types::CelestialSystemError;
 pub use crate::units::{Length, Mass};
 
