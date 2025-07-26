@@ -573,7 +573,7 @@ impl Station {
 		if self.is_secret() { 0 } else { self.gates_count() }
 	}
 
-	/// Returns the kind of presence the space fleet is stationed at this body.
+	/// Returns the military stationed at this body and the kind of presence it has here.
 	pub fn military( &self ) -> MilitaryPresence {
 		self.military
 	}

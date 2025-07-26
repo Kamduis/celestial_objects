@@ -1292,9 +1292,7 @@ impl CelestialSystem {
 
 	/// Returns the kind of `MilitaryPresence` in this system.
 	///
-	/// The strongest and most obvious presence of all militaries in this system are provided.
-	///
-	/// If the index is `&[]` the method returns the most visible fleet presence of any of the worlds within this system.
+	/// If the index is `&[]` the method returns the strongest and most obvious presence of any of the worlds within this system.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
@@ -1630,25 +1628,25 @@ mod tests {
 	}
 
 	#[test]
-	fn test_fleet_presence() {
+	fn test_military_presence() {
 		let systems = systems_examples::systems_example();
 
 		let sol = &systems[0];
 
 		assert_eq!( sol.military_presence( &[0] ).unwrap(), MilitaryPresence::new() );
 		assert_eq!( sol.military_presence( &[1] ).unwrap(), MilitaryPresence::new() );
-		assert_eq!( sol.military_presence( &[2] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Patrol ) );
+		assert_eq!( sol.military_presence( &[2] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Patrol ) );
 		assert_eq!( sol.military_presence( &[3] ).unwrap(), MilitaryPresence::new() );
-		assert_eq!( sol.military_presence( &[3,1] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Secret ) );
-		assert_eq!( sol.military_presence( &[3,2] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Base ) );
-		assert_eq!( sol.military_presence( &[4] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Base ) );
+		assert_eq!( sol.military_presence( &[3,1] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Secret ) );
+		assert_eq!( sol.military_presence( &[3,2] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Base ) );
+		assert_eq!( sol.military_presence( &[4] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Base ) );
 		assert_eq!( sol.military_presence( &[4,1] ).unwrap(), MilitaryPresence::new() );
-		assert_eq!( sol.military_presence( &[4,2] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Fob) );
-		assert_eq!( sol.military_presence( &[] ).unwrap(), MilitaryPresence::new_fleet( properties::Presence::Base ) );
+		assert_eq!( sol.military_presence( &[4,2] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Fob) );
+		assert_eq!( sol.military_presence( &[] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Base ) );
 	}
 
 	#[test]
-	fn test_has_fleet_presence() {
+	fn test_has_military_presence() {
 		let systems = systems_examples::systems_example();
 
 		let sol = &systems[0];
@@ -1666,7 +1664,7 @@ mod tests {
 	}
 
 	#[test]
-	fn test_has_fleet_secret() {
+	fn test_has_military_secret() {
 		let systems = systems_examples::systems_example();
 
 		let sol = &systems[0];

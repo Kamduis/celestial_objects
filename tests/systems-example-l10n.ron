@@ -44,7 +44,7 @@
 									techlevel: 11,
 									gates: 122,
 									military: (
-										fleet: Base,
+										union: Base,
 									),
 									satellites: [],
 								)),
@@ -84,7 +84,7 @@
 									techlevel: 11,
 									gates: 58,
 									military: (
-										fleet: Base,
+										union: Base,
 									),
 									satellites: [],
 								)),

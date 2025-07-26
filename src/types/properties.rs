@@ -240,7 +240,8 @@ impl Locale for Affiliation {
 pub struct MilitaryPresence{
 	/// Union Fleet
 	#[serde( default )]
-	fleet: Presence,
+	#[serde( rename = "union" )]
+	union_: Presence,
 
 	/// The directorate military.
 	#[serde( default )]
@@ -258,9 +259,9 @@ impl MilitaryPresence {
 	}
 
 	/// Returns a new `MilitaryPresence` with `presence` of the Union Fleet.
-	pub fn new_fleet( presence: Presence ) -> Self {
+	pub fn new_union( presence: Presence ) -> Self {
 		Self {
-			fleet: presence,
+			union_: presence,
 			..Default::default()
 		}
 	}
@@ -288,21 +289,21 @@ impl MilitaryPresence {
 
 	/// Returns `true`, if there is any kind of military presence.
 	pub fn is_present( &self ) -> bool {
-		self.fleet.is_present()
+		self.union_.is_present()
 			|| self.directorate.is_present()
 			|| self.militia.is_present()
 	}
 
 	/// Returns `true`, if there is any kind of *visible* military presence. Only secret military deployments return `false`.
 	pub fn is_present_visible( &self ) -> bool {
-		self.fleet.is_present_visible()
+		self.union_.is_present_visible()
 			|| self.directorate.is_present_visible()
 			|| self.militia.is_present_visible()
 	}
 
 	/// Returns the `Presence` of the Union Fleet.
-	pub fn fleet( &self ) -> Presence {
-		self.fleet
+	pub fn union( &self ) -> Presence {
+		self.union_
 	}
 
 	/// Returns the `Presence` of the Directorate military.
@@ -318,20 +319,11 @@ impl MilitaryPresence {
 	/// Combines the military presence of `self` and `other` meaning the maximum `Presence` for each military body is provided.
 	pub(crate) fn combine( &mut self, other: Self ) {
 		*self = Self {
-			fleet: self.fleet.max( other.fleet ),
+			union_: self.union_.max( other.union_ ),
 			directorate: self.directorate.max( other.directorate ),
 			militia: self.militia.max( other.militia ),
 		};
 	}
-
-	// /// Returns the combined military presence of `self` and `other` meaning the maximum `Presence` for each military body is provided in the returned `MilitaryPresence`.
-	// pub(crate) fn combined( self, other: Self ) -> Self {
-	// 	Self {
-	// 		fleet: self.fleet.max( other.fleet ),
-	// 		directorate: self.directorate.max( other.directorate ),
-	// 		militia: self.militia.max( other.militia ),
-	// 	}
-	// }
 }
 
 

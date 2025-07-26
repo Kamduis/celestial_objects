@@ -47,7 +47,7 @@
 						techlevel: 10,
 						gates: 14,
 						military: (
-							fleet: Patrol,
+							union: Patrol,
 						),
 						satellites: [],
 					)),
@@ -85,7 +85,7 @@
 									techlevel: 11,
 									gates: 1,
 									military: (
-										fleet: Secret,
+										union: Secret,
 									),
 									satellites: [],
 								)),
@@ -112,7 +112,7 @@
 									techlevel: 11,
 									gates: 0,
 									military: (
-										fleet: Base,
+										union: Base,
 									),
 									satellites: [],
 								)),
@@ -143,7 +143,7 @@
 						techlevel: 11,
 						gates: 64,
 						military: (
-							fleet: Base,
+							union: Base,
 						),
 						satellites: [
 							(
@@ -166,7 +166,7 @@
 									gravity: 306e-6,
 									temperature: (-40.0, -40.0, -40.0),
 									military: (
-										fleet: Fob,
+										union: Fob,
 									),
 									satellites: [],
 								)),
@@ -235,7 +235,7 @@
 									techlevel: 12,
 									gates: 0,
 									military: (
-										fleet: Base,
+										union: Base,
 									),
 									satellites: [],
 								)),
@@ -288,7 +288,7 @@
 									techlevel: 11,
 									gates: 122,
 									military: (
-										fleet: Base,
+										union: Base,
 									),
 									satellites: [],
 								)),
@@ -328,7 +328,7 @@
 									techlevel: 11,
 									gates: 58,
 									military: (
-										fleet: Base,
+										union: Base,
 									),
 									satellites: [],
 								)),
