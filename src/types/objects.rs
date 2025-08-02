@@ -166,7 +166,7 @@ pub struct Star {
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
 	pub(crate) description: Option<LocalizedText>,
 
-	/// The objects oribitng this star.
+	/// The objects orbiting this star.
 	pub(crate) satellites: Vec<Orbit>,
 }
 
