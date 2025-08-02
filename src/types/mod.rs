@@ -99,9 +99,11 @@ pub enum RomanNumberError {
 
 pub trait AstronomicalObject {
 	/// Return a new object from `self` with `name`.
+	#[allow( dead_code, reason = "This trait is not public but this method may be useful later, when the trait is made public. It is used during testing, though." )]
 	fn with_name( self, name: &str ) -> Self;
 
 	/// Return a new object from `self` with `satellites` orbiting it.
+	#[allow( dead_code, reason = "This trait is not public but this method may be useful later, when the trait is made public. It is used during testing, though." )]
 	fn with_satellites( self, satellites: Vec<Orbit> ) -> Self;
 
 	/// Returns the satellites of this object.
