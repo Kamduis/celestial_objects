@@ -1393,7 +1393,7 @@ impl CelestialSystem {
 	}
 
 	/// Returns an iterator of all stars within this system.
-	pub fn stars( &self ) -> CelestialSystemStarsIterator {
+	pub fn stars( &self ) -> CelestialSystemStarsIterator<'_> {
 		let mut iter_obj = CelestialSystemStarsIterator {
 			stars: Vec::new(),
 			index: 0,

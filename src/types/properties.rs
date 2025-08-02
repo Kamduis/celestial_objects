@@ -733,7 +733,7 @@ impl GasComposition {
 	}
 
 	/// Return an iterator of `GasComposition`.
-	pub fn iter( &self ) -> btree_map::Iter<Molecule, f64> {
+	pub fn iter( &self ) -> btree_map::Iter<'_, Molecule, f64> {
 		self.into_iter()
 	}
 }
