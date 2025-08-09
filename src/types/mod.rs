@@ -1406,6 +1406,30 @@ impl CelestialSystem {
 		iter_obj
 	}
 
+	/// Returns an iterator of all planets within this system. This includes all planets regardless of the star they are orbiting.
+	pub fn planets( &self ) -> CelestialSystemPlanetsIterator<'_> {
+		let mut iter_obj = CelestialSystemPlanetsIterator {
+			planets: Vec::new(),
+			index: 0,
+		};
+
+		iter_obj.walker( &self.body );
+
+		iter_obj
+	}
+
+	/// Returns an iterator of all space stations within this system.
+	pub fn stations( &self ) -> CelestialSystemStationsIterator<'_> {
+		let mut iter_obj = CelestialSystemStationsIterator {
+			stations: Vec::new(),
+			index: 0,
+		};
+
+		iter_obj.walker( &self.body );
+
+		iter_obj
+	}
+
 	/// Returns the mass of this system's main star.
 	pub fn mass_main( &self ) -> Mass {
 		let star_main = self.stars().nth( 0 )
@@ -1480,7 +1504,106 @@ impl<'a> Iterator for CelestialSystemStarsIterator<'a> {
 			return None;
 		}
 
-		let result = Some( self.stars[ self.index ] ) ;
+		let result = Some( self.stars[self.index] ) ;
+		self.index += 1;
+
+		result
+	}
+}
+
+
+/// Iterator for planets within a `CelestialSystem`.
+///
+/// TODO: The implementation is very inefficient, creating a `Vec` each time the iterator is newly created.
+pub struct CelestialSystemPlanetsIterator<'a> {
+	planets: Vec<&'a Trabant>,
+
+	index: usize,
+}
+
+impl<'a> CelestialSystemPlanetsIterator<'a> {
+	/// Walking all objects within this system and collecting planets.
+	fn walker( &mut self, body: &'a CelestialBody ) {
+		match body {
+			// Planets only orbit stars.
+			CelestialBody::Star( x ) => {
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+			},
+			CelestialBody::Trabant( x ) => {
+				self.planets.push( x );
+			},
+
+			// No star will be orbiting a trabant or station.
+			_ => (),
+		}
+	}
+}
+
+impl<'a> Iterator for CelestialSystemPlanetsIterator<'a> {
+	type Item = &'a Trabant;
+
+	fn next( &mut self ) -> Option<Self::Item> {
+		if self.index >= self.planets.len() {
+			return None;
+		}
+
+		let result = Some( self.planets[self.index] ) ;
+		self.index += 1;
+
+		result
+	}
+}
+
+
+/// Iterator for space stations within a `CelestialSystem`.
+///
+/// TODO: The implementation is very inefficient, creating a `Vec` each time the iterator is newly created.
+pub struct CelestialSystemStationsIterator<'a> {
+	stations: Vec<&'a Station>,
+
+	index: usize,
+}
+
+impl<'a> CelestialSystemStationsIterator<'a> {
+	/// Walking all objects within this system and collecting stars.
+	fn walker( &mut self, body: &'a CelestialBody ) {
+		match body {
+			CelestialBody::Station( x ) => {
+				self.stations.push( x );
+			},
+
+			// A station may orbit anything but other stations.
+			CelestialBody::GravitationalCenter( x ) => {
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+			},
+			CelestialBody::Star( x ) => {
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+			},
+			CelestialBody::Trabant( x ) => {
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+			},
+			CelestialBody::Ring( _ ) => (),
+		}
+	}
+}
+
+impl<'a> Iterator for CelestialSystemStationsIterator<'a> {
+	type Item = &'a Station;
+
+	fn next( &mut self ) -> Option<Self::Item> {
+		if self.index >= self.stations.len() {
+			return None;
+		}
+
+		let result = Some( self.stations[self.index] ) ;
 		self.index += 1;
 
 		result
