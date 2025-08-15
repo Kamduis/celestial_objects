@@ -10,6 +10,7 @@ planet = planet
 moon = moon
 
 Union = Union
+Directorate = Directorate
 Border-World = Border World
 Free-Territories = Free Territories
 Uninhabited = Uninhabited

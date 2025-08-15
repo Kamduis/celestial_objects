@@ -10,6 +10,7 @@ planet = Planet
 moon = Mond
 
 Union = Union
+Directorate = Direktorat
 Border-World = Grenzwelt
 Free-Territories = Freie Territorien
 Uninhabited = Unbewohnt

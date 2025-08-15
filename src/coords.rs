@@ -368,14 +368,20 @@ impl Serialize for EquatorialCoords {
 	where
 		S: Serializer,
 	{
-		// 3 is the number of fields in the struct.
-		let mut state = serializer.serialize_struct( "EquatorialCoords", 3 )?;
-
-		state.serialize_field( "ra", &self.ra_hms() )?;
-		state.serialize_field( "dec", &self.dec_dms() )?;
-		state.serialize_field( "dist", &self.dist() )?;
-
-		state.end()
+		if serializer.is_human_readable() {
+			// 3 is the number of fields in the struct.
+			let mut state = serializer.serialize_struct( "EquatorialCoords", 3 )?;
+			state.serialize_field( "ra", &self.ra_hms() )?;
+			state.serialize_field( "dec", &self.dec_dms() )?;
+			state.serialize_field( "dist", &self.dist() )?;
+			state.end()
+		} else {
+			let mut state = serializer.serialize_struct( "EquatorialCoords", 3 )?;
+			state.serialize_field( "ra", &self.ra )?;
+			state.serialize_field( "dec", &self.dec )?;
+			state.serialize_field( "dist", &self.dist )?;
+			state.end()
+		}
 	}
 }
 
@@ -459,13 +465,64 @@ impl<'de> Deserialize<'de> for EquatorialCoords {
 				let dec = dec.ok_or_else( || serde::de::Error::missing_field( "dec" ) )?;
 				let dist = dist.ok_or_else( || serde::de::Error::missing_field( "dist" ) )?;
 
-				let res = EquatorialCoords::try_from_hms_dms_ly( ra, dec, dist ).unwrap();
+				Ok( EquatorialCoords::new( ra, dec, dist ) )
+			}
+		}
+
+		struct EquatorialCoordsHumanReadableVisitor;
+
+		impl<'de> serde::de::Visitor<'de> for EquatorialCoordsHumanReadableVisitor {
+			type Value = EquatorialCoords;
+
+			fn expecting( &self, formatter: &mut fmt::Formatter ) -> fmt::Result {
+				formatter.write_str( "struct EquatorialCoords" )
+			}
+
+			fn visit_map<V>( self, mut map: V ) -> Result<EquatorialCoords, V::Error>
+			where
+				V: serde::de::MapAccess<'de>,
+			{
+				let mut ra = None;
+				let mut dec = None;
+				let mut dist = None;
+				while let Some( key ) = map.next_key()? {
+					match key {
+						Field::Ra => {
+							if ra.is_some() {
+								return Err( serde::de::Error::duplicate_field( "ra" ) );
+							}
+							ra = Some( map.next_value::<String>()? );
+						}
+						Field::Dec => {
+							if dec.is_some() {
+								return Err( serde::de::Error::duplicate_field( "dec" ) );
+							}
+							dec = Some( map.next_value::<String>()? );
+						}
+						Field::Dist => {
+							if dist.is_some() {
+								return Err( serde::de::Error::duplicate_field( "dist" ) );
+							}
+							dist = Some( map.next_value()? );
+						}
+					}
+				}
+				let ra = ra.ok_or_else( || serde::de::Error::missing_field( "ra" ) )?;
+				let dec = dec.ok_or_else( || serde::de::Error::missing_field( "dec" ) )?;
+				let dist = dist.ok_or_else( || serde::de::Error::missing_field( "dist" ) )?;
+
+				let res = EquatorialCoords::try_from_hms_dms_ly( &ra, &dec, dist ).unwrap();
+
 				Ok( res )
 			}
 		}
 
 		const FIELDS: &[&str] = &[ "ra", "dec", "dist" ];
-		deserializer.deserialize_struct( "EquatorialCoords", FIELDS, EquatorialCoordsVisitor )
+		if deserializer.is_human_readable() {
+			deserializer.deserialize_struct( "EquatorialCoords", FIELDS, EquatorialCoordsHumanReadableVisitor )
+		} else {
+			deserializer.deserialize_struct( "EquatorialCoords", FIELDS, EquatorialCoordsVisitor )
+		}
 	}
 }
 

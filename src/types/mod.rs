@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition, FleetPresence, LocalizedText};
+pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition, MilitaryPresence, LocalizedText};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -99,9 +99,11 @@ pub enum RomanNumberError {
 
 pub trait AstronomicalObject {
 	/// Return a new object from `self` with `name`.
+	#[allow( dead_code, reason = "This trait is not public but this method may be useful later, when the trait is made public. It is used during testing, though." )]
 	fn with_name( self, name: &str ) -> Self;
 
 	/// Return a new object from `self` with `satellites` orbiting it.
+	#[allow( dead_code, reason = "This trait is not public but this method may be useful later, when the trait is made public. It is used during testing, though." )]
 	fn with_satellites( self, satellites: Vec<Orbit> ) -> Self;
 
 	/// Returns the satellites of this object.
@@ -1290,21 +1292,19 @@ impl CelestialSystem {
 		Ok( false )
 	}
 
-	/// Returns the kind of `FleetPresence` that is present in this system.
+	/// Returns the kind of `MilitaryPresence` in this system.
 	///
-	/// If the index is `&[]` the method returns the most visible fleet presence of any of the worlds within this system.
+	/// If the index is `&[]` the method returns the strongest and most obvious presence of any of the worlds within this system.
 	///
 	/// # Arguments
 	/// * `index` See [`self.name()`].
-	pub fn fleet_presence( &self, index: &[usize] ) -> Result<FleetPresence, CelestialSystemError> {
+	pub fn military_presence( &self, index: &[usize] ) -> Result<MilitaryPresence, CelestialSystemError> {
 		if index.is_empty() {
 			let res = self.indices().iter()
 				.skip( 1 )  // Skipping `&[]`
-				.fold( FleetPresence::No, |mut acc, idx| {
-					let pres = self.fleet_presence( idx ).expect( "Only existing indices should be available here!" );
-					if acc < pres {
-						acc = pres;
-					}
+				.fold( MilitaryPresence::new(), |mut acc, idx| {
+					let pres = self.military_presence( idx ).expect( "Only existing indices should be available here!" );
+					acc.combine( pres );
 					acc
 				} );
 
@@ -1318,9 +1318,9 @@ impl CelestialSystem {
 		};
 
 		let res = match body {
-			CelestialBody::Trabant( x ) => x.fleet_presence(),
-			CelestialBody::Station( x ) => x.fleet_presence(),
-			_ => FleetPresence::No,
+			CelestialBody::Trabant( x ) => x.military(),
+			CelestialBody::Station( x ) => x.military(),
+			_ => MilitaryPresence::new(),
 		};
 
 		Ok( res )
@@ -1395,9 +1395,33 @@ impl CelestialSystem {
 	}
 
 	/// Returns an iterator of all stars within this system.
-	pub fn stars( &self ) -> CelestialSystemStarsIterator {
+	pub fn stars( &self ) -> CelestialSystemStarsIterator<'_> {
 		let mut iter_obj = CelestialSystemStarsIterator {
 			stars: Vec::new(),
+			index: 0,
+		};
+
+		iter_obj.walker( &self.body );
+
+		iter_obj
+	}
+
+	/// Returns an iterator of all planets within this system. This includes all planets regardless of the star they are orbiting.
+	pub fn planets( &self ) -> CelestialSystemPlanetsIterator<'_> {
+		let mut iter_obj = CelestialSystemPlanetsIterator {
+			planets: Vec::new(),
+			index: 0,
+		};
+
+		iter_obj.walker( &self.body );
+
+		iter_obj
+	}
+
+	/// Returns an iterator of all space stations within this system.
+	pub fn stations( &self ) -> CelestialSystemStationsIterator<'_> {
+		let mut iter_obj = CelestialSystemStationsIterator {
+			stations: Vec::new(),
 			index: 0,
 		};
 
@@ -1480,7 +1504,106 @@ impl<'a> Iterator for CelestialSystemStarsIterator<'a> {
 			return None;
 		}
 
-		let result = Some( self.stars[ self.index ] ) ;
+		let result = Some( self.stars[self.index] ) ;
+		self.index += 1;
+
+		result
+	}
+}
+
+
+/// Iterator for planets within a `CelestialSystem`.
+///
+/// TODO: The implementation is very inefficient, creating a `Vec` each time the iterator is newly created.
+pub struct CelestialSystemPlanetsIterator<'a> {
+	planets: Vec<&'a Trabant>,
+
+	index: usize,
+}
+
+impl<'a> CelestialSystemPlanetsIterator<'a> {
+	/// Walking all objects within this system and collecting planets.
+	fn walker( &mut self, body: &'a CelestialBody ) {
+		match body {
+			// Planets only orbit stars.
+			CelestialBody::Star( x ) => {
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+			},
+			CelestialBody::Trabant( x ) => {
+				self.planets.push( x );
+			},
+
+			// No star will be orbiting a trabant or station.
+			_ => (),
+		}
+	}
+}
+
+impl<'a> Iterator for CelestialSystemPlanetsIterator<'a> {
+	type Item = &'a Trabant;
+
+	fn next( &mut self ) -> Option<Self::Item> {
+		if self.index >= self.planets.len() {
+			return None;
+		}
+
+		let result = Some( self.planets[self.index] ) ;
+		self.index += 1;
+
+		result
+	}
+}
+
+
+/// Iterator for space stations within a `CelestialSystem`.
+///
+/// TODO: The implementation is very inefficient, creating a `Vec` each time the iterator is newly created.
+pub struct CelestialSystemStationsIterator<'a> {
+	stations: Vec<&'a Station>,
+
+	index: usize,
+}
+
+impl<'a> CelestialSystemStationsIterator<'a> {
+	/// Walking all objects within this system and collecting stars.
+	fn walker( &mut self, body: &'a CelestialBody ) {
+		match body {
+			CelestialBody::Station( x ) => {
+				self.stations.push( x );
+			},
+
+			// A station may orbit anything but other stations.
+			CelestialBody::GravitationalCenter( x ) => {
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+			},
+			CelestialBody::Star( x ) => {
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+			},
+			CelestialBody::Trabant( x ) => {
+				for sat in &x.satellites {
+					self.walker( &sat.body );
+				}
+			},
+			CelestialBody::Ring( _ ) => (),
+		}
+	}
+}
+
+impl<'a> Iterator for CelestialSystemStationsIterator<'a> {
+	type Item = &'a Station;
+
+	fn next( &mut self ) -> Option<Self::Item> {
+		if self.index >= self.stations.len() {
+			return None;
+		}
+
+		let result = Some( self.stations[self.index] ) ;
 		self.index += 1;
 
 		result
@@ -1630,57 +1753,57 @@ mod tests {
 	}
 
 	#[test]
-	fn test_fleet_presence() {
+	fn test_military_presence() {
 		let systems = systems_examples::systems_example();
 
 		let sol = &systems[0];
 
-		assert_eq!( sol.fleet_presence( &[0] ).unwrap(), FleetPresence::No );
-		assert_eq!( sol.fleet_presence( &[1] ).unwrap(), FleetPresence::No );
-		assert_eq!( sol.fleet_presence( &[2] ).unwrap(), FleetPresence::Patrol );
-		assert_eq!( sol.fleet_presence( &[3] ).unwrap(), FleetPresence::No );
-		assert_eq!( sol.fleet_presence( &[3,1] ).unwrap(), FleetPresence::Secret );
-		assert_eq!( sol.fleet_presence( &[3,2] ).unwrap(), FleetPresence::Base );
-		assert_eq!( sol.fleet_presence( &[4] ).unwrap(), FleetPresence::Base );
-		assert_eq!( sol.fleet_presence( &[4,1] ).unwrap(), FleetPresence::No );
-		assert_eq!( sol.fleet_presence( &[4,2] ).unwrap(), FleetPresence::Fob );
-		assert_eq!( sol.fleet_presence( &[] ).unwrap(), FleetPresence::Base );
+		assert_eq!( sol.military_presence( &[0] ).unwrap(), MilitaryPresence::new() );
+		assert_eq!( sol.military_presence( &[1] ).unwrap(), MilitaryPresence::new() );
+		assert_eq!( sol.military_presence( &[2] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Patrol ) );
+		assert_eq!( sol.military_presence( &[3] ).unwrap(), MilitaryPresence::new() );
+		assert_eq!( sol.military_presence( &[3,1] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Secret ) );
+		assert_eq!( sol.military_presence( &[3,2] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Base ) );
+		assert_eq!( sol.military_presence( &[4] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Base ) );
+		assert_eq!( sol.military_presence( &[4,1] ).unwrap(), MilitaryPresence::new() );
+		assert_eq!( sol.military_presence( &[4,2] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Fob) );
+		assert_eq!( sol.military_presence( &[] ).unwrap(), MilitaryPresence::new_union( properties::Presence::Base ) );
 	}
 
 	#[test]
-	fn test_has_fleet_presence() {
+	fn test_has_military_presence() {
 		let systems = systems_examples::systems_example();
 
 		let sol = &systems[0];
 
-		assert!( !sol.fleet_presence( &[0] ).unwrap().is_present() );
-		assert!( !sol.fleet_presence( &[1] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[2] ).unwrap().is_present() );
-		assert!( !sol.fleet_presence( &[3] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[3,1] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[3,2] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[4] ).unwrap().is_present() );
-		assert!( !sol.fleet_presence( &[4,1] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[4,2] ).unwrap().is_present() );
-		assert!( sol.fleet_presence( &[] ).unwrap().is_present() );
+		assert!( !sol.military_presence( &[0] ).unwrap().is_present() );
+		assert!( !sol.military_presence( &[1] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[2] ).unwrap().is_present() );
+		assert!( !sol.military_presence( &[3] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[3,1] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[3,2] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[4] ).unwrap().is_present() );
+		assert!( !sol.military_presence( &[4,1] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[4,2] ).unwrap().is_present() );
+		assert!( sol.military_presence( &[] ).unwrap().is_present() );
 	}
 
 	#[test]
-	fn test_has_fleet_secret() {
+	fn test_has_military_secret() {
 		let systems = systems_examples::systems_example();
 
 		let sol = &systems[0];
 
-		assert!( !sol.fleet_presence( &[0] ).unwrap().is_present_visible() );
-		assert!( !sol.fleet_presence( &[1] ).unwrap().is_present_visible() );
-		assert!( sol.fleet_presence( &[2] ).unwrap().is_present_visible() );
-		assert!( !sol.fleet_presence( &[3] ).unwrap().is_present_visible() );
-		assert!( !sol.fleet_presence( &[3,1] ).unwrap().is_present_visible() );
-		assert!( sol.fleet_presence( &[3,2] ).unwrap().is_present_visible() );
-		assert!( sol.fleet_presence( &[4] ).unwrap().is_present_visible() );
-		assert!( !sol.fleet_presence( &[4,1] ).unwrap().is_present_visible() );
-		assert!( sol.fleet_presence( &[4,2] ).unwrap().is_present_visible() );
-		assert!( sol.fleet_presence( &[] ).unwrap().is_present_visible() );
+		assert!( !sol.military_presence( &[0] ).unwrap().is_present_visible() );
+		assert!( !sol.military_presence( &[1] ).unwrap().is_present_visible() );
+		assert!( sol.military_presence( &[2] ).unwrap().is_present_visible() );
+		assert!( !sol.military_presence( &[3] ).unwrap().is_present_visible() );
+		assert!( !sol.military_presence( &[3,1] ).unwrap().is_present_visible() );
+		assert!( sol.military_presence( &[3,2] ).unwrap().is_present_visible() );
+		assert!( sol.military_presence( &[4] ).unwrap().is_present_visible() );
+		assert!( !sol.military_presence( &[4,1] ).unwrap().is_present_visible() );
+		assert!( sol.military_presence( &[4,2] ).unwrap().is_present_visible() );
+		assert!( sol.military_presence( &[] ).unwrap().is_present_visible() );
 	}
 
 	#[test]

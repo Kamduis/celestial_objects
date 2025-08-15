@@ -15,7 +15,7 @@ use crate::CelestialSystem;
 use crate::coords::EquatorialCoords;
 use crate::types::AstronomicalObject;
 use crate::types::CelestialBody;
-use crate::types::properties::{Affiliation, Orbit, Atmosphere, AtmosphereQuality, GasComposition, Molecule, FleetPresence, LocalizedText};
+use crate::types::properties::{Affiliation, Orbit, Atmosphere, AtmosphereQuality, GasComposition, Molecule, MilitaryPresence, Presence, LocalizedText};
 use crate::types::objects::{GravitationalCenter, Star, Trabant, Ring, Station};
 
 
@@ -50,7 +50,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							techlevel: None,
 							gates: 0,
 							institutions: Vec::new(),
-							fleet: FleetPresence::No,
+							military: MilitaryPresence::new(),
 							properties: Vec::new(),
 							policies: Vec::new(),
 							satellites: Vec::new(),
@@ -82,7 +82,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							properties: Vec::new(),
 							policies: Vec::new(),
 							institutions: Vec::new(),
-							fleet: FleetPresence::Patrol,
+							military: MilitaryPresence::new_union( Presence::Patrol ),
 							satellites: Vec::new(),
 						} ),
 					},
@@ -113,7 +113,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							properties: Vec::new(),
 							policies: Vec::new(),
 							institutions: Vec::new(),
-							fleet: FleetPresence::No,
+							military: MilitaryPresence::new(),
 							satellites: vec![
 								Orbit {
 									axis_semi_major: 0.00257,
@@ -132,7 +132,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										properties: Vec::new(),
 										policies: Vec::new(),
 										institutions: Vec::new(),
-										fleet: FleetPresence::Secret,
+										military: MilitaryPresence::new_union( Presence::Secret ),
 										satellites: Vec::new(),
 									} ),
 								},
@@ -161,7 +161,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										properties: Vec::new(),
 										policies: Vec::new(),
 										institutions: Vec::new(),
-										fleet: FleetPresence::Base,
+										military: MilitaryPresence::new_union( Presence::Base ),
 										satellites: Vec::new(),
 									} )
 								},
@@ -195,7 +195,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							properties: Vec::new(),
 							policies: Vec::new(),
 							institutions: Vec::new(),
-							fleet: FleetPresence::Base,
+							military: MilitaryPresence::new_union( Presence::Base ),
 							satellites: vec![
 								Orbit {
 									axis_semi_major: 62.6746804e-6,
@@ -214,7 +214,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										properties: Vec::new(),
 										policies: Vec::new(),
 										institutions: Vec::new(),
-										fleet: FleetPresence::No,
+										military: MilitaryPresence::new(),
 										satellites: Vec::new(),
 									} ),
 								},
@@ -235,7 +235,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										properties: Vec::new(),
 										policies: Vec::new(),
 										institutions: Vec::new(),
-										fleet: FleetPresence::Fob,
+										military: MilitaryPresence::new_union( Presence::Fob ),
 										satellites: Vec::new(),
 									} ),
 								},
@@ -268,7 +268,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							properties: Vec::new(),
 							policies: Vec::new(),
 							institutions: Vec::new(),
-							fleet: FleetPresence::No,
+							military: MilitaryPresence::new(),
 							satellites: vec![
 								Orbit {
 									axis_semi_major: 425.574205e-6,
@@ -308,7 +308,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 							properties: Vec::new(),
 							policies: Vec::new(),
 							institutions: Vec::new(),
-							fleet: FleetPresence::No,
+							military: MilitaryPresence::new(),
 							satellites: vec![
 								Orbit {
 									axis_semi_major: 0.00237,
@@ -327,7 +327,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										properties: Vec::new(),
 										policies: Vec::new(),
 										institutions: Vec::new(),
-										fleet: FleetPresence::Base,
+										military: MilitaryPresence::new_union( Presence::Base ),
 										satellites: Vec::new(),
 									} ),
 								},
@@ -380,7 +380,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										properties: Vec::new(),
 										policies: Vec::new(),
 										institutions: Vec::new(),
-										fleet: FleetPresence::Base,
+										military: MilitaryPresence::new_union( Presence::Base ),
 										satellites: Vec::new(),
 									} ),
 								},
@@ -419,7 +419,7 @@ pub(crate) fn systems_example() -> Vec<CelestialSystem> {
 										properties: Vec::new(),
 										policies: Vec::new(),
 										institutions: Vec::new(),
-										fleet: FleetPresence::Base,
+										military: MilitaryPresence::new_union( Presence::Base ),
 										satellites: Vec::new(),
 									} ),
 								},
@@ -487,7 +487,7 @@ pub(crate) fn systems_example_l10n() -> Vec<CelestialSystem> {
 										properties: Vec::new(),
 										policies: Vec::new(),
 										institutions: Vec::new(),
-										fleet: FleetPresence::Base,
+										military: MilitaryPresence::new_union( Presence::Base ),
 										satellites: Vec::new(),
 									} ),
 								},
@@ -526,7 +526,7 @@ pub(crate) fn systems_example_l10n() -> Vec<CelestialSystem> {
 										properties: Vec::new(),
 										policies: Vec::new(),
 										institutions: Vec::new(),
-										fleet: FleetPresence::Base,
+										military: MilitaryPresence::new_union( Presence::Base ),
 										satellites: Vec::new(),
 									} ),
 								},
