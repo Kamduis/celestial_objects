@@ -36,12 +36,20 @@ pub const MASS_JUPITER: f64 = 1.89813e27;
 pub const MASS_TERRA: f64 = 5.97219e24;
 
 
+/// The mass of Terra in kg.
+pub const MASS_LUNA: f64 = 7.346e22;
+
+
 /// The radius of Sol in meter.
 pub const RADIUS_SOL: f64 = 695e6;
 
 
 /// The radius of Terra in meter.
 pub const RADIUS_TERRA: f64 = 6.378e6;
+
+
+/// The radius of Luna in meter.
+pub const RADIUS_LUNA: f64 = 1.737e6;
 
 
 // /// The luminosity of Sol in Lumen.
