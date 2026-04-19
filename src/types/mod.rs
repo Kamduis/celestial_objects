@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, AtmosphereQuality, GasComposition, MilitaryPresence, LocalizedText};
+pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, Population, AtmosphereQuality, GasComposition, MilitaryPresence, LocalizedText};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -1290,6 +1290,37 @@ impl CelestialSystem {
 		}
 
 		Ok( false )
+	}
+
+	/// Returns the populations of this world.
+	///
+	/// If the index is `&[]` the method returns the population throughout this system.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`].
+	pub fn population( &self, index: &[usize] ) -> Result<Population, CelestialSystemError> {
+		if index.is_empty() {
+			let res = self.indices().iter()
+				.skip( 1 )  // Skipping `&[]`
+				.map( |x| self.population( x ).unwrap_or_default() )
+				.sum();
+
+			return Ok( res );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		let res = match body {
+			CelestialBody::Trabant( x ) => x.population().clone(),
+			CelestialBody::Station( x ) => x.population().clone(),
+			_ => Population::default(),
+		};
+
+		Ok( res )
 	}
 
 	/// Returns the kind of `MilitaryPresence` in this system.

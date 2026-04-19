@@ -9,6 +9,7 @@
 
 use std::collections::{btree_map, BTreeMap};
 use std::fmt;
+use std::iter::Sum;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
@@ -237,7 +238,7 @@ impl Locale for Affiliation {
 
 /// Represents the military presence at a celestial object or a planetary system of possible multiple different military bodies.
 #[derive( Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Default, Debug )]
-pub struct MilitaryPresence{
+pub struct MilitaryPresence {
 	/// Union Fleet
 	#[serde( default )]
 	#[serde( rename = "union" )]
@@ -641,6 +642,78 @@ impl Locale for Policy {
 			Self::Secret => LOCALES.lookup( locale, "secret" ),
 		}
 	}
+}
+
+
+/// The population of a celestial body.
+#[derive( Serialize, Deserialize, Clone, PartialEq, Eq, Default, Debug )]
+pub struct Population {
+	/// The human population size
+	#[serde( default )]
+	human: u64,
+
+	/// The sket population size.
+	#[serde( default )]
+	sket: u64,
+
+	/// If native lifeforms exist.
+	#[serde( default )]
+	native: NativeLive,
+}
+
+impl Population {
+	/// Returns the population size of humans.
+	pub fn human( &self ) -> u64 {
+		self.human
+	}
+
+	/// Returns the population size of sket.
+	pub fn sket( &self ) -> u64 {
+		self.sket
+	}
+
+	/// Returns `true` if the population is completely zero. Neither humans nor Sket exist here.
+	pub fn is_zero( &self ) -> bool {
+		self.human == 0 && self.sket == 0
+	}
+}
+
+impl Sum<Self> for Population {
+	fn sum<I>( iter: I ) -> Self
+	where
+		I: Iterator<Item = Self>,
+	{
+		iter.fold( Self::default(), |a, b| Self {
+			human: a.human + b.human,
+			sket: a.sket + b.sket,
+			..Default::default()
+		} )
+	}
+}
+
+impl<'a> Sum<&'a Self> for Population {
+	fn sum<I>( iter: I ) -> Self
+	where
+		I: Iterator<Item = &'a Self>,
+	{
+		iter.fold( Self::default(), |a, b| Self {
+			human: a.human + b.human,
+			sket: a.sket + b.sket,
+			..Default::default()
+		} )
+	}
+}
+
+
+/// The kind of native life that exist.
+#[derive( Serialize, Deserialize, Clone, PartialEq, Eq, Default, Debug )]
+pub enum NativeLive {
+	#[default]
+	Nothing,
+
+	Bacteria,
+
+	Multicellular,
 }
 
 

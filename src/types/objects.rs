@@ -18,7 +18,7 @@ use crate::types::Policy;
 
 use super::AstronomicalObject;
 use super::properties::PropertiesError;
-use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution, MilitaryPresence, LocalizedText};
+use super::properties::{Population, Property, Orbit, StarType, SpectralClass, Atmosphere, Institution, MilitaryPresence, LocalizedText};
 
 
 
@@ -323,6 +323,10 @@ pub struct Trabant {
 	#[serde( default )]
 	pub(crate) gates: u32,
 
+	/// The population size.
+	#[serde( default )]
+	pub(crate) population: Population,
+
 	/// The properties of this trabant.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
@@ -367,6 +371,11 @@ impl Trabant {
 	/// Returns the number of *visible* hyperspace gates of this trabant. Meaning, if this trabant is secret, this method returns 0.
 	pub fn gates_count_visible( &self ) -> u32 {
 		if self.is_secret() { 0 } else { self.gates_count() }
+	}
+
+	/// Returns the population sizes of this body.
+	pub fn population( &self ) -> &Population {
+		&self.population
 	}
 
 	/// Returns the kind of presence the provided `military` has at this body.
@@ -527,6 +536,10 @@ pub struct Station {
 	#[serde( default )]
 	pub(crate) gates: u32,
 
+	/// The population size.
+	#[serde( default )]
+	pub(crate) population: Population,
+
 	/// The properties of this station.
 	#[serde( default )]
 	#[serde( skip_serializing_if = "Vec::is_empty" )]
@@ -571,6 +584,11 @@ impl Station {
 	/// Returns the number of *visible* hyperspace gates of this station. Meaning, if this station is secret, this method returns 0.
 	pub fn gates_count_visible( &self ) -> u32 {
 		if self.is_secret() { 0 } else { self.gates_count() }
+	}
+
+	/// Returns the population sizes of this station.
+	pub fn population( &self ) -> &Population {
+		&self.population
 	}
 
 	/// Returns the military stationed at this body and the kind of presence it has here.
