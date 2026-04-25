@@ -717,6 +717,33 @@ pub enum NativeLive {
 }
 
 
+/// Represents the kind of data network that may exist.
+#[derive( Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Default, Debug )]
+pub enum Network {
+	/// There exists no data network.
+	#[default]
+	No,
+
+	/// There exists only a primitive data network, probably only localized clusters, no worldwide connection.
+	Primitive,
+
+	/// There exists a real datasphere. If the argument
+	Datasphere( Datasphere ),
+}
+
+
+/// Represents the existence of a Plexus.
+#[derive( Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Default, Debug )]
+pub struct Datasphere( bool );
+
+impl Datasphere {
+	/// Returns `true` if the Plexus exists.
+	pub fn has_plexus( &self ) -> bool {
+		self.0
+	}
+}
+
+
 /// Special properties.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Eq, Debug )]
 pub enum Property {

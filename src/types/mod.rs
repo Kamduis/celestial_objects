@@ -17,7 +17,7 @@ use crate::units::{Mass, Length};
 
 pub(crate) mod properties;
 use properties::{TrabantType, Orbit};
-pub use properties::{StarColor, BodyType, Property, Policy, SpectralClass, StarType, Affiliation, Atmosphere, Population, AtmosphereQuality, GasComposition, MilitaryPresence, LocalizedText};
+pub use properties::{StarColor, BodyType, Property, Network, Policy, SpectralClass, StarType, Affiliation, Atmosphere, Population, AtmosphereQuality, GasComposition, MilitaryPresence, LocalizedText};
 
 pub(crate) mod objects;
 use objects::{GravitationalCenter, Star, Trabant, Ring, Station};
@@ -169,6 +169,33 @@ pub trait AstronomicalObject {
 		self.policies().iter()
 			.any( |x| matches!( x, Policy::Secret ) )
 	}
+}
+
+
+pub trait Populated {
+	/// Returns the tech level of this trabant.
+	fn techlevel( &self ) -> Option<u32> {
+		None
+	}
+
+	/// Is `true` if this world has a datasphere.
+	fn network( &self ) -> Network;
+
+	/// Returns the number of hyperspace gates of this trabant.
+	fn gates_count( &self ) -> u32 {
+		0
+	}
+
+	/// Returns the number of *visible* hyperspace gates of this trabant. Meaning, if this trabant is secret, this method returns 0.
+	fn gates_count_visible( &self ) -> u32 {
+		0
+	}
+
+	/// Returns the population sizes of this body.
+	fn population( &self ) -> &Population;
+
+	/// Returns the kind of presence the provided `military` has at this body.
+	fn military( &self ) -> MilitaryPresence;
 }
 
 
@@ -1202,6 +1229,30 @@ impl CelestialSystem {
 		self.indices().iter()
 			.filter_map( |x| self.techlevel( x ).unwrap_or_default() )
 			.max()
+	}
+
+	/// Returns what kind of data network exists at the `index`ed object if at all.
+	///
+	/// # Arguments
+	/// * `index` See [`self.name()`]..
+	pub fn network( &self, index: &[usize] ) -> Result<Network, CelestialSystemError> {
+		if index.is_empty() {
+			return Err( CelestialSystemError::IllegalIndex( format!( "{index:?}" ) ) );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		let res = match body {
+			CelestialBody::Trabant( x ) => x.network(),
+			CelestialBody::Station( x ) => x.network(),
+			_ => Network::No,
+		};
+
+		Ok( res )
 	}
 
 	/// Returns the number of hyperspace gates of this world.
