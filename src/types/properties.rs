@@ -987,7 +987,7 @@ pub enum Molecule {
 	Oxygen,
 	SulfurDioxide,
 	SulfurMonoxide,
-	Water,
+	WaterVapor,
 	Other,
 }
 
@@ -1009,7 +1009,7 @@ impl fmt::Display for Molecule {
 			Self::Oxygen =>         write!( f, "O2" ),
 			Self::SulfurDioxide =>  write!( f, "SO2" ),
 			Self::SulfurMonoxide => write!( f, "SO" ),
-			Self::Water =>          write!( f, "H2O" ),
+			Self::WaterVapor =>     write!( f, "H2O" ),
 			Self::Other =>          write!( f, r"other" ),
 		}
 	}
@@ -1044,7 +1044,7 @@ impl Latex for Molecule {
 			Self::Oxygen => r"\ce{O2}",
 			Self::SulfurDioxide => r"\ce{SO2}",
 			Self::SulfurMonoxide => r"\ce{SO}",
-			Self::Water => r"\ce{H2O}",
+			Self::WaterVapor => r"\ce{H2O}",
 			Self::Other => r"other",
 		};
 
