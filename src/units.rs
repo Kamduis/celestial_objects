@@ -307,13 +307,14 @@ impl Sub for Mass {
 	}
 }
 
-impl Mul for Mass {
-	type Output = Self;
-
-	fn mul( self, rhs: Self ) -> Self {
-		Self::from( self.0 * rhs.0 )
-	}
-}
+// // Will be removed. `Mass` * `Mass` is not a `Mass`.
+// impl Mul for Mass {
+// 	type Output = Self;
+//
+// 	fn mul( self, rhs: Self ) -> Self {
+// 		Self::from( self.0 * rhs.0 )
+// 	}
+// }
 
 impl Mul<f64> for Mass {
 	type Output = Self;
@@ -332,10 +333,10 @@ impl Mul<Mass> for f64 {
 }
 
 impl Div for Mass {
-	type Output = Self;
+	type Output = f64;
 
-	fn div( self, rhs: Self ) -> Self {
-		Self::from( self.0 / rhs.0 )
+	fn div( self, rhs: Self ) -> f64 {
+		self.0 / rhs.0
 	}
 }
 
