@@ -45,7 +45,11 @@
 							}),
 						),
 						techlevel: 10,
+						network: Datasphere( Yes ),
 						gates: 14,
+						population: (
+							human: 1_100_000,
+						),
 						military: (
 							union: Patrol,
 						),
@@ -83,7 +87,11 @@
 									gravity: 0.1654,
 									temperature: (-173.0, -23.0, 116.0 ),
 									techlevel: 11,
+									network: Datasphere( Yes ),
 									gates: 1,
+									population: (
+										human: 300_000,
+									),
 									military: (
 										union: Secret,
 									),
@@ -110,7 +118,11 @@
 										}),
 									),
 									techlevel: 11,
+									network: Datasphere( Yes ),
 									gates: 0,
+									population: (
+										human: 8_000,
+									),
 									military: (
 										union: Base,
 									),
@@ -141,7 +153,11 @@
 							}),
 						),
 						techlevel: 11,
+						network: Datasphere( Yes ),
 						gates: 64,
+						population: (
+							human: 88_040_000,
+						),
 						military: (
 							union: Base,
 						),
@@ -233,7 +249,11 @@
 									gravity: 0.0794,
 									temperature: (-235.0, -235.0, -235.0),
 									techlevel: 12,
+									network: Localized,
 									gates: 0,
+									population: (
+										human: 1_000,
+									),
 									military: (
 										union: Base,
 									),
@@ -286,7 +306,11 @@
 										}),
 									),
 									techlevel: 11,
+									network: Datasphere( Yes ),
 									gates: 122,
+									population: (
+										human: 13_180_000_000,
+									),
 									military: (
 										union: Base,
 									),
@@ -326,7 +350,11 @@
 										}),
 									),
 									techlevel: 11,
+									network: Datasphere( Yes ),
 									gates: 58,
+									population: (
+										human: 6_760_000_000,
+									),
 									military: (
 										union: Base,
 									),

@@ -29,7 +29,7 @@ mod serde_helpers;
 pub use crate::coords::{EquatorialCoords, GalacticCoords};
 pub use crate::types::{StarColor, CelestialSystem, CelestialBody, BodyType, SpectralClass, StarType, Affiliation, Population, Policy, Property, Atmosphere, AtmosphereQuality, GasComposition};
 pub use crate::types::objects::{GravitationalCenter, Star, Trabant, Ring};
-pub use crate::types::properties::{MilitaryPresence, Presence, Network, Datasphere, LocalizedText};
+pub use crate::types::properties::{MilitaryPresence, Presence, Network, Plexus, LocalizedText};
 pub use crate::types::CelestialSystemError;
 pub use crate::units::{Length, Mass};
 
