@@ -66,6 +66,11 @@ impl Length {
 		Self( val * calc::RADIUS_TERRA )
 	}
 
+	/// Creates a new `Length` from a factor of the radius of Luna.
+	pub fn from_radius_luna( val: f64 ) -> Self {
+		Self( val * calc::RADIUS_TERRA )
+	}
+
 	/// Returns the length in meter.
 	pub fn meter( &self ) -> f64 {
 		self.0
@@ -84,6 +89,11 @@ impl Length {
 	/// Returns the length in relation to the radius of Terra.
 	pub fn radius_terra( &self ) -> f64 {
 		self.0 / calc::RADIUS_TERRA
+	}
+
+	/// Returns the length in relation to the radius of Luna.
+	pub fn radius_luna( &self ) -> f64 {
+		self.0 / calc::RADIUS_LUNA
 	}
 
 	/// Raises the `Length` to an integer power.
@@ -203,6 +213,11 @@ impl Mass {
 		Self( val * calc::MASS_TERRA )
 	}
 
+	/// Creates a new `Mass` from a factor of the mass of Luna (the moon of Terra).
+	pub fn from_mass_luna( val: f64 ) -> Self {
+		Self( val * calc::MASS_LUNA )
+	}
+
 	/// Returns the mass in kg.
 	pub fn kg( &self ) -> f64 {
 		self.0
@@ -251,6 +266,11 @@ impl Mass {
 		self.0 / calc::MASS_TERRA
 	}
 
+	/// Returns the mass in relation to the mass of Luna.
+	pub fn luna( &self ) -> f64 {
+		self.0 / calc::MASS_LUNA
+	}
+
 	/// Raises the `Mass` to an integer power.
 	pub fn powi( &self, n: i32 ) -> Self {
 		Self::from( self.0.powi( n ) )
@@ -287,13 +307,14 @@ impl Sub for Mass {
 	}
 }
 
-impl Mul for Mass {
-	type Output = Self;
-
-	fn mul( self, rhs: Self ) -> Self {
-		Self::from( self.0 * rhs.0 )
-	}
-}
+// // Will be removed. `Mass` * `Mass` is not a `Mass`.
+// impl Mul for Mass {
+// 	type Output = Self;
+//
+// 	fn mul( self, rhs: Self ) -> Self {
+// 		Self::from( self.0 * rhs.0 )
+// 	}
+// }
 
 impl Mul<f64> for Mass {
 	type Output = Self;
@@ -312,10 +333,10 @@ impl Mul<Mass> for f64 {
 }
 
 impl Div for Mass {
-	type Output = Self;
+	type Output = f64;
 
-	fn div( self, rhs: Self ) -> Self {
-		Self::from( self.0 / rhs.0 )
+	fn div( self, rhs: Self ) -> f64 {
+		self.0 / rhs.0
 	}
 }
 

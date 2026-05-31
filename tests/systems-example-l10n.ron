@@ -42,7 +42,11 @@
 										}),
 									),
 									techlevel: 11,
+									network: Datasphere( Yes ),
 									gates: 122,
+									population: (
+										human: 13_180_000_000,
+									),
 									military: (
 										union: Base,
 									),
@@ -82,7 +86,11 @@
 										}),
 									),
 									techlevel: 11,
+									network: Datasphere( Yes ),
 									gates: 58,
+									population: (
+										human: 6_760_000_000,
+									),
 									military: (
 										union: Base,
 									),

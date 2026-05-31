@@ -16,9 +16,9 @@ use crate::calc;
 use crate::units::{Mass, Length};
 use crate::types::Policy;
 
-use super::AstronomicalObject;
+use super::{AstronomicalObject, Populated};
 use super::properties::PropertiesError;
-use super::properties::{Property, Orbit, StarType, SpectralClass, Atmosphere, Institution, MilitaryPresence, LocalizedText};
+use super::properties::{Population, Property, Orbit, StarType, SpectralClass, Network, Atmosphere, Institution, MilitaryPresence, LocalizedText};
 
 
 
@@ -319,9 +319,17 @@ pub struct Trabant {
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
 	pub(crate) techlevel: Option<u32>,
 
+	/// Returns the kind of data network that exists on this world.
+	#[serde( default )]
+	pub(crate) network: Network,
+
 	/// The number of jump gates on this world.
 	#[serde( default )]
 	pub(crate) gates: u32,
+
+	/// The population size.
+	#[serde( default )]
+	pub(crate) population: Population,
 
 	/// The properties of this trabant.
 	#[serde( default )]
@@ -351,28 +359,6 @@ pub struct Trabant {
 
 	/// The objects orbiting this trabant.
 	pub(crate) satellites: Vec<Orbit>,
-}
-
-impl Trabant {
-	/// Returns the tech level of this trabant.
-	pub fn techlevel( &self ) -> Option<u32> {
-		self.techlevel
-	}
-
-	/// Returns the number of hyperspace gates of this trabant.
-	pub fn gates_count( &self ) -> u32 {
-		self.gates
-	}
-
-	/// Returns the number of *visible* hyperspace gates of this trabant. Meaning, if this trabant is secret, this method returns 0.
-	pub fn gates_count_visible( &self ) -> u32 {
-		if self.is_secret() { 0 } else { self.gates_count() }
-	}
-
-	/// Returns the kind of presence the provided `military` has at this body.
-	pub fn military( &self ) -> MilitaryPresence {
-		self.military
-	}
 }
 
 impl AstronomicalObject for Trabant {
@@ -434,6 +420,32 @@ impl AstronomicalObject for Trabant {
 
 	fn description( &self ) -> Option<&LocalizedText> {
 		self.description.as_ref()
+	}
+}
+
+impl Populated for Trabant {
+	fn techlevel( &self ) -> Option<u32> {
+		self.techlevel
+	}
+
+	fn network( &self ) -> Network {
+		self.network
+	}
+
+	fn gates_count( &self ) -> u32 {
+		self.gates
+	}
+
+	fn gates_count_visible( &self ) -> u32 {
+		if self.is_secret() { 0 } else { self.gates_count() }
+	}
+
+	fn population( &self ) -> &Population {
+		&self.population
+	}
+
+	fn military( &self ) -> MilitaryPresence {
+		self.military
 	}
 }
 
@@ -523,9 +535,17 @@ pub struct Station {
 	#[serde( with = "crate::serde_helpers::option_wrapper" )]
 	pub(crate) techlevel: Option<u32>,
 
+	/// Returns the kind of data network that exists on the station.
+	#[serde( default )]
+	pub(crate) network: Network,
+
 	/// The number of jump gates on this station.
 	#[serde( default )]
 	pub(crate) gates: u32,
+
+	/// The population size.
+	#[serde( default )]
+	pub(crate) population: Population,
 
 	/// The properties of this station.
 	#[serde( default )]
@@ -555,28 +575,6 @@ pub struct Station {
 
 	/// The objects orbiting this station.
 	pub(crate) satellites: Vec<Orbit>,
-}
-
-impl Station {
-	/// Returns the tech level of this station.
-	pub fn techlevel( &self ) -> Option<u32> {
-		self.techlevel
-	}
-
-	/// Returns the number of hyperspace gates of this station.
-	pub fn gates_count( &self ) -> u32 {
-		self.gates
-	}
-
-	/// Returns the number of *visible* hyperspace gates of this station. Meaning, if this station is secret, this method returns 0.
-	pub fn gates_count_visible( &self ) -> u32 {
-		if self.is_secret() { 0 } else { self.gates_count() }
-	}
-
-	/// Returns the military stationed at this body and the kind of presence it has here.
-	pub fn military( &self ) -> MilitaryPresence {
-		self.military
-	}
 }
 
 impl AstronomicalObject for Station {
@@ -631,5 +629,31 @@ impl AstronomicalObject for Station {
 
 	fn description( &self ) -> Option<&LocalizedText> {
 		self.description.as_ref()
+	}
+}
+
+impl Populated for Station {
+	fn techlevel( &self ) -> Option<u32> {
+		self.techlevel
+	}
+
+	fn network( &self ) -> Network {
+		self.network
+	}
+
+	fn gates_count( &self ) -> u32 {
+		self.gates
+	}
+
+	fn gates_count_visible( &self ) -> u32 {
+		if self.is_secret() { 0 } else { self.gates_count() }
+	}
+
+	fn population( &self ) -> &Population {
+		&self.population
+	}
+
+	fn military( &self ) -> MilitaryPresence {
+		self.military
 	}
 }

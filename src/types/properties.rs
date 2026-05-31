@@ -9,6 +9,7 @@
 
 use std::collections::{btree_map, BTreeMap};
 use std::fmt;
+use std::iter::Sum;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
@@ -237,7 +238,7 @@ impl Locale for Affiliation {
 
 /// Represents the military presence at a celestial object or a planetary system of possible multiple different military bodies.
 #[derive( Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Default, Debug )]
-pub struct MilitaryPresence{
+pub struct MilitaryPresence {
 	/// Union Fleet
 	#[serde( default )]
 	#[serde( rename = "union" )]
@@ -644,6 +645,141 @@ impl Locale for Policy {
 }
 
 
+/// The population of a celestial body.
+#[derive( Serialize, Deserialize, Clone, PartialEq, Eq, Default, Debug )]
+pub struct Population {
+	/// The human population size
+	#[serde( default )]
+	human: u64,
+
+	/// The sket population size.
+	#[serde( default )]
+	sket: u64,
+
+	/// If native lifeforms exist.
+	#[serde( default )]
+	native: NativeLive,
+}
+
+impl Population {
+	/// Returns the population size of humans.
+	pub fn human( &self ) -> u64 {
+		self.human
+	}
+
+	/// Returns the population size of sket.
+	pub fn sket( &self ) -> u64 {
+		self.sket
+	}
+
+	/// Returns `true` if the population is completely zero. Neither humans nor Sket exist here.
+	pub fn is_zero( &self ) -> bool {
+		self.human == 0 && self.sket == 0
+	}
+}
+
+impl Population {
+	/// Create a new `Population` from the number of `humans` provided.
+	pub fn from_humans( humans: u64 ) -> Self {
+		Self {
+			human: humans,
+			sket: 0,
+			native: Default::default(),
+		}
+	}
+
+	/// Create a new `Population` from the number of `sket` provided.
+	pub fn from_sket( sket: u64 ) -> Self {
+		Self {
+			human: 0,
+			sket,
+			native: Default::default(),
+		}
+	}
+
+	/// Create a new `Population` from `self` with the number of `humans` provided.
+	pub fn with_humans( mut self, humans: u64 ) -> Self {
+		self.human = humans;
+		self
+	}
+
+	/// Create a new `Population` from `self` with the number of `sket` provided.
+	pub fn with_sket( mut self, sket: u64 ) -> Self {
+		self.sket = sket;
+		self
+	}
+}
+
+impl Sum<Self> for Population {
+	fn sum<I>( iter: I ) -> Self
+	where
+		I: Iterator<Item = Self>,
+	{
+		iter.fold( Self::default(), |a, b| Self {
+			human: a.human + b.human,
+			sket: a.sket + b.sket,
+			..Default::default()
+		} )
+	}
+}
+
+impl<'a> Sum<&'a Self> for Population {
+	fn sum<I>( iter: I ) -> Self
+	where
+		I: Iterator<Item = &'a Self>,
+	{
+		iter.fold( Self::default(), |a, b| Self {
+			human: a.human + b.human,
+			sket: a.sket + b.sket,
+			..Default::default()
+		} )
+	}
+}
+
+
+/// The kind of native life that exist.
+#[derive( Serialize, Deserialize, Clone, PartialEq, Eq, Default, Debug )]
+pub enum NativeLive {
+	#[default]
+	Nothing,
+
+	Bacteria,
+
+	Multicellular,
+}
+
+
+/// Represents the kind of data network that may exist.
+#[derive( Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Default, Debug )]
+pub enum Network {
+	/// There exists no data network.
+	#[default]
+	No,
+
+	/// There exists only a primitive data network, probably only localized clusters, no worldwide connection.
+	Localized,
+
+	/// There exists a real datasphere. Maybe with a Plexus.
+	Datasphere( Plexus ),
+}
+
+
+/// Represents the existence of a Plexus.
+#[derive( Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Default, Debug )]
+pub enum Plexus {
+	#[default]
+	No,
+	Yes,
+}
+
+impl Plexus {
+	/// Returns `true` if the Plexus exists.
+	pub fn has_plexus( &self ) -> bool {
+		matches!( self, Plexus::Yes )
+	}
+}
+
+
 /// Special properties.
 #[derive( Serialize, Deserialize, Clone, PartialEq, Eq, Debug )]
 pub enum Property {
@@ -887,7 +1023,7 @@ pub enum Molecule {
 	Oxygen,
 	SulfurDioxide,
 	SulfurMonoxide,
-	Water,
+	WaterVapor,
 	Other,
 }
 
@@ -909,7 +1045,7 @@ impl fmt::Display for Molecule {
 			Self::Oxygen =>         write!( f, "O2" ),
 			Self::SulfurDioxide =>  write!( f, "SO2" ),
 			Self::SulfurMonoxide => write!( f, "SO" ),
-			Self::Water =>          write!( f, "H2O" ),
+			Self::WaterVapor =>     write!( f, "H2O" ),
 			Self::Other =>          write!( f, r"other" ),
 		}
 	}
@@ -944,7 +1080,7 @@ impl Latex for Molecule {
 			Self::Oxygen => r"\ce{O2}",
 			Self::SulfurDioxide => r"\ce{SO2}",
 			Self::SulfurMonoxide => r"\ce{SO}",
-			Self::Water => r"\ce{H2O}",
+			Self::WaterVapor => r"\ce{H2O}",
 			Self::Other => r"other",
 		};
 
