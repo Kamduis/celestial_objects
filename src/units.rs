@@ -137,14 +137,6 @@ impl Sub for Length {
 	}
 }
 
-impl Mul for Length {
-	type Output = Self;
-
-	fn mul( self, rhs: Self ) -> Self {
-		Self::from( self.0 * rhs.0 )
-	}
-}
-
 impl Mul<f64> for Length {
 	type Output = Self;
 
@@ -162,10 +154,10 @@ impl Mul<Length> for f64 {
 }
 
 impl Div for Length {
-	type Output = Self;
+	type Output = f64;
 
-	fn div( self, rhs: Self ) -> Self {
-		Self::from( self.0 / rhs.0 )
+	fn div( self, rhs: Self ) -> f64 {
+		self.0 / rhs.0
 	}
 }
 
@@ -174,14 +166,6 @@ impl Div<f64> for Length {
 
 	fn div( self, rhs: f64 ) -> Self {
 		Self::from( self.0 / rhs )
-	}
-}
-
-impl Div<Length> for f64 {
-	type Output = Length;
-
-	fn div( self, rhs: Length ) -> Length {
-		Length::from( self / rhs.0 )
 	}
 }
 
@@ -312,15 +296,6 @@ impl Sub for Mass {
 	}
 }
 
-// // Will be removed. `Mass` * `Mass` is not a `Mass`.
-// impl Mul for Mass {
-// 	type Output = Self;
-//
-// 	fn mul( self, rhs: Self ) -> Self {
-// 		Self::from( self.0 * rhs.0 )
-// 	}
-// }
-
 impl Mul<f64> for Mass {
 	type Output = Self;
 
@@ -350,14 +325,6 @@ impl Div<f64> for Mass {
 
 	fn div( self, rhs: f64 ) -> Self {
 		Self::from( self.0 / rhs )
-	}
-}
-
-impl Div<Mass> for f64 {
-	type Output = Mass;
-
-	fn div( self, rhs: Mass ) -> Mass {
-		Mass::from( self / rhs.0 )
 	}
 }
 
@@ -463,14 +430,6 @@ impl Div<f64> for Acceleration {
 
 	fn div( self, rhs: f64 ) -> Self {
 		Self( self.0 / rhs )
-	}
-}
-
-impl Div<Acceleration> for f64 {
-	type Output = Acceleration;
-
-	fn div( self, rhs: Acceleration ) -> Acceleration {
-		Acceleration( self / rhs.0 )
 	}
 }
 

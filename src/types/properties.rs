@@ -416,7 +416,9 @@ impl Orbit {
 	pub fn radius_from_focal( &self, angle: f64 ) -> Length {
 		let p = self.axis_semi_minor().powi( 2 ) / self.axis_semi_major();
 
-		p / ( 1.0 + self.eccentricity * angle.cos() )
+		let res = p / ( 1.0 + self.eccentricity * angle.cos() );
+
+		Length::from_meter( res )
 	}
 }
 
