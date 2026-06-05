@@ -678,6 +678,38 @@ impl Population {
 	}
 }
 
+impl Population {
+	/// Create a new `Population` from the number of `humans` provided.
+	pub fn from_humans( humans: u64 ) -> Self {
+		Self {
+			human: humans,
+			sket: 0,
+			native: Default::default(),
+		}
+	}
+
+	/// Create a new `Population` from the number of `sket` provided.
+	pub fn from_sket( sket: u64 ) -> Self {
+		Self {
+			human: 0,
+			sket,
+			native: Default::default(),
+		}
+	}
+
+	/// Create a new `Population` from `self` with the number of `humans` provided.
+	pub fn with_humans( mut self, humans: u64 ) -> Self {
+		self.human = humans;
+		self
+	}
+
+	/// Create a new `Population` from `self` with the number of `sket` provided.
+	pub fn with_sket( mut self, sket: u64 ) -> Self {
+		self.sket = sket;
+		self
+	}
+}
+
 impl Sum<Self> for Population {
 	fn sum<I>( iter: I ) -> Self
 	where
@@ -725,21 +757,25 @@ pub enum Network {
 	No,
 
 	/// There exists only a primitive data network, probably only localized clusters, no worldwide connection.
-	Primitive,
+	Localized,
 
-	/// There exists a real datasphere. If the argument
-	Datasphere( Datasphere ),
+	/// There exists a real datasphere. Maybe with a Plexus.
+	Datasphere( Plexus ),
 }
 
 
 /// Represents the existence of a Plexus.
 #[derive( Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Default, Debug )]
-pub struct Datasphere( bool );
+pub enum Plexus {
+	#[default]
+	No,
+	Yes,
+}
 
-impl Datasphere {
+impl Plexus {
 	/// Returns `true` if the Plexus exists.
 	pub fn has_plexus( &self ) -> bool {
-		self.0
+		matches!( self, Plexus::Yes )
 	}
 }
 
