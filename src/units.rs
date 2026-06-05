@@ -343,6 +343,7 @@ impl Sum<Self> for Mass {
 #[derive( Clone, Copy, PartialEq, PartialOrd, Debug )]
 pub struct Acceleration( f64 );
 
+#[cfg( feature = "travel" )]
 impl Acceleration {
 	/// An `Acceleration` of 0 m/s².
 	pub const ZERO: Self = Self( 0.0 );
@@ -371,6 +372,7 @@ impl Acceleration {
 	}
 }
 
+#[cfg( feature = "travel" )]
 impl From<f32> for Acceleration {
 	/// Creating a new `Acceleration` from a number assuming it represents an acceleration in m/s².
 	fn from( value: f32 ) -> Self {
@@ -378,6 +380,7 @@ impl From<f32> for Acceleration {
 	}
 }
 
+#[cfg( feature = "travel" )]
 impl From<f64> for Acceleration {
 	/// Creating a new `Acceleration` from a number assuming it represents an acceleration in m/s².
 	fn from( value: f64 ) -> Self {
@@ -385,6 +388,7 @@ impl From<f64> for Acceleration {
 	}
 }
 
+#[cfg( feature = "travel" )]
 impl Add for Acceleration {
 	type Output = Self;
 
@@ -393,6 +397,7 @@ impl Add for Acceleration {
 	}
 }
 
+#[cfg( feature = "travel" )]
 impl Sub for Acceleration {
 	type Output = Self;
 
@@ -401,6 +406,7 @@ impl Sub for Acceleration {
 	}
 }
 
+#[cfg( feature = "travel" )]
 impl Mul<f64> for Acceleration {
 	type Output = Self;
 
@@ -409,6 +415,7 @@ impl Mul<f64> for Acceleration {
 	}
 }
 
+#[cfg( feature = "travel" )]
 impl Mul<Acceleration> for f64 {
 	type Output = Acceleration;
 
@@ -417,6 +424,7 @@ impl Mul<Acceleration> for f64 {
 	}
 }
 
+#[cfg( feature = "travel" )]
 impl Div for Acceleration {
 	type Output = f64;
 
@@ -425,6 +433,7 @@ impl Div for Acceleration {
 	}
 }
 
+#[cfg( feature = "travel" )]
 impl Div<f64> for Acceleration {
 	type Output = Self;
 
