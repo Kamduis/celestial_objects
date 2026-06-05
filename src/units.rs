@@ -371,6 +371,110 @@ impl Sum<Self> for Mass {
 }
 
 
+/// Representing an acceleration.
+#[cfg( feature = "travel" )]
+#[derive( Clone, Copy, PartialEq, PartialOrd, Debug )]
+pub struct Acceleration( f64 );
+
+impl Acceleration {
+	/// An `Acceleration` of 0 m/s².
+	pub const ZERO: Self = Self( 0.0 );
+
+	/// Earth surface gravitation in m/s².
+	const GRAV_EARTH: f64 = 9.80665;
+
+	/// Creates a new `Acceleration` from `val` in m/s².
+	pub fn new( val: f64 ) -> Self {
+		Self( val )
+	}
+
+	/// Creates a new `Acceleration` from a factor of the surface gravity of Terra.
+	pub fn from_g( val: f64 ) -> Self {
+		Self( val * Self::GRAV_EARTH )
+	}
+
+	/// Returns the acceleration in m/s² as `f64`.
+	pub fn as_f64( &self ) -> f64 {
+		self.0
+	}
+
+	/// Returns the acceleration in relation to the surface gravity of Terra.
+	pub fn g( &self ) -> f64 {
+		self.0 / Self::GRAV_EARTH
+	}
+}
+
+impl From<f32> for Acceleration {
+	/// Creating a new `Acceleration` from a number assuming it represents an acceleration in m/s².
+	fn from( value: f32 ) -> Self {
+		Self( value.into() )
+	}
+}
+
+impl From<f64> for Acceleration {
+	/// Creating a new `Acceleration` from a number assuming it represents an acceleration in m/s².
+	fn from( value: f64 ) -> Self {
+		Self( value )
+	}
+}
+
+impl Add for Acceleration {
+	type Output = Self;
+
+	fn add( self, rhs: Self ) -> Self {
+		Self( self.0 + rhs.0 )
+	}
+}
+
+impl Sub for Acceleration {
+	type Output = Self;
+
+	fn sub( self, rhs: Self ) -> Self {
+		Self( self.0 - rhs.0 )
+	}
+}
+
+impl Mul<f64> for Acceleration {
+	type Output = Self;
+
+	fn mul( self, rhs: f64 ) -> Self {
+		Self( self.0 * rhs )
+	}
+}
+
+impl Mul<Acceleration> for f64 {
+	type Output = Acceleration;
+
+	fn mul( self, rhs: Acceleration ) -> Acceleration {
+		Acceleration( self * rhs.0 )
+	}
+}
+
+impl Div for Acceleration {
+	type Output = f64;
+
+	fn div( self, rhs: Self ) -> f64 {
+		self.0 / rhs.0
+	}
+}
+
+impl Div<f64> for Acceleration {
+	type Output = Self;
+
+	fn div( self, rhs: f64 ) -> Self {
+		Self( self.0 / rhs )
+	}
+}
+
+impl Div<Acceleration> for f64 {
+	type Output = Acceleration;
+
+	fn div( self, rhs: Acceleration ) -> Acceleration {
+		Acceleration( self / rhs.0 )
+	}
+}
+
+
 
 
 //=============================================================================

@@ -33,6 +33,7 @@ pub use crate::types::objects::{GravitationalCenter, Star, Trabant, Ring};
 pub use crate::types::properties::{MilitaryPresence, Presence, Network, Plexus, LocalizedText};
 pub use crate::types::CelestialSystemError;
 pub use crate::units::{Length, Mass};
+#[cfg( feature = "travel" )] pub use crate::units::Acceleration;
 
 
 
