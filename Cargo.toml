@@ -9,6 +9,7 @@ description = "Handling systems of stars, planets and moons that are orbiting ea
 [features]
 i18n = ["dep:fluent-templates", "dep:unic-langid"]
 tex = []
+travel = []
 
 [dependencies]
 approx = "0.5.1"

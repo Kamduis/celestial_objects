@@ -40,3 +40,6 @@ nontoxic = non-toxic
 toxic = toxic
 
 other = other
+
+maneuver-rendezvous = rendezvous
+maneuver-intercept = intercept

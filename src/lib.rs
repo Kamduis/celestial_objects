@@ -21,6 +21,7 @@ mod units;
 mod coords;
 mod types;
 mod calc;
+#[cfg( feature = "travel" )] pub mod travel;
 mod serde_helpers;
 
 #[cfg( feature = "i18n" )] pub use traits::{Locale};

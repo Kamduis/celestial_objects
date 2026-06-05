@@ -40,3 +40,6 @@ nontoxic = ungiftig
 toxic = giftig
 
 other = andere
+
+maneuver-rendezvous = Rendevouz
+maneuver-intercept = Abfangen

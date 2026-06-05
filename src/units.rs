@@ -51,6 +51,11 @@ impl Length {
 	/// A `Length` of 0 m.
 	pub const ZERO: Length = Self( 0.0 );
 
+	/// Creates a new `Length` from meter.
+	pub fn from_meter( val: f64 ) -> Self {
+		Self( val )
+	}
+
 	/// Creates a new `Length` from astronomical units.
 	pub fn from_au( val: f64 ) -> Self {
 		Self( val * calc::ASTRONOMICAL_UNIT )
