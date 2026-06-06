@@ -526,6 +526,15 @@ impl<'de> Deserialize<'de> for EquatorialCoords {
 	}
 }
 
+impl fmt::Display for EquatorialCoords {
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
+		match self.dist {
+			0.0 => write!( f, "Ra: 0.0°, Dec: 0.0°, d: 0.0 ly" ),
+			_ => write!( f, "Ra: {}, Dec: {}, d: {:.1} ly", self.ra_hms(), self.dec_dms(), self.dist ),
+		}
+	}
+}
+
 
 /// This struct represents the galactic coordinate system.
 #[derive( Clone, PartialEq, Debug )]
@@ -560,6 +569,15 @@ impl From<EquatorialCoords> for GalacticCoords {
 			b: trans[0],
 			l: trans[1],
 			dist: item.dist,
+		}
+	}
+}
+
+impl fmt::Display for GalacticCoords {
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
+		match self.dist {
+			0.0 => write!( f, "l: 0.0°, b: 0.0°, d: 0.0 ly" ),
+			_ => write!( f, "l: {:.1}°, b: {:.1}°, d: {:.1} ly", self.l.to_degrees(), self.b.to_degrees(), self.dist ),
 		}
 	}
 }

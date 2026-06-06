@@ -148,7 +148,7 @@ impl Mul<f64> for Length {
 impl Mul<Length> for f64 {
 	type Output = Length;
 
-	fn mul( self, rhs: Length ) -> Length {
+	fn mul( self, rhs: Self::Output ) -> Self::Output {
 		Length::from( self * rhs.0 )
 	}
 }
@@ -307,7 +307,7 @@ impl Mul<f64> for Mass {
 impl Mul<Mass> for f64 {
 	type Output = Mass;
 
-	fn mul( self, rhs: Mass ) -> Mass {
+	fn mul( self, rhs: Self::Output ) -> Self::Output {
 		Mass::from( self * rhs.0 )
 	}
 }
@@ -419,7 +419,7 @@ impl Mul<f64> for Acceleration {
 impl Mul<Acceleration> for f64 {
 	type Output = Acceleration;
 
-	fn mul( self, rhs: Acceleration ) -> Acceleration {
+	fn mul( self, rhs: Self::Output ) -> Self::Output {
 		Acceleration( self * rhs.0 )
 	}
 }
