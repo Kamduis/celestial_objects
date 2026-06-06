@@ -564,6 +564,15 @@ impl From<EquatorialCoords> for GalacticCoords {
 	}
 }
 
+impl fmt::Display for GalacticCoords {
+	fn fmt( &self, f: &mut fmt::Formatter<'_> ) -> fmt::Result {
+		match self.dist {
+			0.0 => write!( f, "l: 0.0°, b: 0.0°, d: 0.0 ly" ),
+			_ => write!( f, "l: {:.1}°, b: {:.1}°, d: {:.1} ly", self.l.to_degrees(), self.b.to_degrees(), self.dist ),
+		}
+	}
+}
+
 
 
 
