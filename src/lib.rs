@@ -21,6 +21,7 @@ mod units;
 mod coords;
 mod types;
 mod calc;
+#[cfg( feature = "travel" )] pub mod travel;
 mod serde_helpers;
 
 #[cfg( feature = "i18n" )] pub use traits::{Locale};
@@ -32,6 +33,7 @@ pub use crate::types::objects::{GravitationalCenter, Star, Trabant, Ring};
 pub use crate::types::properties::{MilitaryPresence, Presence, Network, Plexus, LocalizedText};
 pub use crate::types::CelestialSystemError;
 pub use crate::units::{Length, Mass};
+#[cfg( feature = "travel" )] pub use crate::units::Acceleration;
 
 
 
