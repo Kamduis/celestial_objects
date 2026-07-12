@@ -16,6 +16,7 @@ use std::sync::LazyLock;
 #[cfg( feature = "i18n" )] use fluent_templates::Loader;
 use regex::Regex;
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
+use serde::de::Visitor;
 use thiserror::Error;
 #[cfg( feature = "i18n" )] use unic_langid::LanguageIdentifier;
 
@@ -859,7 +860,7 @@ impl Atmosphere {
 
 
 /// The composition of the atmosphere.
-#[derive( Serialize, Deserialize, Clone, PartialEq, Default, Debug )]
+#[derive( Serialize, Clone, PartialEq, Default, Debug )]
 pub struct GasComposition( BTreeMap<Molecule, f64> );
 
 impl GasComposition {
@@ -870,7 +871,7 @@ impl GasComposition {
 		1.0 - known
 	}
 
-	/// Return an iterator of `GasComposition`.
+	/// Returns an iterator of `GasComposition`.
 	pub fn iter( &self ) -> btree_map::Iter<'_, Molecule, f64> {
 		self.into_iter()
 	}
@@ -893,13 +894,20 @@ impl<'a> IntoIterator for &'a GasComposition {
 	}
 }
 
+/// Creates a `GasComposition` from an array of `( Molecule, f64 )`s.
+///
+/// **Note:** `Molecule`s with a value of 0.0 or less are ignored. These molecules ar not part of the composition, since they are zero.
 impl<const N: usize> From<[( Molecule, f64 ); N]> for GasComposition {
 	fn from( arr: [( Molecule, f64 ); N] ) -> Self {
 		if N == 0 {
 			return Self::default();
 		}
 
-		Self( BTreeMap::from( arr ) )
+		let res = arr.into_iter()
+			.filter( |( _, v )| *v > 0.0 )
+			.collect::<BTreeMap<_, _>>();
+
+		Self( res )
 	}
 }
 
@@ -957,6 +965,38 @@ impl LocaleLatex for GasComposition {
 			.map( |( k, v )| format!( r"{}\,\qty{{{:.1}}}{{\percent}}", k.to_latex_locale( locale ), v * 100.0 ) )
 			.collect::<Vec<String>>()
 			.join( ", " )
+	}
+}
+
+/// Deserialize `GasComposition` but ignore all items with a value of 0.0 or less.
+impl<'de> Deserialize<'de> for GasComposition {
+	fn deserialize<D>( deserializer: D ) -> Result<Self, D::Error>
+	where
+		D: Deserializer<'de>,
+	{
+		struct CompositionVisitor;
+
+		impl<'de> Visitor<'de> for CompositionVisitor {
+			type Value = GasComposition;
+
+			fn expecting( &self, formatter: &mut fmt::Formatter ) -> fmt::Result {
+				formatter.write_str("a `GasComposition` newtype wrapping a map")
+			}
+
+			fn visit_newtype_struct<D>( self, deserializer: D ) -> Result<Self::Value, D::Error>
+			where
+				D: Deserializer<'de>,
+			{
+				let map = BTreeMap::<Molecule, f64>::deserialize( deserializer )?;
+				Ok( GasComposition(
+					map.into_iter()
+						.filter( |&( _, v )| v > 0.0 )
+						.collect(),
+				) )
+			}
+		}
+
+		deserializer.deserialize_newtype_struct( "GasComposition", CompositionVisitor )
 	}
 }
 
