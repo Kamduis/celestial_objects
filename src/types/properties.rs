@@ -918,7 +918,14 @@ impl fmt::Display for GasComposition {
 		tmp.0.insert( Molecule::Other, self.other() );
 
 		tmp.0.iter()
-			.map( |( k, v )| format!( r"{} {:.1}%", k, v * 100.0 ) )
+			.filter( |( _, v )| **v > 0.00001 )
+			.map( |( k, &v )| if v < 0.0001 {
+				format!( r"{} {:.1}‱", k, v * 10_000.0 )
+			} else if v < 0.001 {
+				format!( r"{} {:.1}‰", k, v * 1000.0 )
+			} else {
+				format!( r"{} {:.1}%", k, v * 100.0 )
+			} )
 			.collect::<Vec<String>>()
 			.join( ", " );
 
@@ -934,7 +941,14 @@ impl Locale for GasComposition {
 		tmp.0.insert( Molecule::Other, self.other() );
 
 		tmp.0.iter()
-			.map( |( k, v )| format!( r"{} {:.1}%", k.to_string_locale( locale ), v * 100.0 ) )
+			.filter( |( _, v )| **v > 0.00001 )
+			.map( |( k, &v )| if v < 0.0001 {
+				format!( r"{} {:.1}‱", k.to_string_locale( locale ), v * 10_000.0 )
+			} else if v < 0.001 {
+				format!( r"{} {:.1}‰", k.to_string_locale( locale ), v * 1000.0 )
+			} else {
+				format!( r"{} {:.1}%", k.to_string_locale( locale ), v * 100.0 )
+			} )
 			.collect::<Vec<String>>()
 			.join( ", " )
 	}
@@ -948,7 +962,14 @@ impl Latex for GasComposition {
 		tmp.0.insert( Molecule::Other, self.other() );
 
 		tmp.0.iter()
-			.map( |( k, v )| format!( r"{}\,\qty{{{:.1}}}{{\percent}}", k.to_latex(), v * 100.0 ) )
+			.filter( |( _, v )| **v > 0.00001 )
+			.map( |( k, &v )| if v < 0.0001 {
+				format!( r"{}\,\qty{{{:.1}}}{{‱}}", k.to_latex(), v * 10_000.0 )
+			} else if v < 0.001 {
+				format!( r"{}\,\qty{{{:.1}}}{{‰}}", k.to_latex(), v * 1000.0 )
+			} else {
+				format!( r"{}\,\qty{{{:.1}}}{{\percent}}", k.to_latex(), v * 100.0 )
+			} )
 			.collect::<Vec<String>>()
 			.join( ", " )
 	}
@@ -962,7 +983,14 @@ impl LocaleLatex for GasComposition {
 		tmp.0.insert( Molecule::Other, self.other() );
 
 		tmp.0.iter()
-			.map( |( k, v )| format!( r"{}\,\qty{{{:.1}}}{{\percent}}", k.to_latex_locale( locale ), v * 100.0 ) )
+			.filter( |( _, v )| **v > 0.00001 )
+			.map( |( k, &v )| if v < 0.0001 {
+				format!( r"{}\,\qty{{{:.1}}}{{‱}}", k.to_latex_locale( locale ), v * 10_000.0 )
+			} else if v < 0.001 {
+				format!( r"{}\,\qty{{{:.1}}}{{‰}}", k.to_latex_locale( locale ), v * 1000.0 )
+			} else {
+				format!( r"{}\,\qty{{{:.1}}}{{\percent}}", k.to_latex_locale( locale ), v * 100.0 )
+			} )
 			.collect::<Vec<String>>()
 			.join( ", " )
 	}
