@@ -1498,8 +1498,7 @@ impl CelestialSystem {
 			let res = self.indices().iter()
 				.skip( 1 )  // Skipping `&[]`
 				.any( |idx| {
-					let hab = self.is_habitable( idx ).expect( "Only existing indices should be available here!" );
-					hab
+					self.is_habitable( idx ).expect( "Only existing indices should be available here!" )
 				} );
 
 			return Ok( res );
