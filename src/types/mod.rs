@@ -172,6 +172,23 @@ pub trait AstronomicalObject {
 }
 
 
+/// This trait represents possible habitable worlds like planets, moons or space stations.
+pub trait Habitat: AstronomicalObject {
+	/// Returns `true` if this `Habitat` can support human life or `false` if it cannot.
+	fn is_habitable( &self ) -> bool {
+		let grav = self.gravitation()
+			.map( |x| x <= 2.0 )
+			.unwrap_or( true );
+
+		let atmo = self.atmosphere()
+			.map( |x| matches!( x.quality(), AtmosphereQuality::Breathable | AtmosphereQuality::NonToxic ) )
+			.unwrap_or( false );
+
+		grav && atmo
+	}
+}
+
+
 pub trait Populated {
 	/// Returns the tech level of this trabant.
 	fn techlevel( &self ) -> Option<u32> {
@@ -364,6 +381,16 @@ pub enum CelestialBody {
 	Ring( Ring ),
 
 	Station( Station ),
+}
+
+impl CelestialBody {
+	pub fn is_habitable( &self ) -> bool {
+		match self {
+			Self::Trabant( x ) => x.is_habitable(),
+			Self::Station( x ) => x.is_habitable(),
+			_ => false,
+		}
+	}
 }
 
 impl AstronomicalObject for CelestialBody {
@@ -1456,6 +1483,34 @@ impl CelestialSystem {
 		};
 
 		Ok( body.is_secret() )
+	}
+
+	/// Returns `true` if the object is considered habitable for humans.
+	///
+	/// `&[]` represents the system itself.
+	/// `&[0]` represents the root object of the system. For a singular star system, this is the star. For a binary star system, this is the gravitational center of the two stars.
+	/// `&[1]` represents the first object orbiting `&[0]`.
+	/// `&[2]` represents the second object orbiting `&[0]`.
+	/// `&[1,0]` represents the first object orbiting `&[0]` (identical to `&[1]`).
+	/// `&[1,1]` represents the first object orbiting `&[1]` (the first object orbiting `&[0]`)
+	pub fn is_habitable( &self, index: &[usize] ) -> Result<bool, CelestialSystemError> {
+		if index.is_empty() {
+			let res = self.indices().iter()
+				.skip( 1 )  // Skipping `&[]`
+				.any( |idx| {
+					self.is_habitable( idx ).expect( "Only existing indices should be available here!" )
+				} );
+
+			return Ok( res );
+		}
+
+		let body = if index[0] == 0 {
+			&self.body
+		} else {
+			satellite_getter( &self.body, index )?
+		};
+
+		Ok( body.is_habitable() )
 	}
 
 	/// Returns the object at `index`.

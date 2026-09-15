@@ -16,7 +16,7 @@ use crate::calc;
 use crate::units::{Mass, Length};
 use crate::types::Policy;
 
-use super::{AstronomicalObject, Populated};
+use super::{AstronomicalObject, Habitat, Populated};
 use super::properties::PropertiesError;
 use super::properties::{Population, Property, Orbit, StarType, SpectralClass, Network, Atmosphere, Institution, MilitaryPresence, LocalizedText};
 
@@ -423,6 +423,8 @@ impl AstronomicalObject for Trabant {
 	}
 }
 
+impl Habitat for Trabant {}
+
 impl Populated for Trabant {
 	fn techlevel( &self ) -> Option<u32> {
 		self.techlevel
@@ -631,6 +633,8 @@ impl AstronomicalObject for Station {
 		self.description.as_ref()
 	}
 }
+
+impl Habitat for Station {}
 
 impl Populated for Station {
 	fn techlevel( &self ) -> Option<u32> {
